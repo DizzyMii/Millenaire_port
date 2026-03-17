@@ -6,5 +6,5 @@ public class ItemMillenaireBow extends BowItem {
     public ItemMillenaireBow(Properties props) {
         super(props);
     }
-    // TODO: Implement custom bow behavior if needed
+    // Uses default BowItem behavior; culture-specific bow textures handled via item model
 }

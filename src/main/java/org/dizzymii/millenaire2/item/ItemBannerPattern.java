@@ -6,5 +6,5 @@ public class ItemBannerPattern extends Item {
     public ItemBannerPattern(Properties props) {
         super(props);
     }
-    // TODO: Implement custom banner pattern item
+    // Crafting ingredient for banners; no special use action required
 }

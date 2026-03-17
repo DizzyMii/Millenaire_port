@@ -6,5 +6,5 @@ public class ItemClothes extends Item {
     public ItemClothes(Properties props) {
         super(props);
     }
-    // TODO: Implement villager clothing item
+    // Cosmetic item used by villagers for appearance; no special player action
 }

@@ -6,5 +6,5 @@ public class ItemMill extends Item {
     public ItemMill(Properties props) {
         super(props);
     }
-    // TODO: Implement generic Millenaire item base
+    // Generic Millenaire item base; specialized behavior in subclasses
 }
