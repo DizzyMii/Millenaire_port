@@ -35,5 +35,55 @@ public final class BuildingMetadataLoader {
         return metadata;
     }
 
-    // TODO: applyMetadata(BuildingCustomPlan, Map), parseResources, parseTags
+    /**
+     * Apply loaded metadata key-value pairs to a BuildingCustomPlan.
+     */
+    public static void applyMetadata(BuildingCustomPlan plan, Map<String, String> meta) {
+        for (Map.Entry<String, String> entry : meta.entrySet()) {
+            String key = entry.getKey().toLowerCase();
+            String value = entry.getValue();
+            try {
+                switch (key) {
+                    case "name" -> plan.nativeName = value;
+                    case "gamename" -> plan.gameNameKey = value;
+                    case "shop" -> plan.shop = value;
+                    case "radius" -> plan.radius = Integer.parseInt(value);
+                    case "heightradius" -> plan.heightRadius = Integer.parseInt(value);
+                    case "prioritymovein" -> plan.priorityMoveIn = Integer.parseInt(value);
+                    case "male" -> {
+                        for (String s : value.split(",")) {
+                            String t = s.trim();
+                            if (!t.isEmpty()) plan.maleResident.add(t);
+                        }
+                    }
+                    case "female" -> {
+                        for (String s : value.split(",")) {
+                            String t = s.trim();
+                            if (!t.isEmpty()) plan.femaleResident.add(t);
+                        }
+                    }
+                    case "visitor" -> {
+                        for (String s : value.split(",")) {
+                            String t = s.trim();
+                            if (!t.isEmpty()) plan.visitors.add(t);
+                        }
+                    }
+                    case "tag" -> {
+                        for (String s : value.split(",")) {
+                            String t = s.trim();
+                            if (!t.isEmpty()) plan.tags.add(t);
+                        }
+                    }
+                    default -> {
+                        // Store in generic names map for culture-specific lookups
+                        if (key.startsWith("name_")) {
+                            plan.names.put(key.substring(5), value);
+                        }
+                    }
+                }
+            } catch (NumberFormatException e) {
+                MillLog.warn(null, "BuildingMetadataLoader: bad number for " + key + "=" + value);
+            }
+        }
+    }
 }
