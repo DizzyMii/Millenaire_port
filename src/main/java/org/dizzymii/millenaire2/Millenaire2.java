@@ -26,6 +26,7 @@ import org.dizzymii.millenaire2.data.ContentDeployer;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.item.MillItems;
+import org.dizzymii.millenaire2.network.MillNetworking;
 import org.slf4j.Logger;
 
 @Mod(Millenaire2.MODID)
@@ -56,6 +57,7 @@ public class Millenaire2 {
     public Millenaire2(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::registerEntityAttributes);
+        modEventBus.addListener(MillNetworking::register);
 
         // Register all deferred registers
         BLOCKS.register(modEventBus);
