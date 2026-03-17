@@ -62,5 +62,49 @@ public class QuestStep {
         return quest.key + "_" + pos + "_";
     }
 
-    // TODO: getDescription, getLabel, lackingConditions — depends on LanguageUtilities quest strings
+    // ========== Text accessors ==========
+
+    public String getDescription(String lang) {
+        return descriptions.getOrDefault(lang, descriptions.getOrDefault("en", ""));
+    }
+
+    public String getDescriptionRefuse(String lang) {
+        return descriptionsRefuse.getOrDefault(lang, descriptionsRefuse.getOrDefault("en", ""));
+    }
+
+    public String getDescriptionSuccess(String lang) {
+        return descriptionsSuccess.getOrDefault(lang, descriptionsSuccess.getOrDefault("en", ""));
+    }
+
+    public String getDescriptionTimeUp(String lang) {
+        return descriptionsTimeUp.getOrDefault(lang, descriptionsTimeUp.getOrDefault("en", ""));
+    }
+
+    public String getLabel(String lang) {
+        return labels.getOrDefault(lang, labels.getOrDefault("en", "Step " + pos));
+    }
+
+    public String getListing(String lang) {
+        return listings.getOrDefault(lang, listings.getOrDefault("en", ""));
+    }
+
+    // ========== Condition checks ==========
+
+    @Nullable
+    public String lackingConditions(org.dizzymii.millenaire2.world.UserProfile profile,
+                                     org.dizzymii.millenaire2.world.MillWorldData mw) {
+        for (String tag : forbiddenGlobalTag) {
+            if (mw.hasGlobalTag(tag)) return "Forbidden global tag present: " + tag;
+        }
+        for (String tag : forbiddenPlayerTag) {
+            if (profile.hasTag(tag)) return "Forbidden player tag present: " + tag;
+        }
+        for (String tag : stepRequiredGlobalTag) {
+            if (!mw.hasGlobalTag(tag)) return "Required global tag missing: " + tag;
+        }
+        for (String tag : stepRequiredPlayerTag) {
+            if (!profile.hasTag(tag)) return "Required player tag missing: " + tag;
+        }
+        return null; // all conditions met
+    }
 }

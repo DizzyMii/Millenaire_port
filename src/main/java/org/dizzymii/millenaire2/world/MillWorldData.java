@@ -143,6 +143,12 @@ public class MillWorldData extends SavedData {
         }
     }
 
+    public void removeGlobalTag(String tag) {
+        if (globalTags.remove(tag)) {
+            setDirty();
+        }
+    }
+
     // ========== Tick ==========
 
     /**

@@ -19,5 +19,39 @@ public class QuestVillager {
 
     public QuestVillager() {}
 
-    // TODO: testVillager(UserProfile, VillagerRecord) — depends on full VillagerRecord integration
+    /**
+     * Tests whether a villager record satisfies this quest role's requirements.
+     */
+    public boolean testVillager(org.dizzymii.millenaire2.world.UserProfile profile,
+                                org.dizzymii.millenaire2.village.VillagerRecord vr) {
+        // Check type match
+        if (!types.isEmpty()) {
+            boolean typeMatch = false;
+            String vrType = vr.type;
+            if (vrType != null) {
+                for (String t : types) {
+                    if (vrType.equalsIgnoreCase(t)) {
+                        typeMatch = true;
+                        break;
+                    }
+                }
+            }
+            if (!typeMatch) return false;
+        }
+
+        // Check required tags
+        for (String tag : requiredTags) {
+            if (!vr.hasQuestTag(tag)) return false;
+        }
+
+        // Check forbidden tags
+        for (String tag : forbiddenTags) {
+            if (vr.hasQuestTag(tag)) return false;
+        }
+
+        // Check killed
+        if (vr.killed) return false;
+
+        return true;
+    }
 }

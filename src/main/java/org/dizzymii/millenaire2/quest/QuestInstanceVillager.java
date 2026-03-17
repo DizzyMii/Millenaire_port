@@ -37,5 +37,21 @@ public class QuestInstanceVillager {
         return vr;
     }
 
-    // TODO: getVillager(Level) — depends on MillVillager entity lookup in MillWorldData
+    /**
+     * Attempts to find the live MillVillager entity in the given level.
+     * Scans loaded entities matching the villager ID stored in this instance.
+     */
+    @Nullable
+    public org.dizzymii.millenaire2.entity.MillVillager getVillager(net.minecraft.world.level.Level level) {
+        if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            for (net.minecraft.world.entity.Entity entity : serverLevel.getAllEntities()) {
+                if (entity instanceof org.dizzymii.millenaire2.entity.MillVillager mv) {
+                    if (mv.getVillagerId() == id) {
+                        return mv;
+                    }
+                }
+            }
+        }
+        return null;
+    }
 }
