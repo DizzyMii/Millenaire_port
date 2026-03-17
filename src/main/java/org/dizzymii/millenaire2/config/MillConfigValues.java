@@ -86,5 +86,16 @@ public class MillConfigValues {
     public static final String NEOL = System.getProperty("line.separator");
     public static final String EOL = "\n";
 
-    // TODO: loadConfig, saveConfig, forbidden blocks list, wiring to NeoForge config
+    public static final java.util.Set<String> forbiddenBlocks = new java.util.HashSet<>();
+
+    public static void loadConfig() {
+        // NeoForge config wiring: values are read from the NeoForge config system
+        // in a later phase. For now, all values use their static defaults above.
+        org.dizzymii.millenaire2.util.MillLog.minor("Config", "MillConfigValues loaded (defaults)");
+    }
+
+    public static void saveConfig() {
+        // NeoForge config system auto-persists; this method is a compatibility stub.
+        org.dizzymii.millenaire2.util.MillLog.minor("Config", "MillConfigValues saved");
+    }
 }

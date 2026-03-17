@@ -12,5 +12,28 @@ public class CultureLanguage {
     public Map<String, String> strings = new HashMap<>();
 
     public CultureLanguage() {}
-    // TODO: Implement language file loading and string lookup
+
+    public CultureLanguage(String cultureKey) {
+        this.cultureKey = cultureKey;
+    }
+
+    public void loadFromProperties(java.io.InputStream in) throws java.io.IOException {
+        java.util.Properties props = new java.util.Properties();
+        props.load(new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8));
+        for (String key : props.stringPropertyNames()) {
+            strings.put(key, props.getProperty(key));
+        }
+    }
+
+    public String getString(String key) {
+        return strings.getOrDefault(key, key);
+    }
+
+    public String getString(String key, String fallback) {
+        return strings.getOrDefault(key, fallback);
+    }
+
+    public boolean hasString(String key) {
+        return strings.containsKey(key);
+    }
 }
