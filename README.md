@@ -1,4 +1,4 @@
-# Millénaire 2 — NeoForge Port
+# Millénaire — NeoForge Port
 
 A community-driven (Currently only me :D Contributions are welcome) port of the classic [Millénaire](https://millenaire.org/) Minecraft mod from **1.12.2 Forge** to **1.21.1 NeoForge**.
 
