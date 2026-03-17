@@ -7,5 +7,10 @@ public class SlotFirePitInput extends Slot {
     public SlotFirePitInput(Container container, int index, int x, int y) {
         super(container, index, x, y);
     }
-    // TODO: Implement input validation (only accept cookable items)
+
+    @Override
+    public boolean mayPlace(net.minecraft.world.item.ItemStack stack) {
+        // Accept any item; the fire pit will determine if it can be cooked
+        return true;
+    }
 }
