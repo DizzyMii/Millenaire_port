@@ -1,14 +1,15 @@
 package org.dizzymii.millenaire2.network;
 
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.network.payloads.MillGenericC2SPayload;
 import org.dizzymii.millenaire2.util.MillLog;
 
 /**
  * Server-side handler for client-to-server packets.
  * Dispatches incoming generic payloads to the appropriate handler based on packet type.
- *
- * TODO: Implement individual packet handlers as village/building/GUI systems are ported.
  */
 public final class ServerPacketHandler {
 
@@ -23,28 +24,110 @@ public final class ServerPacketHandler {
                 handleGuiAction(subType, payload.data(), context);
                 break;
             case MillPacketIds.PACKET_VILLAGELIST_REQUEST:
-                // TODO: send village list to requesting player
+                handleVillageListRequest(context);
                 break;
             case MillPacketIds.PACKET_DECLARERELEASENUMBER:
-                // TODO: handle release number declaration
+                handleDeclareReleaseNumber(payload.data(), context);
                 break;
             case MillPacketIds.PACKET_MAPINFO_REQUEST:
                 // TODO: send map info
                 break;
             case MillPacketIds.PACKET_VILLAGERINTERACT_REQUEST:
-                // TODO: handle villager interaction request
+                handleVillagerInteract(payload.data(), context);
                 break;
             case MillPacketIds.PACKET_AVAILABLECONTENT:
                 // TODO: handle available content declaration
                 break;
             case MillPacketIds.PACKET_DEVCOMMAND:
-                // TODO: handle dev commands
+                handleDevCommand(subType, payload.data(), context);
                 break;
             default:
                 MillLog.warn("ServerPacketHandler", "Unknown C2S packet type: " + type + "/" + subType);
                 break;
         }
     }
+
+    // ========== Villager interaction ==========
+
+    private static void handleVillagerInteract(byte[] data, IPayloadContext context) {
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            int entityId = r.readInt();
+
+            if (!(context.player() instanceof ServerPlayer player)) return;
+            Entity entity = player.level().getEntity(entityId);
+            if (!(entity instanceof MillVillager villager)) {
+                MillLog.warn("ServerPacketHandler", "Villager interact: entity " + entityId + " not found");
+                return;
+            }
+
+            // Send full villager sync to the interacting player
+            ServerPacketSender.sendVillagerSync(player, villager);
+
+            // TODO: Open trade/dialogue GUI based on villager type and player reputation
+            //       For now, just sync the villager data to the client
+            MillLog.minor("ServerPacketHandler", "Player " + player.getName().getString()
+                    + " interacted with villager " + villager.getFirstName());
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling villager interact", e);
+        } finally {
+            r.release();
+        }
+    }
+
+    // ========== Village list request ==========
+
+    private static void handleVillageListRequest(IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) return;
+
+        // TODO: Gather actual village data from MillWorldData and build the list.
+        //       For now, send an empty list so the packet flow is verified.
+        java.util.List<ServerPacketSender.VillageListEntry> entries = new java.util.ArrayList<>();
+        ServerPacketSender.sendVillageList(player, entries);
+        MillLog.minor("ServerPacketHandler", "Sent village list to " + player.getName().getString());
+    }
+
+    // ========== Release number declaration ==========
+
+    private static void handleDeclareReleaseNumber(byte[] data, IPayloadContext context) {
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            String releaseNumber = r.readString();
+            MillLog.minor("ServerPacketHandler", "Client declared release: " + releaseNumber);
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling release declaration", e);
+        } finally {
+            r.release();
+        }
+    }
+
+    // ========== Dev commands ==========
+
+    private static void handleDevCommand(int commandId, byte[] data, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) return;
+
+        // Only allow ops
+        if (!player.hasPermissions(2)) {
+            MillLog.warn("ServerPacketHandler", "Non-op player tried dev command: " + player.getName().getString());
+            return;
+        }
+
+        switch (commandId) {
+            case MillPacketIds.DEV_COMMAND_TOGGLE_AUTO_MOVE:
+                MillLog.minor("ServerPacketHandler", "Toggle auto-move for " + player.getName().getString());
+                // TODO: toggle auto-move on the villager nearest to player
+                break;
+            case MillPacketIds.DEV_COMMAND_TEST_PATH:
+                MillLog.minor("ServerPacketHandler", "Test path for " + player.getName().getString());
+                // TODO: trigger test pathfinding from player position
+                break;
+            default:
+                MillLog.warn("ServerPacketHandler", "Unknown dev command: " + commandId);
+                break;
+        }
+    }
+
+    // ========== GUI actions ==========
 
     private static void handleGuiAction(int actionId, byte[] data, IPayloadContext context) {
         switch (actionId) {
