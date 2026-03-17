@@ -22,6 +22,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.dizzymii.millenaire2.block.MillBlocks;
 import org.dizzymii.millenaire2.data.ContentDeployer;
+import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.item.MillItems;
 import org.slf4j.Logger;
 
@@ -63,6 +64,7 @@ public class Millenaire2 {
         // Force class loading of registration holders
         MillBlocks.init();
         MillItems.init();
+        MillEntities.init();
 
         NeoForge.EVENT_BUS.register(this);
 
