@@ -233,6 +233,11 @@ public abstract class MillVillager extends PathfinderMob {
     private void tickGoalSelection() {
         if (Goal.goals == null || Goal.goals.isEmpty()) return;
 
+        // Ensure VillagerType is resolved (needed after NBT load)
+        if (vtype == null && vtypeKey != null) {
+            resolveVillagerType();
+        }
+
         // If we have a valid active goal, check if it's still valid
         if (currentGoal != null && goalKey != null) {
             try {
@@ -289,7 +294,7 @@ public abstract class MillVillager extends PathfinderMob {
             }
         }
 
-        // Fallback: sleep at night, idle during day
+        // Fallback: sleep at night, idle wander during day
         if (isNight && Goal.sleep != null) {
             try {
                 GoalInformation info = Goal.sleep.getDestination(this);
@@ -298,6 +303,27 @@ public abstract class MillVillager extends PathfinderMob {
                     return;
                 }
             } catch (Exception ignored) {}
+        }
+
+        // Daytime idle: try socialise, otherwise wander near home
+        if (!isNight) {
+            if (Goal.gosocialise != null) {
+                try {
+                    GoalInformation info = Goal.gosocialise.getDestination(this);
+                    if (info != null && info.hasTarget()) {
+                        setActiveGoal("gosocialise", Goal.gosocialise, info);
+                        return;
+                    }
+                } catch (Exception ignored) {}
+            }
+            // Random wander near home point
+            Point wanderTarget = housePoint != null ? housePoint : townHallPoint;
+            if (wanderTarget != null) {
+                int dx = this.getRandom().nextInt(11) - 5;
+                int dz = this.getRandom().nextInt(11) - 5;
+                Point wander = new Point(wanderTarget.x + dx, wanderTarget.y, wanderTarget.z + dz);
+                this.getNavigation().moveTo(wander.x + 0.5, wander.y, wander.z + 0.5, 0.5);
+            }
         }
     }
 

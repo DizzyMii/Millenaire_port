@@ -1,13 +1,14 @@
 package org.dizzymii.millenaire2.goal;
 
+import net.minecraft.server.level.ServerLevel;
 import org.dizzymii.millenaire2.entity.MillVillager;
-import org.dizzymii.millenaire2.item.InvItem;
 import org.dizzymii.millenaire2.util.Point;
-import java.util.Map;
+import org.dizzymii.millenaire2.village.Building;
+import org.dizzymii.millenaire2.village.ConstructionIP;
 
 /**
  * Villager walks to a construction site and places blocks step-by-step.
- * Integrates with ConstructionIP and BuildingProject for block sequencing.
+ * Delegates actual block placement to the Building's ConstructionIP.
  */
 public class GoalConstructionStepByStep extends Goal {
 
@@ -15,35 +16,56 @@ public class GoalConstructionStepByStep extends Goal {
 
     @Override
     public GoalInformation getDestination(MillVillager villager) throws Exception {
-        Point townHall = villager.townHallPoint;
-        if (townHall == null) return null;
+        // Find a building under construction that this villager can work on
+        Building building = findConstructionSite(villager);
+        if (building == null) return null;
 
-        // Check if we have construction materials to place
-        if (villager.constructionJobId >= 0 || !villager.inventory.isEmpty()) {
-            return new GoalInformation(townHall, 5);
-        }
-        return null;
+        Point buildPos = building.getPos();
+        if (buildPos == null) return null;
+
+        return new GoalInformation(buildPos, building, 5);
     }
 
     @Override
     public boolean performAction(MillVillager villager) throws Exception {
-        // Consume one construction resource from inventory to simulate placing a block
-        if (!villager.inventory.isEmpty()) {
-            Map.Entry<InvItem, Integer> first = villager.inventory.entrySet().iterator().next();
-            villager.removeFromInv(first.getKey(), 1);
+        GoalInformation info = villager.getGoalInformation();
+        Building building = info != null ? info.targetBuilding : null;
+        if (building == null) return true; // No building, done
 
-            // Swing arm animation
+        ConstructionIP cip = building.currentConstruction;
+        if (cip == null || cip.isComplete()) return true; // Nothing to build
+
+        if (!(villager.level() instanceof ServerLevel serverLevel)) return true;
+
+        // Place a few blocks per action tick
+        int placed = cip.placeBlocks(serverLevel, 3);
+        if (placed > 0) {
             villager.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+            if (building.mw != null) building.mw.setDirty();
         }
 
-        // If inventory is empty, construction trip is done
-        if (villager.inventory.isEmpty()) {
-            villager.constructionJobId = -1;
+        if (cip.isComplete()) {
+            building.currentConstruction = null;
+            if (building.mw != null) building.mw.setDirty();
             return true;
         }
         return false;
     }
 
     @Override
-    public int actionDuration(MillVillager villager) { return 20; }
+    public int actionDuration(MillVillager villager) { return 15; }
+
+    /**
+     * Find a building under construction that this villager should work on.
+     * Prioritises the villager's home building, then the town hall.
+     */
+    private Building findConstructionSite(MillVillager villager) {
+        Building home = villager.getHomeBuilding();
+        if (home != null && home.isUnderConstruction()) return home;
+
+        Building th = villager.getTownHallBuilding();
+        if (th != null && th.isUnderConstruction()) return th;
+
+        return null;
+    }
 }
