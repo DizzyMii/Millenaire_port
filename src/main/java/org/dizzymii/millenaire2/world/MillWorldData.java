@@ -185,7 +185,15 @@ public class MillWorldData extends SavedData {
         }
         root.put("globalTags", tagList);
 
-        MillLog.minor("MillWorldData", "Saved " + buildings.size() + " buildings.");
+        // Save player profiles
+        ListTag profileList = new ListTag();
+        for (Map.Entry<UUID, UserProfile> entry : profiles.entrySet()) {
+            CompoundTag pTag = entry.getValue().save();
+            profileList.add(pTag);
+        }
+        root.put("profiles", profileList);
+
+        MillLog.minor("MillWorldData", "Saved " + buildings.size() + " buildings, " + profiles.size() + " profiles.");
         return root;
     }
 
@@ -216,7 +224,18 @@ public class MillWorldData extends SavedData {
             }
         }
 
-        MillLog.minor("MillWorldData", "Loaded " + data.buildings.size() + " buildings.");
+        // Load player profiles
+        if (root.contains("profiles", Tag.TAG_LIST)) {
+            ListTag profileList = root.getList("profiles", Tag.TAG_COMPOUND);
+            for (int i = 0; i < profileList.size(); i++) {
+                UserProfile p = UserProfile.load(profileList.getCompound(i));
+                if (p.uuid != null) {
+                    data.profiles.put(p.uuid, p);
+                }
+            }
+        }
+
+        MillLog.minor("MillWorldData", "Loaded " + data.buildings.size() + " buildings, " + data.profiles.size() + " profiles.");
         return data;
     }
 }
