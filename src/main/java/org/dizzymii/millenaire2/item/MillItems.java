@@ -281,12 +281,12 @@ public class MillItems {
         Millenaire2.ITEMS.registerSimpleBlockItem("sod", org.dizzymii.millenaire2.block.MillBlocks.SOD);
         Millenaire2.ITEMS.registerSimpleBlockItem("path_dirt", org.dizzymii.millenaire2.block.MillBlocks.PATH_DIRT);
         Millenaire2.ITEMS.registerSimpleBlockItem("path_gravel", org.dizzymii.millenaire2.block.MillBlocks.PATH_GRAVEL);
-        Millenaire2.ITEMS.registerSimpleBlockItem("path_sand", org.dizzymii.millenaire2.block.MillBlocks.PATH_SAND);
+        Millenaire2.ITEMS.registerSimpleBlockItem("path_slabs", org.dizzymii.millenaire2.block.MillBlocks.PATH_SLABS);
         Millenaire2.ITEMS.registerSimpleBlockItem("path_sandstone", org.dizzymii.millenaire2.block.MillBlocks.PATH_SANDSTONE);
         Millenaire2.ITEMS.registerSimpleBlockItem("rosette", org.dizzymii.millenaire2.block.MillBlocks.ROSETTE);
         Millenaire2.ITEMS.registerSimpleBlockItem("alchemist_explosive", org.dizzymii.millenaire2.block.MillBlocks.ALCHEMIST_EXPLOSIVE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("mill_sandstone", org.dizzymii.millenaire2.block.MillBlocks.MILL_SANDSTONE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("mill_sandstone_decorated", org.dizzymii.millenaire2.block.MillBlocks.MILL_SANDSTONE_DECORATED);
+        Millenaire2.ITEMS.registerSimpleBlockItem("sandstone_carved", org.dizzymii.millenaire2.block.MillBlocks.SANDSTONE_CARVED);
+        Millenaire2.ITEMS.registerSimpleBlockItem("sandstone_decorated", org.dizzymii.millenaire2.block.MillBlocks.SANDSTONE_DECORATED);
         Millenaire2.ITEMS.registerSimpleBlockItem("mill_statue", org.dizzymii.millenaire2.block.MillBlocks.MILL_STATUE);
     }
 
