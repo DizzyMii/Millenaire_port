@@ -1,3 +1,0 @@
-sells=egg,feather,chickenmeat,chickenmeatcooked
-
-buys=wheat,seeds,chickenmeat

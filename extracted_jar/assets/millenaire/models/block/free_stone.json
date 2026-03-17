@@ -1,6 +1,0 @@
-{
-  "parent": "millenaire:block/free",
-  "textures": {
-    "freeblock": "minecraft:blocks/stone"
-  }
-}

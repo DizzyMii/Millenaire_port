@@ -1,6 +1,0 @@
-{
-    "parent": "block/wall_side",
-    "textures": {
-        "wall": "millenaire:blocks/sandstone_red_clean"
-    }
-}
