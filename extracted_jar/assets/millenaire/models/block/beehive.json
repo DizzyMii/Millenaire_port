@@ -1,0 +1,12 @@
+{
+   "parent": "block/cube_all",
+   "textures": {
+     "particle": "millenaire:blocks/beehive",
+     "down": "millenaire:blocks/thatch_topbottom",
+     "up": "millenaire:blocks/thatch_topbottom",
+     "north": "millenaire:blocks/beehive",
+     "east": "millenaire:blocks/beehive",
+     "south": "millenaire:blocks/beehive",
+     "west": "millenaire:blocks/beehive"
+   }
+}

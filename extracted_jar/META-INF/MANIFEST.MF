@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Implementation-Title: Development
+Implementation-Version: 8.1.2
+Specification-Vendor: millenaire
+Specification-Title: millenaire
+Implementation-Timestamp: 2022-07-20T14:11:24+0200
+Specification-Version: 1
+Implementation-Vendor: millenaire
+

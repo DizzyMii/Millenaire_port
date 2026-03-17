@@ -1,0 +1,87 @@
+package org.dizzymii.millenaire2;
+
+import com.mojang.logging.LogUtils;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import org.dizzymii.millenaire2.block.MillBlocks;
+import org.dizzymii.millenaire2.item.MillItems;
+import org.slf4j.Logger;
+
+@Mod(Millenaire2.MODID)
+public class Millenaire2 {
+    public static final String MODID = "millenaire2";
+    public static final String MODNAME = "Millénaire";
+    public static final String VERSION = "2.0.0";
+    private static final Logger LOGGER = LogUtils.getLogger();
+
+    // --- Deferred Registers ---
+    public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MODID);
+    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MODID);
+    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
+    public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(Registries.ENTITY_TYPE, MODID);
+    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
+
+    // --- Creative Tab ---
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MILL_TAB = CREATIVE_MODE_TABS.register("millenaire_tab",
+            () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.millenaire2"))
+                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .icon(() -> MillItems.DENIER.get().getDefaultInstance())
+                    .displayItems((parameters, output) -> {
+                        MillItems.ALL_ITEMS.forEach(item -> output.accept(item.get()));
+                    })
+                    .build());
+
+    public Millenaire2(IEventBus modEventBus, ModContainer modContainer) {
+        modEventBus.addListener(this::commonSetup);
+
+        // Register all deferred registers
+        BLOCKS.register(modEventBus);
+        ITEMS.register(modEventBus);
+        CREATIVE_MODE_TABS.register(modEventBus);
+        ENTITY_TYPES.register(modEventBus);
+        BLOCK_ENTITY_TYPES.register(modEventBus);
+
+        // Force class loading of registration holders
+        MillBlocks.init();
+        MillItems.init();
+
+        NeoForge.EVENT_BUS.register(this);
+
+        modContainer.registerConfig(ModConfig.Type.COMMON, MillConfig.SPEC);
+    }
+
+    private void commonSetup(final FMLCommonSetupEvent event) {
+        LOGGER.info("{} {} common setup", MODNAME, VERSION);
+    }
+
+    @SubscribeEvent
+    public void onServerStarting(ServerStartingEvent event) {
+        LOGGER.info("{} server starting", MODNAME);
+    }
+
+    @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    public static class ClientModEvents {
+        @SubscribeEvent
+        public static void onClientSetup(FMLClientSetupEvent event) {
+            LOGGER.info("{} client setup", MODNAME);
+        }
+    }
+}

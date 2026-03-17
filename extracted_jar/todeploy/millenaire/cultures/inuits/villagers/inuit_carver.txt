@@ -1,0 +1,54 @@
+native_name=Mitlik
+gender=female
+familyNameList=inuit_names
+firstNameList=inuit_names
+malechild=inuit_boy
+femalechild=inuit_girl
+baseheight=0.85
+icon=inuitcarving
+
+travelbook_held_item=inuitcarving
+travelbook_held_item_off_hand=bone
+
+texture=textures/entity/inuit/inuit_female.png
+texture=textures/entity/inuit/inuit_female2.png
+texture=textures/entity/inuit/inuit_female3.png
+texture=textures/entity/inuit/inuit_female4.png
+texture=textures/entity/inuit/inuit_female5.png
+texture=textures/entity/inuit/inuit_female6.png
+
+goal=gorest
+goal=gosocialise
+goal=chat
+
+// Bone
+goal=makeinuitcarving
+goal=makebone
+goal=makespade
+requiredGood=bone,20
+requiredGood=boneblock,10
+
+// Ice
+goal=makeicebrick
+requiredGood=ice,8
+
+// Snow
+goal=makesnowbricksfromnothing
+goal=makesnowwall
+requiredGood=snowblock,8
+
+// Stone
+goal=makestonecauldron
+requiredGood=cobblestone,8
+
+// Weapons etc
+goal=makearrowinuit
+requiredGood=wood_pine,8
+
+baseAttackStrength=5
+tag=helpInAttacks
+defaultweapon=woodsword
+
+toolneededclass=armour
+toolneededclass=toolssword
+toolneededclass=rangedweapons

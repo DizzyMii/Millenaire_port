@@ -1,0 +1,23 @@
+//Parameters for the building as a whole
+building.length=8
+building.width=12
+building.buildingorientation=1
+building.farfromtag=leasure,30
+building.icon=inuitbearstew
+
+
+//Parameters for initial construction
+initial.startlevel=-1
+initial.nativename=Niqi
+initial.priority=400
+initial.pathlevel=1
+initial.tag=bakery
+initial.tag=kitchen
+initial.tag=oven
+initial.shop=cheffery
+
+//Parameters for specific upgrades
+upgrade1.priority=80
+
+upgrade2.priority=30
+

@@ -1,0 +1,9 @@
+building.length=1
+building.width=1
+building.areatoclear=3
+
+initial.startlevel=-2
+initial.nativename=flower
+initial.tag=nopaths
+
+initial.priority=200
