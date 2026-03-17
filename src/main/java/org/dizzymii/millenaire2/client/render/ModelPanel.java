@@ -5,5 +5,6 @@ package org.dizzymii.millenaire2.client.render;
  * Ported from org.millenaire.client.render.ModelPanel (Forge 1.12.2).
  */
 public class ModelPanel {
-    // TODO: Implement panel model geometry for block entity renderer
+    // Panel model is a flat quad; geometry defined inline in TESRPanel when rendered
+    // Full model extraction deferred until panel block entity is complete
 }

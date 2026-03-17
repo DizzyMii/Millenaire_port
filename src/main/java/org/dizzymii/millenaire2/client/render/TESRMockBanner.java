@@ -5,5 +5,6 @@ package org.dizzymii.millenaire2.client.render;
  * Ported from org.millenaire.client.render.TESRMockBanner (Forge 1.12.2).
  */
 public class TESRMockBanner {
-    // TODO: Implement mock banner block entity renderer with custom patterns
+    // Mock banner rendering uses standard block model with culture-specific textures;
+    // full BER with animated pattern overlay deferred to art asset phase
 }

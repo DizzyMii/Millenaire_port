@@ -37,6 +37,13 @@ public class ClientSetup {
         event.registerEntityRenderer(MillEntities.GENERIC_MALE.get(), MillVillagerRenderer::new);
         event.registerEntityRenderer(MillEntities.GENERIC_SYMM_FEMALE.get(), FemaleSymmRenderer::new);
         event.registerEntityRenderer(MillEntities.GENERIC_ASYMM_FEMALE.get(), FemaleAsymmRenderer::new);
-        // TODO: Register targeted mob and wall decoration renderers
+        // Targeted mobs reuse vanilla renderers
+        event.registerEntityRenderer(MillEntities.TARGETED_BLAZE.get(),
+                net.minecraft.client.renderer.entity.BlazeRenderer::new);
+        event.registerEntityRenderer(MillEntities.TARGETED_WITHER_SKELETON.get(),
+                net.minecraft.client.renderer.entity.WitherSkeletonRenderer::new);
+        event.registerEntityRenderer(MillEntities.TARGETED_GHAST.get(),
+                net.minecraft.client.renderer.entity.GhastRenderer::new);
+        event.registerEntityRenderer(MillEntities.WALL_DECORATION.get(), RenderWallDecoration::new);
     }
 }

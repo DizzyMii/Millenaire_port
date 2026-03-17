@@ -119,6 +119,10 @@ public class MillFirePitBlockEntity extends BaseContainerBlockEntity {
         return this.burnTime > 0;
     }
 
+    public ItemStack getCookingItem() {
+        return this.items.get(SLOT_INPUT);
+    }
+
     public static void serverTick(Level level, BlockPos pos, BlockState state, MillFirePitBlockEntity be) {
         boolean wasLit = be.isLit();
         boolean changed = false;
