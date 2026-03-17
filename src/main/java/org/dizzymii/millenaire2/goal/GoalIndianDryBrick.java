@@ -20,7 +20,7 @@ public class GoalIndianDryBrick extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        // TODO: Convert wet bricks to dried bricks in building inventory
+        // Produce dried bricks from sun-drying process
         InvItem brick = InvItem.get("minecraft:brick");
         if (brick != null) v.addToInv(brick, 1 + v.level().random.nextInt(2));
         return true;

@@ -19,7 +19,17 @@ public class GoalChildBecomeAdult extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        // TODO: Transition child to adult - assign adult VillagerType, resize model
+        // Transition child to adult using the altkey from VillagerType
+        if (v.vtype != null && v.vtype.altkey != null) {
+            org.dizzymii.millenaire2.culture.Culture culture = v.getCulture();
+            if (culture != null) {
+                org.dizzymii.millenaire2.culture.VillagerType adultType = culture.getVillagerType(v.vtype.altkey);
+                if (adultType != null) {
+                    v.vtype = adultType;
+                    v.refreshDimensions(); // Update bounding box for adult size
+                }
+            }
+        }
         return true;
     }
 

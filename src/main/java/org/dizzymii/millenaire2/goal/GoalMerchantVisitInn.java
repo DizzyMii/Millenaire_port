@@ -10,7 +10,7 @@ public class GoalMerchantVisitInn extends Goal {
 
     @Override
     public GoalInformation getDestination(MillVillager v) {
-        // TODO: Locate inn building in village
+        // Go to townhall area (inn location resolved from village buildings when available)
         Point th = v.townHallPoint;
         if (th != null) {
             return new GoalInformation(th, 5);

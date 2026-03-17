@@ -19,7 +19,16 @@ public class GoalGetGoodsForHousehold extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        // TODO: Query household needs from BuildingResManager and transfer from townhall
+        org.dizzymii.millenaire2.village.Building th = v.getTownHallBuilding();
+        if (th != null) {
+            for (java.util.Map.Entry<org.dizzymii.millenaire2.item.InvItem, Integer> entry : th.resManager.resources.entrySet()) {
+                int take = Math.min(entry.getValue(), 4);
+                if (take > 0 && th.resManager.takeGoods(entry.getKey(), take)) {
+                    v.addToInv(entry.getKey(), take);
+                    break;
+                }
+            }
+        }
         return true;
     }
 

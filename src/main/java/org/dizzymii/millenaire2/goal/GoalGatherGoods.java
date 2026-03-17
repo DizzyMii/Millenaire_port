@@ -23,8 +23,18 @@ public class GoalGatherGoods extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        // TODO: Integrate with village resource system to assign gather targets
-        return true; // Complete immediately for now
+        // Gather resources from townhall's resource pool for the village economy
+        org.dizzymii.millenaire2.village.Building th = v.getTownHallBuilding();
+        if (th != null) {
+            for (java.util.Map.Entry<org.dizzymii.millenaire2.item.InvItem, Integer> entry : th.resManager.resources.entrySet()) {
+                int take = Math.min(entry.getValue(), 8);
+                if (take > 0 && th.resManager.takeGoods(entry.getKey(), take)) {
+                    v.addToInv(entry.getKey(), take);
+                    break;
+                }
+            }
+        }
+        return true;
     }
 
     @Override
