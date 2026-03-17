@@ -80,11 +80,25 @@ public final class ServerPacketHandler {
     private static void handleVillageListRequest(IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
 
-        // TODO: Gather actual village data from MillWorldData and build the list.
-        //       For now, send an empty list so the packet flow is verified.
+        org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
         java.util.List<ServerPacketSender.VillageListEntry> entries = new java.util.ArrayList<>();
+
+        if (mw != null) {
+            for (java.util.Map.Entry<org.dizzymii.millenaire2.util.Point, org.dizzymii.millenaire2.village.Building> e
+                    : mw.getBuildingsMap().entrySet()) {
+                org.dizzymii.millenaire2.village.Building b = e.getValue();
+                org.dizzymii.millenaire2.util.Point bPos = e.getKey();
+                String name = b.getName() != null ? b.getName() : "Unknown";
+                String culture = b.cultureKey != null ? b.cultureKey : "";
+                int dist = (int) Math.sqrt(
+                        Math.pow(player.getX() - bPos.x, 2) + Math.pow(player.getZ() - bPos.z, 2));
+                entries.add(new ServerPacketSender.VillageListEntry(
+                        bPos, culture, name, dist, !b.isTownhall));
+            }
+        }
+
         ServerPacketSender.sendVillageList(player, entries);
-        MillLog.minor("ServerPacketHandler", "Sent village list to " + player.getName().getString());
+        MillLog.minor("ServerPacketHandler", "Sent village list (" + entries.size() + " entries) to " + player.getName().getString());
     }
 
     // ========== Release number declaration ==========
