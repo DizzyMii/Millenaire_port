@@ -19,7 +19,6 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
@@ -109,13 +108,6 @@ public class Millenaire2 {
         net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
         worldData = MillWorldData.get(overworld);
         LOGGER.info("{} world data loaded: {} buildings", MODNAME, worldData.allBuildings().size());
-    }
-
-    @SubscribeEvent
-    public void onServerTick(ServerTickEvent.Post event) {
-        if (worldData != null) {
-            worldData.tick();
-        }
     }
 
     @Nullable
