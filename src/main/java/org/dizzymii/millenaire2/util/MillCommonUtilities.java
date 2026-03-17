@@ -54,6 +54,17 @@ public class MillCommonUtilities {
     }
 
     /**
+     * Returns the custom content directory for user-provided data overrides.
+     */
+    public static File getMillenaireCustomContentDir() {
+        File dir = new File(getMillenaireCustomDir(), "millenaire");
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        return dir;
+    }
+
+    /**
      * Returns the save directory for Millénaire world data within a specific world.
      */
     public static File getMillenaireSaveDir(MinecraftServer server) {
