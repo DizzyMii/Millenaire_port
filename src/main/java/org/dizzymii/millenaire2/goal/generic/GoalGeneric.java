@@ -13,7 +13,7 @@ public class GoalGeneric extends Goal {
     public static void loadGenericGoals() {
         // Generic goals are loaded from culture config files during Culture.load()
         // This method is called at startup as an entry point for any additional data-driven goals
-        org.dizzymii.millenaire2.util.MillLog.LOGGER.debug("Generic goal loader initialised");
+        org.dizzymii.millenaire2.util.MillLog.minor(GoalGeneric.class, "Generic goal loader initialised");
     }
 
     @Override public GoalInformation getDestination(MillVillager v) { return null; }
