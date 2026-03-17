@@ -69,6 +69,14 @@ public class Point {
 
     // --- Serialization ---
 
+    public void write(CompoundTag tag, String prefix) {
+        writeToNBT(tag, prefix);
+    }
+
+    public static Point read(CompoundTag tag, String prefix) {
+        return readFromNBT(tag, prefix);
+    }
+
     public void writeToNBT(CompoundTag tag, String prefix) {
         tag.putInt(prefix + "X", x);
         tag.putInt(prefix + "Y", y);
