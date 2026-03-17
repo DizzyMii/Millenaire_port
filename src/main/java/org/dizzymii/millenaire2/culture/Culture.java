@@ -89,27 +89,70 @@ public class Culture {
         return cultures.get(name);
     }
 
+    /**
+     * Clear all loaded cultures (for reload support).
+     */
+    public static void clearCultures() {
+        cultures.clear();
+        LIST_CULTURES.clear();
+    }
+
     public static boolean loadCultures() {
+        clearCultures();
+
         File contentDir = MillCommonUtilities.getMillenaireContentDir();
         File culturesDir = new File(contentDir, "cultures");
+        File customContentDir = MillCommonUtilities.getMillenaireCustomContentDir();
+        File customCulturesDir = new File(customContentDir, "cultures");
+
         if (!culturesDir.exists()) {
             MillLog.error(null, "Cultures directory not found: " + culturesDir.getAbsolutePath());
             return false;
         }
 
-        File[] cultureDirs = culturesDir.listFiles(File::isDirectory);
-        if (cultureDirs == null) return false;
+        // Collect all culture directory names from both default and custom
+        java.util.Set<String> cultureNames = new java.util.TreeSet<>();
+        File[] defaultDirs = culturesDir.listFiles(File::isDirectory);
+        if (defaultDirs != null) {
+            for (File d : defaultDirs) cultureNames.add(d.getName());
+        }
+        if (customCulturesDir.exists()) {
+            File[] customDirs = customCulturesDir.listFiles(File::isDirectory);
+            if (customDirs != null) {
+                for (File d : customDirs) cultureNames.add(d.getName());
+            }
+        }
 
-        for (File cultureDir : cultureDirs) {
-            MillLog.major(null, "Loading culture: " + cultureDir.getName());
-            Culture culture = new Culture(cultureDir.getName());
-            culture.load(new VirtualDir(cultureDir));
+        for (String cultureName : cultureNames) {
+            MillLog.major(null, "Loading culture: " + cultureName);
+
+            // Build a VirtualDir merging default + custom (custom overrides default)
+            List<File> sources = new ArrayList<>();
+            File defaultDir = new File(culturesDir, cultureName);
+            if (defaultDir.exists()) sources.add(defaultDir);
+            File customDir = new File(customCulturesDir, cultureName);
+            if (customDir.exists()) sources.add(customDir);
+
+            VirtualDir vdir;
+            if (sources.size() == 1) {
+                vdir = new VirtualDir(sources.get(0));
+            } else {
+                try {
+                    vdir = new VirtualDir(sources);
+                } catch (Exception e) {
+                    MillLog.error(null, "Error creating VirtualDir for culture: " + cultureName, e);
+                    continue;
+                }
+            }
+
+            Culture culture = new Culture(cultureName);
+            culture.load(vdir);
             cultures.put(culture.key, culture);
             LIST_CULTURES.add(culture);
         }
 
         MillLog.major(null, "Finished loading " + LIST_CULTURES.size() + " cultures.");
-        return true;
+        return !LIST_CULTURES.isEmpty();
     }
 
     // --- Instance methods ---

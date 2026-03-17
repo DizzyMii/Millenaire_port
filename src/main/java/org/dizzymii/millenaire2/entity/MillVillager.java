@@ -146,6 +146,42 @@ public abstract class MillVillager extends PathfinderMob {
     public boolean isMale() { return getGender() == MALE; }
     public boolean isFemale() { return getGender() == FEMALE; }
 
+    // --- Culture/VillagerType resolution ---
+    @Nullable private org.dizzymii.millenaire2.culture.Culture cachedCulture = null;
+    @Nullable public String vtypeKey = null;
+
+    /**
+     * Resolve and cache the Culture object from the synced culture key.
+     */
+    @Nullable
+    public org.dizzymii.millenaire2.culture.Culture getCulture() {
+        String key = getCultureKey();
+        if (key.isEmpty()) return null;
+        if (cachedCulture != null && cachedCulture.key.equals(key)) return cachedCulture;
+        cachedCulture = org.dizzymii.millenaire2.culture.Culture.getCultureByName(key);
+        return cachedCulture;
+    }
+
+    /**
+     * Resolve the VillagerType from the culture using the vtypeKey.
+     * Also caches the result into the vtype field.
+     */
+    public void resolveVillagerType() {
+        if (vtypeKey == null || vtypeKey.isEmpty()) return;
+        org.dizzymii.millenaire2.culture.Culture culture = getCulture();
+        if (culture != null) {
+            vtype = culture.getVillagerType(vtypeKey);
+        }
+    }
+
+    /**
+     * Set the villager type key and immediately resolve the VillagerType.
+     */
+    public void setVillagerTypeKey(String key) {
+        this.vtypeKey = key;
+        resolveVillagerType();
+    }
+
     // --- Goal accessors ---
     @Nullable public GoalInformation getGoalInformation() { return goalInformation; }
     public void setGoalInformation(@Nullable GoalInformation info) { this.goalInformation = info; }
@@ -417,7 +453,9 @@ public abstract class MillVillager extends PathfinderMob {
             tag.putString("hiredBy", hiredBy);
             tag.putLong("hiredUntil", hiredUntil);
         }
-        if (vtype != null) {
+        if (vtypeKey != null) {
+            tag.putString("villagerType", vtypeKey);
+        } else if (vtype != null) {
             tag.putString("villagerType", vtype.key);
         }
         // Save inventory
@@ -467,7 +505,9 @@ public abstract class MillVillager extends PathfinderMob {
                 }
             }
         }
-        // TODO: Resolve vtype from tag.getString("villagerType") once Culture is loaded
+        if (tag.contains("villagerType")) {
+            setVillagerTypeKey(tag.getString("villagerType"));
+        }
     }
 
     // --- Inventory helpers ---

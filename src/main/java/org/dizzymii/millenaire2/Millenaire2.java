@@ -98,6 +98,7 @@ public class Millenaire2 {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("{} server starting", MODNAME);
+        org.dizzymii.millenaire2.culture.Culture.loadCultures();
     }
 
     @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
