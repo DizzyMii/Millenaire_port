@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_raw_seafood": {
+      "conditions": {
+        "items": [
+          {
+            "items": "millenaire2:seafood_raw"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "millenaire2:seafood_cooked"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_raw_seafood"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "millenaire2:seafood_cooked"
+    ]
+  }
+}

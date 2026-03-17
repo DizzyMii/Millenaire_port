@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "millenaire2:block/path_gravel",
+    "side": "millenaire2:block/path_gravel",
+    "top": "millenaire2:block/path_gravel"
+  }
+}

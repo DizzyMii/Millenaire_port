@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "millenaire2:denierargent"
+    }
+  ],
+  "result": {
+    "count": 9,
+    "id": "millenaire2:denier"
+  }
+}

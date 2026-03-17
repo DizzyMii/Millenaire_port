@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "millenaire2:block/slab_path_ochre_tiles"
+    },
+    "type=double": {
+      "model": "millenaire2:block/path_ochre_tiles"
+    },
+    "type=top": {
+      "model": "millenaire2:block/slab_path_ochre_tiles_top"
+    }
+  }
+}

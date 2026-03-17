@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:smelting",
+  "category": "food",
+  "cookingtime": 200,
+  "experience": 0.35,
+  "ingredient": {
+    "item": "millenaire2:seafood_raw"
+  },
+  "result": {
+    "count": 1,
+    "id": "millenaire2:seafood_cooked"
+  }
+}

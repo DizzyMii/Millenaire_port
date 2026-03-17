@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/template_wall_post",
+  "textures": {
+    "wall": "millenaire2:block/sandstone_red_carved"
+  }
+}

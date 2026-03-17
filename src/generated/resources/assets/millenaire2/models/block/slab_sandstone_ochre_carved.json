@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "millenaire2:block/sandstone_ochre_carved",
+    "side": "millenaire2:block/sandstone_ochre_carved",
+    "top": "millenaire2:block/sandstone_ochre_carved"
+  }
+}

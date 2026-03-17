@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "millenaire2:block/slab_path_sandstone"
+    },
+    "type=double": {
+      "model": "millenaire2:block/path_sandstone"
+    },
+    "type=top": {
+      "model": "millenaire2:block/slab_path_sandstone_top"
+    }
+  }
+}
