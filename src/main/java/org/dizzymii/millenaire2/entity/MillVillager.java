@@ -391,7 +391,12 @@ public abstract class MillVillager extends PathfinderMob {
                 " — " + goalDisplay
         ));
 
-        // TODO: Open trade GUI, hire GUI, or dialogue based on villager type and player reputation
+        // Request server to open the trade GUI for this villager
+        if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            org.dizzymii.millenaire2.network.ServerPacketSender.sendVillagerSync(sp, this);
+            org.dizzymii.millenaire2.network.ServerPacketSender.sendOpenGui(
+                    sp, org.dizzymii.millenaire2.network.MillPacketIds.GUI_TRADE, this.getId(), this.townHallPoint);
+        }
         return InteractionResult.SUCCESS;
     }
 
@@ -424,7 +429,14 @@ public abstract class MillVillager extends PathfinderMob {
         if (!this.level().isClientSide) {
             MillLog.major(this, "Villager died: " + getFirstName() + " " + getFamilyName()
                     + " at " + new Point(this.blockPosition()));
-            // TODO: Notify village, update VillagerRecord, handle respawn logic
+            // Notify village and update villager record
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw != null) {
+                org.dizzymii.millenaire2.village.VillagerRecord vr = mw.getVillagerRecord(this.villagerId);
+                if (vr != null) {
+                    vr.killed = true;
+                }
+            }
         }
     }
 

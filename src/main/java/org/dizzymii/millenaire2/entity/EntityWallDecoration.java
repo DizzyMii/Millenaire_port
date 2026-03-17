@@ -64,6 +64,12 @@ public class EntityWallDecoration extends Entity {
 
     @Override
     public void tick() {
-        // TODO: implement survival checks, collision, etc.
+        // Survival check: discard if block behind is air (decoration fell off wall)
+        if (!this.level().isClientSide && this.tickCount % 100 == 0) {
+            net.minecraft.core.BlockPos behind = this.blockPosition().relative(getFacingDirection().getOpposite());
+            if (this.level().getBlockState(behind).isAir()) {
+                this.discard();
+            }
+        }
     }
 }
