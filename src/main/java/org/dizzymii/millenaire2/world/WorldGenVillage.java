@@ -5,13 +5,30 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import org.dizzymii.millenaire2.buildingplan.BuildingBlock;
+import org.dizzymii.millenaire2.buildingplan.PngPlanLoader;
+import org.dizzymii.millenaire2.culture.BuildingPlan;
+import org.dizzymii.millenaire2.culture.BuildingPlanSet;
 import org.dizzymii.millenaire2.culture.Culture;
+import org.dizzymii.millenaire2.culture.VillageType;
+import org.dizzymii.millenaire2.culture.VillagerType;
+import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.util.MillCommonUtilities;
 import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
+import org.dizzymii.millenaire2.util.VirtualDir;
 import org.dizzymii.millenaire2.village.Building;
+import org.dizzymii.millenaire2.village.BuildingLocation;
+import org.dizzymii.millenaire2.village.ConstructionIP;
+import org.dizzymii.millenaire2.village.VillagerRecord;
 
 import javax.annotation.Nullable;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Handles village generation in the world — placing town halls, hamlets, lone buildings.
@@ -74,24 +91,204 @@ public class WorldGenVillage {
 
     /**
      * Places a new village townhall building at the given position.
+     * Selects a VillageType, resolves the centre BuildingPlanSet, loads the PNG plan,
+     * creates a ConstructionIP, and populates initial VillagerRecords.
      */
     public static boolean generateNewVillage(ServerLevel level, BlockPos pos, Culture culture,
                                               MillWorldData worldData, RandomSource random) {
+        // Pick a village type from this culture
+        VillageType villageType = pickVillageType(culture, random);
+        if (villageType == null) {
+            MillLog.warn("WorldGenVillage", "No village types for culture: " + culture.key);
+            return false;
+        }
+
+        // Resolve centre building plan set
+        BuildingPlanSet planSet = resolveCentrePlanSet(culture, villageType);
+        if (planSet == null) {
+            MillLog.warn("WorldGenVillage", "No centre building plan for village type: " + villageType.key);
+            return false;
+        }
+
+        BuildingPlan initialPlan = planSet.getInitialPlan();
+        if (initialPlan == null || !initialPlan.hasImage()) {
+            MillLog.warn("WorldGenVillage", "No initial plan image for: " + planSet.key);
+            return false;
+        }
+
         Point villagePos = new Point(pos.getX(), pos.getY(), pos.getZ());
+
+        // Create a BuildingLocation
+        BuildingLocation location = new BuildingLocation();
+        location.planKey = planSet.key;
+        location.cultureKey = culture.key;
+        location.pos = villagePos;
+        location.orientation = random.nextInt(4);
+        location.width = initialPlan.width;
+        location.length = initialPlan.length;
+        location.level = 0;
+
+        // Load blocks from the PNG plan
+        List<BuildingBlock> blocks = loadPlanBlocks(culture, planSet, initialPlan);
 
         // Create a new Building as the townhall
         Building townhall = new Building();
         townhall.isTownhall = true;
         townhall.isActive = true;
         townhall.cultureKey = culture.key;
-        townhall.setName(culture.key + "_village_" + random.nextInt(10000));
+        townhall.setName(generateVillageName(culture, random));
         townhall.setPos(villagePos);
+        townhall.setTownHallPos(villagePos);
+        townhall.location = location;
+        townhall.mw = worldData;
+
+        // Set up construction if we have blocks
+        if (!blocks.isEmpty()) {
+            ConstructionIP cip = new ConstructionIP(location);
+            cip.orientation = location.orientation;
+            cip.setBlocks(blocks);
+            townhall.currentConstruction = cip;
+            MillLog.minor("WorldGenVillage", "Construction queued: " + blocks.size() + " blocks for " + planSet.key);
+        }
+
+        // Create initial VillagerRecords from the plan's villager list
+        createInitialVillagers(townhall, culture, initialPlan, villagePos, random);
 
         worldData.addBuilding(townhall, villagePos);
 
-        MillLog.minor("WorldGenVillage", "Generated new " + culture.key + " village at " +
-                pos.getX() + ", " + pos.getY() + ", " + pos.getZ());
+        MillLog.minor("WorldGenVillage", "Generated new " + culture.key + " " + villageType.key
+                + " village at " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ()
+                + " (" + townhall.getVillagerRecords().size() + " villagers)");
         return true;
+    }
+
+    /**
+     * Pick a VillageType from the culture's list, weighted by generation weight.
+     */
+    @Nullable
+    private static VillageType pickVillageType(Culture culture, RandomSource random) {
+        List<VillageType> types = culture.listVillageTypes;
+        if (types.isEmpty()) return null;
+
+        int totalWeight = 0;
+        for (VillageType vt : types) {
+            totalWeight += Math.max(vt.weight, 1);
+        }
+        int roll = random.nextInt(Math.max(totalWeight, 1));
+        int cumulative = 0;
+        for (VillageType vt : types) {
+            cumulative += Math.max(vt.weight, 1);
+            if (roll < cumulative) return vt;
+        }
+        return types.get(0);
+    }
+
+    /**
+     * Resolve the centre BuildingPlanSet for a VillageType.
+     */
+    @Nullable
+    private static BuildingPlanSet resolveCentrePlanSet(Culture culture, VillageType villageType) {
+        if (villageType.centreBuilding != null) {
+            BuildingPlanSet set = culture.planSets.get(villageType.centreBuilding);
+            if (set != null) return set;
+        }
+        // Fallback: try to find any plan set tagged as "townhall"
+        for (BuildingPlanSet bps : culture.listPlanSets) {
+            if (bps.tags.contains("townhall") || bps.tags.contains("centre")) {
+                return bps;
+            }
+        }
+        // Last resort: first plan set
+        return culture.listPlanSets.isEmpty() ? null : culture.listPlanSets.get(0);
+    }
+
+    /**
+     * Load BuildingBlock list from a plan's PNG file via PngPlanLoader.
+     */
+    private static List<BuildingBlock> loadPlanBlocks(Culture culture, BuildingPlanSet planSet,
+                                                       BuildingPlan plan) {
+        // Locate the PNG file
+        File contentDir = MillCommonUtilities.getMillenaireContentDir();
+        File cultureDir = new File(contentDir, "cultures/" + culture.key);
+        VirtualDir buildingsDir = new VirtualDir(new File(cultureDir, "buildings"));
+
+        String fileName = plan.pngFileName;
+        if (fileName == null) {
+            if ("initial".equals(plan.upgradeKey)) {
+                fileName = planSet.key + ".png";
+            } else {
+                fileName = planSet.key + "_" + plan.upgradeKey + ".png";
+            }
+        }
+
+        File pngFile = buildingsDir.getChildFileRecursive(fileName);
+        if (pngFile == null) pngFile = buildingsDir.getChildFile(fileName);
+        if (pngFile == null || !pngFile.exists()) {
+            MillLog.warn("WorldGenVillage", "PNG plan file not found: " + fileName);
+            return new ArrayList<>();
+        }
+
+        Map<String, List<int[]>> specialPositions = new HashMap<>();
+        return PngPlanLoader.loadPlan(pngFile, plan.width, plan.altitudeOffset, specialPositions);
+    }
+
+    /**
+     * Create initial VillagerRecords for a new village from the plan's villager definitions.
+     */
+    private static void createInitialVillagers(Building townhall, Culture culture,
+                                                BuildingPlan plan, Point villagePos,
+                                                RandomSource random) {
+        List<String> villagerTypes = plan.villagers;
+        if (villagerTypes.isEmpty()) {
+            // Fallback: create a default leader villager
+            VillagerRecord leader = VillagerRecord.create(
+                    culture.key, "leader",
+                    getRandomName(culture, "male_first", random),
+                    getRandomName(culture, "family", random),
+                    MillVillager.MALE);
+            leader.setHousePos(villagePos);
+            leader.setTownHallPos(villagePos);
+            townhall.addVillagerRecord(leader);
+            return;
+        }
+
+        for (String vtKey : villagerTypes) {
+            VillagerType vtype = culture.getVillagerType(vtKey);
+            int gender = MillVillager.MALE;
+            if (vtype != null && "female".equalsIgnoreCase(vtype.gender)) gender = MillVillager.FEMALE;
+
+            String nameListKey = gender == MillVillager.FEMALE ? "female_first" : "male_first";
+            VillagerRecord vr = VillagerRecord.create(
+                    culture.key, vtKey,
+                    getRandomName(culture, nameListKey, random),
+                    getRandomName(culture, "family", random),
+                    gender);
+            vr.setHousePos(villagePos);
+            vr.setTownHallPos(villagePos);
+            townhall.addVillagerRecord(vr);
+        }
+    }
+
+    /**
+     * Get a random name from a culture's name list.
+     */
+    private static String getRandomName(Culture culture, String listKey, RandomSource random) {
+        List<String> names = culture.nameLists.get(listKey);
+        if (names != null && !names.isEmpty()) {
+            return names.get(random.nextInt(names.size()));
+        }
+        return "Villager";
+    }
+
+    /**
+     * Generate a village name from the culture's name lists.
+     */
+    private static String generateVillageName(Culture culture, RandomSource random) {
+        List<String> villageNames = culture.nameLists.get("village");
+        if (villageNames != null && !villageNames.isEmpty()) {
+            return villageNames.get(random.nextInt(villageNames.size()));
+        }
+        return culture.key + "_village_" + random.nextInt(10000);
     }
 
     /**

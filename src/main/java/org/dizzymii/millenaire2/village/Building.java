@@ -156,6 +156,18 @@ public class Building {
         isAreaLoaded = world.hasChunkAt(pos.toBlockPos());
         if (!isAreaLoaded) return;
 
+        // Progress construction (place up to 5 blocks per slow tick)
+        if (currentConstruction != null && !currentConstruction.isComplete()
+                && world instanceof ServerLevel serverLevel) {
+            int placed = currentConstruction.placeBlocks(serverLevel, 5);
+            if (placed > 0 && mw != null) mw.setDirty();
+            if (currentConstruction.isComplete()) {
+                MillLog.minor("Building", "Construction complete for: " + name);
+                currentConstruction = null;
+                if (mw != null) mw.setDirty();
+            }
+        }
+
         // Spawn missing villagers if this is an active townhall or building
         if (isActive && isTownhall && tickCounter % 200 == 0) {
             checkAndSpawnVillagers();

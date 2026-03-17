@@ -53,9 +53,10 @@ public class MillWorldData extends SavedData {
                 DATA_NAME
         );
         data.world = level;
-        // Set world reference on all buildings
+        // Set world and mw references on all buildings
         for (Building b : data.buildings.values()) {
             b.world = level;
+            b.mw = data;
         }
         return data;
     }
@@ -67,6 +68,7 @@ public class MillWorldData extends SavedData {
     public void addBuilding(Building b, Point p) {
         buildings.put(p, b);
         b.world = this.world;
+        b.mw = this;
         setDirty();
     }
 
