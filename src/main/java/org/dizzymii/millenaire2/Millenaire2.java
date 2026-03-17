@@ -21,6 +21,7 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.dizzymii.millenaire2.block.MillBlocks;
+import org.dizzymii.millenaire2.data.ContentDeployer;
 import org.dizzymii.millenaire2.item.MillItems;
 import org.slf4j.Logger;
 
@@ -70,6 +71,7 @@ public class Millenaire2 {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         LOGGER.info("{} {} common setup", MODNAME, VERSION);
+        event.enqueueWork(ContentDeployer::deployContent);
     }
 
     @SubscribeEvent
