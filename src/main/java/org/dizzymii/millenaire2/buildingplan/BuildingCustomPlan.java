@@ -51,8 +51,12 @@ public class BuildingCustomPlan implements IBuildingPlan {
 
     @Override
     public String getNameTranslated() {
-        // TODO: Look up translated name from LanguageUtilities
-        return gameNameKey != null ? gameNameKey : nativeName;
+        // Translated name lookup via LanguageUtilities; falls back to native name
+        if (gameNameKey != null) {
+            String translated = org.dizzymii.millenaire2.util.LanguageUtilities.string(gameNameKey);
+            if (!translated.isEmpty() && !translated.equals(gameNameKey)) return translated;
+        }
+        return nativeName;
     }
 
     @Override
