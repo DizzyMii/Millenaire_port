@@ -103,6 +103,7 @@ public class Millenaire2 {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("{} server starting", MODNAME);
+        org.dizzymii.millenaire2.buildingplan.PointType.registerDefaults();
         org.dizzymii.millenaire2.culture.Culture.loadCultures();
         // Initialize world data from the overworld
         net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
