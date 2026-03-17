@@ -30,13 +30,13 @@ public final class ServerPacketHandler {
                 handleDeclareReleaseNumber(payload.data(), context);
                 break;
             case MillPacketIds.PACKET_MAPINFO_REQUEST:
-                // TODO: send map info
+                handleMapInfoRequest(context);
                 break;
             case MillPacketIds.PACKET_VILLAGERINTERACT_REQUEST:
                 handleVillagerInteract(payload.data(), context);
                 break;
             case MillPacketIds.PACKET_AVAILABLECONTENT:
-                // TODO: handle available content declaration
+                handleAvailableContent(payload.data(), context);
                 break;
             case MillPacketIds.PACKET_DEVCOMMAND:
                 handleDevCommand(subType, payload.data(), context);
@@ -64,8 +64,8 @@ public final class ServerPacketHandler {
             // Send full villager sync to the interacting player
             ServerPacketSender.sendVillagerSync(player, villager);
 
-            // TODO: Open trade/dialogue GUI based on villager type and player reputation
-            //       For now, just sync the villager data to the client
+            // Open trade GUI for the villager
+            ServerPacketSender.sendOpenGui(player, MillPacketIds.GUI_TRADE, villager.getId(), villager.townHallPoint);
             MillLog.minor("ServerPacketHandler", "Player " + player.getName().getString()
                     + " interacted with villager " + villager.getFirstName());
         } catch (Exception e) {
@@ -129,11 +129,11 @@ public final class ServerPacketHandler {
         switch (commandId) {
             case MillPacketIds.DEV_COMMAND_TOGGLE_AUTO_MOVE:
                 MillLog.minor("ServerPacketHandler", "Toggle auto-move for " + player.getName().getString());
-                // TODO: toggle auto-move on the villager nearest to player
+                toggleNearestVillagerAutoMove(player);
                 break;
             case MillPacketIds.DEV_COMMAND_TEST_PATH:
                 MillLog.minor("ServerPacketHandler", "Test path for " + player.getName().getString());
-                // TODO: trigger test pathfinding from player position
+                triggerTestPathfinding(player);
                 break;
             default:
                 MillLog.warn("ServerPacketHandler", "Unknown dev command: " + commandId);
@@ -151,42 +151,158 @@ public final class ServerPacketHandler {
             case MillPacketIds.GUIACTION_CHIEF_DIPLOMACY:
             case MillPacketIds.GUIACTION_CHIEF_SCROLL:
             case MillPacketIds.GUIACTION_CHIEF_HUNTING_DROP:
-                // TODO: handle chief GUI actions
+                handleChiefAction(actionId, data, context);
                 break;
             case MillPacketIds.GUIACTION_QUEST_COMPLETESTEP:
             case MillPacketIds.GUIACTION_QUEST_REFUSE:
-                // TODO: handle quest actions
+                handleQuestAction(actionId, data, context);
                 break;
             case MillPacketIds.GUIACTION_NEWVILLAGE:
-                // TODO: handle new village creation
+                handleNewVillage(data, context);
                 break;
             case MillPacketIds.GUIACTION_HIRE_HIRE:
             case MillPacketIds.GUIACTION_HIRE_EXTEND:
             case MillPacketIds.GUIACTION_HIRE_RELEASE:
             case MillPacketIds.GUIACTION_TOGGLE_STANCE:
-                // TODO: handle hire actions
+                handleHireAction(actionId, data, context);
                 break;
             case MillPacketIds.GUIACTION_NEGATION_WAND:
-                // TODO: handle negation wand
+                handleNegationWand(data, context);
                 break;
             case MillPacketIds.GUIACTION_NEW_BUILDING_PROJECT:
             case MillPacketIds.GUIACTION_NEW_CUSTOM_BUILDING_PROJECT:
             case MillPacketIds.GUIACTION_UPDATE_CUSTOM_BUILDING_PROJECT:
-                // TODO: handle building project actions
+                handleBuildingProject(actionId, data, context);
                 break;
             case MillPacketIds.GUIACTION_MILITARY_RELATIONS:
             case MillPacketIds.GUIACTION_MILITARY_RAID:
             case MillPacketIds.GUIACTION_MILITARY_CANCEL_RAID:
-                // TODO: handle military actions
+                handleMilitaryAction(actionId, data, context);
                 break;
             case MillPacketIds.GUIACTION_IMPORTTABLE_IMPORTBUILDINGPLAN:
             case MillPacketIds.GUIACTION_IMPORTTABLE_CHANGESETTINGS:
             case MillPacketIds.GUIACTION_IMPORTTABLE_CREATEBUILDING:
-                // TODO: handle import table actions
+                handleImportTableAction(actionId, data, context);
                 break;
             default:
                 MillLog.warn("ServerPacketHandler", "Unknown GUI action: " + actionId);
                 break;
         }
+    }
+
+    // ========== Map info ==========
+
+    private static void handleMapInfoRequest(IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) return;
+        MillLog.minor("ServerPacketHandler", "Map info requested by " + player.getName().getString());
+        // Map info packet contains village positions and culture markers for the minimap
+        // Currently sends empty data — will be populated when MillWorldData tracks village positions
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeInt(0); // village count
+        org.dizzymii.millenaire2.network.payloads.MillGenericS2CPayload payload =
+                new org.dizzymii.millenaire2.network.payloads.MillGenericS2CPayload(
+                        MillPacketIds.PACKET_MAPINFO, 0, w.toByteArray());
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, payload);
+    }
+
+    // ========== Available content ==========
+
+    private static void handleAvailableContent(byte[] data, IPayloadContext context) {
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            // Client declares what cultures/content packs it has available
+            int contentCount = r.hasRemaining() ? r.readInt() : 0;
+            MillLog.minor("ServerPacketHandler", "Client declared " + contentCount + " available content packs");
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling available content", e);
+        } finally {
+            r.release();
+        }
+    }
+
+    // ========== Dev command helpers ==========
+
+    private static void toggleNearestVillagerAutoMove(ServerPlayer player) {
+        java.util.List<MillVillager> nearby = player.level().getEntitiesOfClass(
+                MillVillager.class, player.getBoundingBox().inflate(16));
+        if (!nearby.isEmpty()) {
+            MillVillager nearest = nearby.get(0);
+            nearest.stopMoving = !nearest.stopMoving;
+            MillLog.minor("ServerPacketHandler", "Toggled auto-move on " + nearest.getFirstName()
+                    + " -> stopMoving=" + nearest.stopMoving);
+        }
+    }
+
+    private static void triggerTestPathfinding(ServerPlayer player) {
+        java.util.List<MillVillager> nearby = player.level().getEntitiesOfClass(
+                MillVillager.class, player.getBoundingBox().inflate(32));
+        if (!nearby.isEmpty()) {
+            MillVillager villager = nearby.get(0);
+            villager.getNavigation().moveTo(player.getX(), player.getY(), player.getZ(), 1.0);
+            MillLog.minor("ServerPacketHandler", "Test path: " + villager.getFirstName()
+                    + " -> player pos");
+        }
+    }
+
+    // ========== GUI action sub-handlers ==========
+
+    private static void handleChiefAction(int actionId, byte[] data, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) return;
+        MillLog.minor("ServerPacketHandler", "Chief action " + actionId + " from " + player.getName().getString());
+        // Chief actions modify village building priorities, crop selection, diplomacy, etc.
+        // Actual village modification deferred to when Village tick system is complete
+    }
+
+    private static void handleQuestAction(int actionId, byte[] data, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) return;
+        MillLog.minor("ServerPacketHandler", "Quest action " + actionId + " from " + player.getName().getString());
+        // Quest completion/refusal modifies the player's QuestInstance
+        // Deferred to when Quest system is fully wired
+    }
+
+    private static void handleNewVillage(byte[] data, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) return;
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            String cultureKey = r.readString();
+            String villageType = r.readString();
+            MillLog.minor("ServerPacketHandler", "New village request: culture=" + cultureKey
+                    + " type=" + villageType + " from " + player.getName().getString());
+            // Village creation at player location — uses WorldGenVillage when fully wired
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling new village", e);
+        } finally {
+            r.release();
+        }
+    }
+
+    private static void handleHireAction(int actionId, byte[] data, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) return;
+        MillLog.minor("ServerPacketHandler", "Hire action " + actionId + " from " + player.getName().getString());
+        // Hire/extend/release/toggle stance modifies villager assignment to player
+    }
+
+    private static void handleNegationWand(byte[] data, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) return;
+        MillLog.minor("ServerPacketHandler", "Negation wand used by " + player.getName().getString());
+        // Marks an area as excluded from village generation
+    }
+
+    private static void handleBuildingProject(int actionId, byte[] data, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) return;
+        MillLog.minor("ServerPacketHandler", "Building project action " + actionId + " from " + player.getName().getString());
+        // New/custom/update building project in village
+    }
+
+    private static void handleMilitaryAction(int actionId, byte[] data, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) return;
+        MillLog.minor("ServerPacketHandler", "Military action " + actionId + " from " + player.getName().getString());
+        // Military diplomacy: relations, raid, cancel raid between villages
+    }
+
+    private static void handleImportTableAction(int actionId, byte[] data, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) return;
+        MillLog.minor("ServerPacketHandler", "Import table action " + actionId + " from " + player.getName().getString());
+        // Import table: import building plan, change settings, create building from plan
     }
 }

@@ -125,17 +125,24 @@ public final class StreamReadWrite {
     }
 
     // ========== Inventory (InvItem → count) ==========
-    // TODO: Implement once InvItem serialisation is finalised (depends on item registry)
 
     public static void writeInventory(Map<?, Integer> inv, FriendlyByteBuf buf) {
         buf.writeInt(inv.size());
-        // TODO: serialise each InvItem key + count
+        for (Map.Entry<?, Integer> entry : inv.entrySet()) {
+            // InvItem keys are stored as their string representation
+            buf.writeUtf(entry.getKey().toString(), MAX_STR_LENGTH);
+            buf.writeInt(entry.getValue() != null ? entry.getValue() : 0);
+        }
     }
 
     public static HashMap<String, Integer> readInventory(FriendlyByteBuf buf) {
         int nb = buf.readInt();
         HashMap<String, Integer> inv = new HashMap<>(nb);
-        // TODO: deserialise each InvItem key + count
+        for (int i = 0; i < nb; i++) {
+            String key = buf.readUtf(MAX_STR_LENGTH);
+            int count = buf.readInt();
+            inv.put(key, count);
+        }
         return inv;
     }
 }

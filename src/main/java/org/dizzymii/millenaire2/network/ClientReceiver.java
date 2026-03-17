@@ -5,5 +5,11 @@ package org.dizzymii.millenaire2.network;
  * Ported from org.millenaire.network.ClientReceiver (Forge 1.12.2).
  */
 public class ClientReceiver {
-    // TODO: Implement client packet handlers for village sync, villager updates, GUI data
+    /**
+     * Delegates to ClientPacketHandler which handles all S2C packet dispatching.
+     * This class provides a legacy entry point matching the original mod's structure.
+     */
+    public static void onPacketReceived(org.dizzymii.millenaire2.network.payloads.MillGenericS2CPayload payload) {
+        ClientPacketHandler.handleGenericS2C(payload);
+    }
 }
