@@ -19,7 +19,7 @@ public final class CommandUtilities {
         param = normalizeString(param);
         List<Building> villages = new ArrayList<>();
         for (Building b : worldData.allBuildings()) {
-            if (b.villageName != null && normalizeString(b.villageName).contains(param)) {
+            if (b.getName() != null && normalizeString(b.getName()).contains(param)) {
                 villages.add(b);
             }
         }
