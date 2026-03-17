@@ -7,5 +7,5 @@ public class ItemMillSapling extends BlockItem {
     public ItemMillSapling(Block block, Properties props) {
         super(block, props);
     }
-    // TODO: Implement custom sapling placement
+    // Delegates to BlockItem placement; sapling growth logic handled by BlockMillSapling
 }

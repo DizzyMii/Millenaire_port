@@ -7,5 +7,5 @@ public class ItemHalfSlab extends BlockItem {
     public ItemHalfSlab(Block block, Properties props) {
         super(block, props);
     }
-    // TODO: Implement half slab placement logic
+    // Half slab placement logic handled by SlabBlock in 1.21.1; default BlockItem behavior suffices
 }
