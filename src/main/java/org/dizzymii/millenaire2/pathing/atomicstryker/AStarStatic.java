@@ -5,13 +5,28 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ButtonBlock;
+import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.world.level.block.CarpetBlock;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.LadderBlock;
+import net.minecraft.world.level.block.PressurePlateBlock;
+import net.minecraft.world.level.block.ScaffoldingBlock;
+import net.minecraft.world.level.block.SignBlock;
+import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
+import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.VineBlock;
+import net.minecraft.world.level.block.WallSignBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Half;
+import net.minecraft.world.level.block.state.properties.SlabType;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
+import org.dizzymii.millenaire2.util.MillLog;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -66,6 +81,9 @@ public class AStarStatic {
 
     /**
      * Check if a block position is passable (can walk through).
+     * Updated for 1.21.1 block API — handles slabs, stairs, signs,
+     * buttons, pressure plates, carpet, snow layers, scaffolding,
+     * waterlogged blocks, and campfires.
      */
     public static boolean isBlockPassable(Level level, BlockPos pos, AStarConfig config) {
         BlockState state = level.getBlockState(pos);
@@ -86,16 +104,49 @@ public class AStarStatic {
         // Climbable blocks are passable
         if (block instanceof LadderBlock || block instanceof VineBlock) return true;
 
-        // Water is passable if can swim
+        // Scaffolding is passable (climbable)
+        if (block instanceof ScaffoldingBlock) return true;
+
+        // Signs are passable (no collision)
+        if (block instanceof SignBlock || block instanceof WallSignBlock) return true;
+
+        // Buttons and pressure plates are passable (negligible collision)
+        if (block instanceof ButtonBlock || block instanceof PressurePlateBlock) return true;
+
+        // Carpet is passable (thin layer, no real collision)
+        if (block instanceof CarpetBlock) return true;
+
+        // Snow layers: passable if thin (< 4 layers), blocked if thick
+        if (block instanceof SnowLayerBlock) {
+            int layers = state.getValue(SnowLayerBlock.LAYERS);
+            return layers < 4;
+        }
+
+        // Campfires block movement (they damage entities)
+        if (block instanceof CampfireBlock) return false;
+
+        // Water / waterlogged blocks are passable if can swim
         if (isBlockWater(level, pos)) return config.canSwim;
 
         // Leaves can be cleared
         if (config.canClearLeaves && state.is(BlockTags.LEAVES)) return true;
 
-        // Fences block movement
+        // Fences and walls block movement (1.5 block height)
         if (block instanceof FenceBlock) return false;
+        if (state.is(BlockTags.WALLS)) return false;
 
-        // Non-solid blocks (flowers, grass, etc.) are passable
+        // Top-half slabs block passage; bottom-half and double slabs are solid ground
+        if (block instanceof SlabBlock) {
+            SlabType type = state.getValue(SlabBlock.TYPE);
+            return type == SlabType.BOTTOM;
+        }
+
+        // Stairs: top-half stairs block passage at this height
+        if (block instanceof StairBlock) {
+            return state.getValue(StairBlock.HALF) == Half.BOTTOM;
+        }
+
+        // Non-solid blocks (flowers, tall grass, etc.) are passable
         return !state.isSolid();
     }
 
@@ -108,11 +159,13 @@ public class AStarStatic {
     }
 
     /**
-     * Check if a block is water.
+     * Check if a block is water or waterlogged.
      */
     public static boolean isBlockWater(Level level, BlockPos pos) {
-        Block block = level.getBlockState(pos).getBlock();
-        return block == Blocks.WATER;
+        BlockState state = level.getBlockState(pos);
+        if (state.getBlock() == Blocks.WATER) return true;
+        FluidState fluid = state.getFluidState();
+        return fluid.is(Fluids.WATER) || fluid.is(Fluids.FLOWING_WATER);
     }
 
     /**
@@ -185,5 +238,33 @@ public class AStarStatic {
             current = current.parent;
         }
         return path;
+    }
+
+    /**
+     * Validation utility: logs passability results for common block types.
+     * Call once during server start to verify the 1.21.1 block API integration
+     * is producing correct results.
+     */
+    public static void auditPassability(Level level, BlockPos origin) {
+        AStarConfig defaultCfg = new AStarConfig(true, false, false, true, true);
+        Block[] testBlocks = {
+                Blocks.AIR, Blocks.STONE, Blocks.OAK_PLANKS, Blocks.OAK_DOOR,
+                Blocks.OAK_FENCE, Blocks.OAK_FENCE_GATE, Blocks.OAK_TRAPDOOR,
+                Blocks.LADDER, Blocks.VINE, Blocks.WATER, Blocks.GLASS_PANE,
+                Blocks.OAK_SLAB, Blocks.OAK_STAIRS, Blocks.SNOW,
+                Blocks.OAK_SIGN, Blocks.OAK_BUTTON, Blocks.STONE_PRESSURE_PLATE,
+                Blocks.WHITE_CARPET, Blocks.SCAFFOLDING, Blocks.CAMPFIRE,
+                Blocks.COBBLESTONE_WALL, Blocks.IRON_BARS, Blocks.OAK_LEAVES
+        };
+        StringBuilder sb = new StringBuilder("AStarStatic passability audit:\n");
+        for (Block b : testBlocks) {
+            BlockState state = b.defaultBlockState();
+            level.setBlock(origin, state, 2);
+            boolean passable = isBlockPassable(level, origin, defaultCfg);
+            sb.append(String.format("  %-25s -> %s%n",
+                    net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(b), passable ? "PASS" : "BLOCK"));
+        }
+        level.setBlock(origin, Blocks.AIR.defaultBlockState(), 2);
+        MillLog.minor(null, sb.toString());
     }
 }
