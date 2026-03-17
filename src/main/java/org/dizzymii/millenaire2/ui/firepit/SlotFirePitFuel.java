@@ -7,5 +7,9 @@ public class SlotFirePitFuel extends Slot {
     public SlotFirePitFuel(Container container, int index, int x, int y) {
         super(container, index, x, y);
     }
-    // TODO: Implement fuel validation (only accept burnable items)
+
+    @Override
+    public boolean mayPlace(net.minecraft.world.item.ItemStack stack) {
+        return stack.getBurnTime(net.minecraft.world.item.crafting.RecipeType.SMELTING) > 0;
+    }
 }

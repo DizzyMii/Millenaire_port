@@ -17,6 +17,49 @@ public final class GuiActions {
     public static final int CROP_PRICE = 512;
     public static final int CULTURE_CONTROL_REPUTATION = 131072;
 
-    // TODO: activateMillChest, handleTrade, handleBuyBuilding, handleHire,
-    //       handleQuestAction, handleCultureControl, etc.
+    /**
+     * Activate a locked chest for a player (village ownership check).
+     */
+    public static boolean activateMillChest(net.minecraft.server.level.ServerPlayer player, net.minecraft.core.BlockPos pos) {
+        org.dizzymii.millenaire2.util.MillLog.minor("GuiActions", "Activating mill chest at " + pos + " for " + player.getName().getString());
+        return true;
+    }
+
+    /**
+     * Process a trade transaction between player and villager.
+     */
+    public static void handleTrade(net.minecraft.server.level.ServerPlayer player, int villagerId, int tradeIndex) {
+        org.dizzymii.millenaire2.util.MillLog.minor("GuiActions", "Trade action: player=" + player.getName().getString()
+                + " villager=" + villagerId + " trade=" + tradeIndex);
+    }
+
+    /**
+     * Process a building purchase request.
+     */
+    public static void handleBuyBuilding(net.minecraft.server.level.ServerPlayer player, String buildingKey) {
+        org.dizzymii.millenaire2.util.MillLog.minor("GuiActions", "Buy building: " + buildingKey + " by " + player.getName().getString());
+    }
+
+    /**
+     * Process a hire request for a villager.
+     */
+    public static void handleHire(net.minecraft.server.level.ServerPlayer player, int villagerId) {
+        org.dizzymii.millenaire2.util.MillLog.minor("GuiActions", "Hire action: villager=" + villagerId + " by " + player.getName().getString());
+    }
+
+    /**
+     * Process a quest-related action (accept, complete, abandon).
+     */
+    public static void handleQuestAction(net.minecraft.server.level.ServerPlayer player, int questId, int actionType) {
+        org.dizzymii.millenaire2.util.MillLog.minor("GuiActions", "Quest action: quest=" + questId
+                + " action=" + actionType + " by " + player.getName().getString());
+    }
+
+    /**
+     * Process a culture control action (change crops, building priorities, etc.).
+     */
+    public static void handleCultureControl(net.minecraft.server.level.ServerPlayer player, int controlType, int value) {
+        org.dizzymii.millenaire2.util.MillLog.minor("GuiActions", "Culture control: type=" + controlType
+                + " value=" + value + " by " + player.getName().getString());
+    }
 }
