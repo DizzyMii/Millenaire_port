@@ -20,8 +20,8 @@ This project aims to bring Millénaire into the modern Minecraft ecosystem using
 
 | Branch | Purpose |
 |--------|---------|
-| `main` / `feat/phase0-foundation` | Primary development branch (1.21.1 NeoForge) |
-| `1.21.1-neoforge` | Stable 1.21.1 NeoForge integration base |
+| `main` | Default branch — all phases merged (1.21.1 NeoForge) |
+| `feat/phase0-foundation` | Phase 0 foundation work |
 | `feat/phase*` | Feature branches for individual porting phases |
 | `feat/data-generation` | Data generation utilities |
 
