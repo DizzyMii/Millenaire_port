@@ -165,6 +165,7 @@ public class MillLootTableProvider extends LootTableProvider {
             dropSelf(MillBlocks.LEAVES_PISTACHIO.get());
             dropSelf(MillBlocks.LEAVES_CHERRY.get());
             dropSelf(MillBlocks.LEAVES_SAKURA.get());
+            dropSelf(MillBlocks.FRUIT_LEAVES.get());
 
             // Mock blocks use noLootTable() — do NOT add loot entries for them
 

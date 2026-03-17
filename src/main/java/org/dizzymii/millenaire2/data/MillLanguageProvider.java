@@ -166,6 +166,7 @@ public class MillLanguageProvider extends LanguageProvider {
         addBlock(MillBlocks.LEAVES_PISTACHIO, "Pistachio Leaves");
         addBlock(MillBlocks.LEAVES_CHERRY, "Cherry Leaves");
         addBlock(MillBlocks.LEAVES_SAKURA, "Sakura Leaves");
+        addBlock(MillBlocks.FRUIT_LEAVES, "Fruit Leaves");
 
         // Special
         addBlock(MillBlocks.LOCKED_CHEST, "Locked Chest");

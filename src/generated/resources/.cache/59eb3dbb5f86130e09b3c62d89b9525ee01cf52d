@@ -1,4 +1,4 @@
-// 1.21.1	2026-03-17T00:36:10.3609899	Loot Tables
+// 1.21.1	2026-03-17T17:20:50.8119878	Loot Tables
 aeeacc280fc5dada14992cb4e7a6f41684ad1bc4 data/millenaire2/loot_table/blocks/alchemist_explosive.json
 628e07ad363dfcd564517faf69291dff6a838827 data/millenaire2/loot_table/blocks/bed_charpoy.json
 63d7538ff8b3159e95c240b227d5c3b8315918db data/millenaire2/loot_table/blocks/bed_straw.json
@@ -14,6 +14,7 @@ d65e98e851cdb42143fee3bbb7eae88d582494bb data/millenaire2/loot_table/blocks/crop
 b23370d45fc7939738107edbc0a3243f3686224a data/millenaire2/loot_table/blocks/crop_turmeric.json
 2e57de016261f281af960b48f625fa71ff994b5d data/millenaire2/loot_table/blocks/crop_vine.json
 a47a70461f084cb686483251cd88d12654844211 data/millenaire2/loot_table/blocks/fire_pit.json
+898856fb4e221460b6c064cd42d85c6c6c29094d data/millenaire2/loot_table/blocks/fruit_leaves.json
 7a7a7a912eaee7804f5d0928f6dee5ca33e6004a data/millenaire2/loot_table/blocks/gray_tiles.json
 ec9c8d4f2986eaf88d0ae17ef1e490c8dfab4950 data/millenaire2/loot_table/blocks/green_tiles.json
 d0385971d9769b915836c7286aa991cd7ffb33e0 data/millenaire2/loot_table/blocks/ice_brick.json
