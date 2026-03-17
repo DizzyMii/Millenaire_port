@@ -68,6 +68,18 @@ public class VillagerRecord implements Cloneable {
     public long getOriginalId() { return originalId; }
     public void setOriginalId(long id) { this.originalId = id; }
 
+    public boolean hasQuestTag(String tag) {
+        return questTags.contains(tag);
+    }
+
+    public void addQuestTag(String tag) {
+        if (!questTags.contains(tag)) questTags.add(tag);
+    }
+
+    public void removeQuestTag(String tag) {
+        questTags.remove(tag);
+    }
+
     // TODO: NBT read/write, full factory method, equipment resolution
 
     @Override
