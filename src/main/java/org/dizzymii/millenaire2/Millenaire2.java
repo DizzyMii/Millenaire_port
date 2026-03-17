@@ -83,7 +83,10 @@ public class Millenaire2 {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         LOGGER.info("{} {} common setup", MODNAME, VERSION);
-        event.enqueueWork(ContentDeployer::deployContent);
+        event.enqueueWork(() -> {
+            ContentDeployer.deployContent();
+            org.dizzymii.millenaire2.goal.Goal.initGoals();
+        });
     }
 
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {
