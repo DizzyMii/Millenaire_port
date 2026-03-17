@@ -12,6 +12,7 @@ import org.dizzymii.millenaire2.client.render.FemaleSymmRenderer;
 import org.dizzymii.millenaire2.client.render.FemaleSymmetricalModel;
 import org.dizzymii.millenaire2.client.render.MillVillagerModel;
 import org.dizzymii.millenaire2.client.render.MillVillagerRenderer;
+import org.dizzymii.millenaire2.client.render.RenderWallDecoration;
 import org.dizzymii.millenaire2.entity.MillEntities;
 
 /**
