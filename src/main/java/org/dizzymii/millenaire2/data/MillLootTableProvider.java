@@ -7,6 +7,8 @@ import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.registries.DeferredBlock;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import org.dizzymii.millenaire2.Millenaire2;
 import org.dizzymii.millenaire2.block.MillBlocks;
 
 import java.util.List;
@@ -164,86 +166,30 @@ public class MillLootTableProvider extends LootTableProvider {
             dropSelf(MillBlocks.LEAVES_CHERRY.get());
             dropSelf(MillBlocks.LEAVES_SAKURA.get());
 
-            // Mock blocks (no drops normally, but register empty)
-            dropSelf(MillBlocks.MARKER_BLOCK.get());
-            dropSelf(MillBlocks.MAIN_CHEST.get());
-            dropSelf(MillBlocks.ANIMAL_SPAWN.get());
-            dropSelf(MillBlocks.SOURCE.get());
-            dropSelf(MillBlocks.FREE_BLOCK.get());
-            dropSelf(MillBlocks.TREE_SPAWN.get());
-            dropSelf(MillBlocks.SOIL_BLOCK.get());
-            dropSelf(MillBlocks.DECOR_BLOCK.get());
+            // Mock blocks use noLootTable() — do NOT add loot entries for them
+
+            // Crops (drop nothing for now, seeds handled by village trade)
+            dropSelf(MillBlocks.CROP_RICE.get());
+            dropSelf(MillBlocks.CROP_TURMERIC.get());
+            dropSelf(MillBlocks.CROP_MAIZE.get());
+            dropSelf(MillBlocks.CROP_COTTON.get());
+            dropSelf(MillBlocks.CROP_VINE.get());
         }
+
+        private static final Set<Block> NO_LOOT_BLOCKS = Set.of(
+                MillBlocks.MARKER_BLOCK.get(), MillBlocks.MAIN_CHEST.get(),
+                MillBlocks.ANIMAL_SPAWN.get(), MillBlocks.SOURCE.get(),
+                MillBlocks.FREE_BLOCK.get(), MillBlocks.TREE_SPAWN.get(),
+                MillBlocks.SOIL_BLOCK.get(), MillBlocks.DECOR_BLOCK.get()
+        );
 
         @Override
         protected Iterable<Block> getKnownBlocks() {
-            return List.of(
-                    MillBlocks.STONE_DECORATION.get(), MillBlocks.COOKED_BRICK.get(),
-                    MillBlocks.PAINTED_BRICK_WHITE.get(), MillBlocks.PAINTED_BRICK_ORANGE.get(),
-                    MillBlocks.PAINTED_BRICK_MAGENTA.get(), MillBlocks.PAINTED_BRICK_LIGHT_BLUE.get(),
-                    MillBlocks.PAINTED_BRICK_YELLOW.get(), MillBlocks.PAINTED_BRICK_LIME.get(),
-                    MillBlocks.PAINTED_BRICK_PINK.get(), MillBlocks.PAINTED_BRICK_GRAY.get(),
-                    MillBlocks.PAINTED_BRICK_LIGHT_GRAY.get(), MillBlocks.PAINTED_BRICK_CYAN.get(),
-                    MillBlocks.PAINTED_BRICK_PURPLE.get(), MillBlocks.PAINTED_BRICK_BLUE.get(),
-                    MillBlocks.PAINTED_BRICK_BROWN.get(), MillBlocks.PAINTED_BRICK_GREEN.get(),
-                    MillBlocks.PAINTED_BRICK_RED.get(), MillBlocks.PAINTED_BRICK_BLACK.get(),
-                    MillBlocks.PAINTED_BRICK_DECO_WHITE.get(), MillBlocks.PAINTED_BRICK_DECO_ORANGE.get(),
-                    MillBlocks.PAINTED_BRICK_DECO_MAGENTA.get(), MillBlocks.PAINTED_BRICK_DECO_LIGHT_BLUE.get(),
-                    MillBlocks.PAINTED_BRICK_DECO_YELLOW.get(), MillBlocks.PAINTED_BRICK_DECO_LIME.get(),
-                    MillBlocks.PAINTED_BRICK_DECO_PINK.get(), MillBlocks.PAINTED_BRICK_DECO_GRAY.get(),
-                    MillBlocks.PAINTED_BRICK_DECO_LIGHT_GRAY.get(), MillBlocks.PAINTED_BRICK_DECO_CYAN.get(),
-                    MillBlocks.PAINTED_BRICK_DECO_PURPLE.get(), MillBlocks.PAINTED_BRICK_DECO_BLUE.get(),
-                    MillBlocks.PAINTED_BRICK_DECO_BROWN.get(), MillBlocks.PAINTED_BRICK_DECO_GREEN.get(),
-                    MillBlocks.PAINTED_BRICK_DECO_RED.get(), MillBlocks.PAINTED_BRICK_DECO_BLACK.get(),
-                    MillBlocks.TIMBER_FRAME_PLAIN.get(), MillBlocks.TIMBER_FRAME_CROSS.get(), MillBlocks.THATCH.get(),
-                    MillBlocks.MUD_BRICK.get(), MillBlocks.MUD_BRICK_EXTENDED.get(),
-                    MillBlocks.SANDSTONE_CARVED.get(), MillBlocks.SANDSTONE_RED_CARVED.get(),
-                    MillBlocks.SANDSTONE_OCHRE_CARVED.get(), MillBlocks.SANDSTONE_DECORATED.get(),
-                    MillBlocks.BYZANTINE_STONE_ORNAMENT.get(), MillBlocks.BYZANTINE_SANDSTONE_ORNAMENT.get(),
-                    MillBlocks.BYZANTINE_TILES.get(), MillBlocks.BYZANTINE_STONE_TILES.get(),
-                    MillBlocks.BYZANTINE_SANDSTONE_TILES.get(),
-                    MillBlocks.GRAY_TILES.get(), MillBlocks.GREEN_TILES.get(), MillBlocks.RED_TILES.get(),
-                    MillBlocks.WET_BRICK.get(), MillBlocks.SILK_WORM_BLOCK.get(), MillBlocks.SNAIL_SOIL.get(),
-                    MillBlocks.SOD.get(), MillBlocks.ALCHEMIST_EXPLOSIVE.get(), MillBlocks.ROSETTE.get(),
-                    MillBlocks.STAINED_GLASS.get(), MillBlocks.MILL_STATUE.get(),
-                    MillBlocks.ICE_BRICK.get(), MillBlocks.SNOW_BRICK.get(),
-                    MillBlocks.PATH_DIRT.get(), MillBlocks.PATH_GRAVEL.get(), MillBlocks.PATH_SLABS.get(),
-                    MillBlocks.PATH_SANDSTONE.get(), MillBlocks.PATH_GRAVEL_SLABS.get(),
-                    MillBlocks.PATH_OCHRE_TILES.get(), MillBlocks.PATH_SNOW.get(),
-                    MillBlocks.LOCKED_CHEST.get(), MillBlocks.FIRE_PIT.get(), MillBlocks.PANEL.get(),
-                    MillBlocks.IMPORT_TABLE.get(), MillBlocks.BED_STRAW.get(), MillBlocks.BED_CHARPOY.get(),
-                    MillBlocks.STAIRS_TIMBERFRAME.get(), MillBlocks.STAIRS_MUDBRICK.get(),
-                    MillBlocks.STAIRS_COOKEDBRICK.get(), MillBlocks.STAIRS_THATCH.get(),
-                    MillBlocks.STAIRS_SANDSTONE_CARVED.get(), MillBlocks.STAIRS_SANDSTONE_RED_CARVED.get(),
-                    MillBlocks.STAIRS_SANDSTONE_OCHRE_CARVED.get(), MillBlocks.STAIRS_BYZANTINE_TILES.get(),
-                    MillBlocks.STAIRS_GRAY_TILES.get(), MillBlocks.STAIRS_GREEN_TILES.get(),
-                    MillBlocks.STAIRS_RED_TILES.get(),
-                    MillBlocks.SLAB_WOOD_DECO.get(), MillBlocks.SLAB_STONE_DECO.get(),
-                    MillBlocks.SLAB_SANDSTONE_CARVED.get(), MillBlocks.SLAB_SANDSTONE_RED_CARVED.get(),
-                    MillBlocks.SLAB_SANDSTONE_OCHRE_CARVED.get(), MillBlocks.SLAB_BYZANTINE_TILES.get(),
-                    MillBlocks.SLAB_GRAY_TILES.get(), MillBlocks.SLAB_GREEN_TILES.get(),
-                    MillBlocks.SLAB_RED_TILES.get(),
-                    MillBlocks.SLAB_PATH_DIRT.get(), MillBlocks.SLAB_PATH_GRAVEL.get(),
-                    MillBlocks.SLAB_PATH_SLABS.get(), MillBlocks.SLAB_PATH_SANDSTONE.get(),
-                    MillBlocks.SLAB_PATH_GRAVEL_SLABS.get(), MillBlocks.SLAB_PATH_OCHRE_TILES.get(),
-                    MillBlocks.SLAB_PATH_SNOW.get(),
-                    MillBlocks.WALL_MUD_BRICK.get(), MillBlocks.WALL_SANDSTONE_CARVED.get(),
-                    MillBlocks.WALL_SANDSTONE_RED_CARVED.get(), MillBlocks.WALL_SANDSTONE_OCHRE_CARVED.get(),
-                    MillBlocks.WALL_SNOW.get(),
-                    MillBlocks.PAPER_WALL.get(), MillBlocks.WOODEN_BARS.get(),
-                    MillBlocks.WOODEN_BARS_INDIAN.get(), MillBlocks.WOODEN_BARS_ROSETTE.get(),
-                    MillBlocks.WOODEN_BARS_DARK.get(),
-                    MillBlocks.SAPLING_APPLE.get(), MillBlocks.SAPLING_OLIVE.get(),
-                    MillBlocks.SAPLING_PISTACHIO.get(), MillBlocks.SAPLING_CHERRY.get(),
-                    MillBlocks.SAPLING_SAKURA.get(),
-                    MillBlocks.LEAVES_APPLE.get(), MillBlocks.LEAVES_OLIVE.get(),
-                    MillBlocks.LEAVES_PISTACHIO.get(), MillBlocks.LEAVES_CHERRY.get(),
-                    MillBlocks.LEAVES_SAKURA.get(),
-                    MillBlocks.MARKER_BLOCK.get(), MillBlocks.MAIN_CHEST.get(),
-                    MillBlocks.ANIMAL_SPAWN.get(), MillBlocks.SOURCE.get(),
-                    MillBlocks.FREE_BLOCK.get(), MillBlocks.TREE_SPAWN.get(),
-                    MillBlocks.SOIL_BLOCK.get(), MillBlocks.DECOR_BLOCK.get()
-            );
+            return Millenaire2.BLOCKS.getEntries().stream()
+                    .map(DeferredHolder::get)
+                    .map(b -> (Block) b)
+                    .filter(b -> !NO_LOOT_BLOCKS.contains(b))
+                    .toList();
         }
     }
 }

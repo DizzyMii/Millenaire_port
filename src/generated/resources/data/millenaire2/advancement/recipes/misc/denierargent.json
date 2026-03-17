@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_denier": {
+      "conditions": {
+        "items": [
+          {
+            "items": "millenaire2:denier"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "millenaire2:denierargent"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_denier"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "millenaire2:denierargent"
+    ]
+  }
+}

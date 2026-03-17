@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "bottom": "millenaire2:block/timber_frame_plain",
+    "side": "millenaire2:block/timber_frame_plain",
+    "top": "millenaire2:block/timber_frame_plain"
+  }
+}

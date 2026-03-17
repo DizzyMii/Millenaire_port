@@ -1,0 +1,10 @@
+// 1.21.1	2026-03-17T00:36:10.3596428	Tags for minecraft:block mod id millenaire2
+c29c00ab25839504ce1c3dba6f508454948eef66 data/minecraft/tags/block/crops.json
+0bf47cd08f12ee229d21a2c1feeacb31261ae07e data/minecraft/tags/block/leaves.json
+25b1a7c67233aa46a7a54a1d956412b41984a607 data/minecraft/tags/block/mineable/axe.json
+ff0f2ef77e2329becdef9653e69701bd55e989d0 data/minecraft/tags/block/mineable/pickaxe.json
+0395201cc872af64f712594e8c95dc882b54d4b6 data/minecraft/tags/block/mineable/shovel.json
+c8b843743a24bfb13fa164604f87c0c7f5ce9463 data/minecraft/tags/block/saplings.json
+4f933d44850a177278e104123356d5366d67af0a data/minecraft/tags/block/slabs.json
+f7b41cc7d8d305683d2fc0209e6397cb3be684d7 data/minecraft/tags/block/stairs.json
+97f5cc807eb4a5ae4964396f73de87a853d0a14a data/minecraft/tags/block/walls.json

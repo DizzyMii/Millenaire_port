@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "millenaire2:block/slab_wood_deco"
+    },
+    "type=double": {
+      "model": "millenaire2:block/timber_frame_plain"
+    },
+    "type=top": {
+      "model": "millenaire2:block/slab_wood_deco_top"
+    }
+  }
+}

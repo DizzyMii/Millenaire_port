@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "millenaire2:sandstone_red_carved"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "millenaire2:blocks/sandstone_red_carved"
+}

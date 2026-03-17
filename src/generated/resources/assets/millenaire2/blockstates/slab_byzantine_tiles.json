@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "millenaire2:block/slab_byzantine_tiles"
+    },
+    "type=double": {
+      "model": "millenaire2:block/byzantine_tiles"
+    },
+    "type=top": {
+      "model": "millenaire2:block/slab_byzantine_tiles_top"
+    }
+  }
+}

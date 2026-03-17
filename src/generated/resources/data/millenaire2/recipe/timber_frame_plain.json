@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "P": {
+      "item": "minecraft:oak_planks"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "pattern": [
+    "SP",
+    "PS"
+  ],
+  "result": {
+    "count": 4,
+    "id": "millenaire2:timber_frame_plain"
+  }
+}

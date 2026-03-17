@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/template_glass_pane_post",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "edge": "millenaire2:block/wooden_bars_rosette_top",
+    "pane": "millenaire2:block/wooden_bars_rosette"
+  }
+}

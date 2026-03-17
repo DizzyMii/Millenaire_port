@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "millenaire2:block/slab_stone_deco"
+    },
+    "type=double": {
+      "model": "millenaire2:block/stone_decoration"
+    },
+    "type=top": {
+      "model": "millenaire2:block/slab_stone_deco_top"
+    }
+  }
+}
