@@ -194,6 +194,7 @@ public class MillBlockStateProvider extends BlockStateProvider {
         simpleBlockWithItem(MillBlocks.LEAVES_PISTACHIO);
         simpleBlockWithItem(MillBlocks.LEAVES_CHERRY);
         simpleBlockWithItem(MillBlocks.LEAVES_SAKURA);
+        simpleBlockWithItem(MillBlocks.FRUIT_LEAVES);
     }
 
     // ===== Helpers =====
