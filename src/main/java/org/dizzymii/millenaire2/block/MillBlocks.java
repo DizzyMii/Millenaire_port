@@ -253,6 +253,10 @@ public class MillBlocks {
     public static final DeferredBlock<Block> LEAVES_SAKURA = Millenaire2.BLOCKS.registerSimpleBlock("leaves_sakura",
             BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.GRASS).noOcclusion().randomTicks());
 
+    // ========== Fruit Leaves ==========
+    public static final DeferredBlock<BlockFruitLeaves> FRUIT_LEAVES = Millenaire2.BLOCKS.register("fruit_leaves",
+            () -> new BlockFruitLeaves(BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.GRASS).noOcclusion().randomTicks()));
+
     // ========== Special Blocks (with BlockEntity wiring) ==========
     public static final DeferredBlock<BlockLockedChest> LOCKED_CHEST = Millenaire2.BLOCKS.register("locked_chest",
             () -> new BlockLockedChest(BlockBehaviour.Properties.of().strength(2.5f).sound(SoundType.WOOD)));

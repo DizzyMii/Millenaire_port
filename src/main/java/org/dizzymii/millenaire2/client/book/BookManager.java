@@ -11,10 +11,6 @@ public class BookManager {
 
     private static Map<String, TextBook> books = new HashMap<>();
 
-    public static void loadBooks() {
-        // TODO: Load book content from resource files
-    }
-
     public static TextBook getBook(String bookId) {
         return books.get(bookId);
     }

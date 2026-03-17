@@ -37,7 +37,7 @@ public class AlwaysTrueCriterionInstance extends SimpleCriterionTrigger<AlwaysTr
 
         public static final Codec<Instance> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
-                        net.minecraft.advancements.critereon.EntityPredicate.ADVANCEMENT_ENTITY_PREDICATE_CODEC
+                        net.minecraft.advancements.critereon.ContextAwarePredicate.CODEC
                                 .optionalFieldOf("player").forGetter(Instance::player)
                 ).apply(inst, Instance::new)
         );
