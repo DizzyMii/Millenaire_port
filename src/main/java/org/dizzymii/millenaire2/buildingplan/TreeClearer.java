@@ -14,8 +14,8 @@ public final class TreeClearer {
 
     public static int clearTreesInArea(Level level, BlockPos min, BlockPos max) {
         int cleared = 0;
-        // TODO: Iterate area, find log/leaf blocks, remove them,
-        //       optionally drop items or add to village inventory
+        // Iterates area, finds log/leaf blocks via BlockItemUtilities.isTreeBlock(),
+        // removes them with drops. Village inventory integration deferred.
         for (int x = min.getX(); x <= max.getX(); x++) {
             for (int y = min.getY(); y <= max.getY(); y++) {
                 for (int z = min.getZ(); z <= max.getZ(); z++) {
