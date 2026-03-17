@@ -1,8 +1,0 @@
-{
-    "parent": "block/outer_stairs",
-    "textures": {
-        "bottom": "millenaire:blocks/timberframeplain",
-        "top": "millenaire:blocks/timberframeplain",
-        "side": "millenaire:blocks/timberframeplain_side"
-    }
-}

@@ -117,3 +117,7 @@ runs/
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
+
+# Reference directories (not part of the build)
+decompiled/
+extracted_jar/

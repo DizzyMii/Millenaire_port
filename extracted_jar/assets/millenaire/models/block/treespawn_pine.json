@@ -1,7 +1,0 @@
-{
-  "parent": "block/cube_all",
-  "textures": {
-    "all": "blocks/sapling_spruce",
-    "particle" : "blocks/sapling_spruce"
-  }
-}
