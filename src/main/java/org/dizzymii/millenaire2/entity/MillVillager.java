@@ -510,6 +510,23 @@ public abstract class MillVillager extends PathfinderMob {
         }
     }
 
+    // --- Building helpers ---
+    @Nullable
+    public org.dizzymii.millenaire2.village.Building getHomeBuilding() {
+        if (housePoint == null || this.level().isClientSide) return null;
+        if (!(this.level() instanceof net.minecraft.server.level.ServerLevel sl)) return null;
+        org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.world.MillWorldData.get(sl);
+        return mw.getBuilding(housePoint);
+    }
+
+    @Nullable
+    public org.dizzymii.millenaire2.village.Building getTownHallBuilding() {
+        if (townHallPoint == null || this.level().isClientSide) return null;
+        if (!(this.level() instanceof net.minecraft.server.level.ServerLevel sl)) return null;
+        org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.world.MillWorldData.get(sl);
+        return mw.getBuilding(townHallPoint);
+    }
+
     // --- Inventory helpers ---
     public int countInv(InvItem item) {
         return inventory.getOrDefault(item, 0);

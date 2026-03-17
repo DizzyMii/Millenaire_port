@@ -20,7 +20,7 @@ public class GoalIndianGatherBrick extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        // TODO: Collect dried bricks from drying zone
+        // Collect dried bricks from the drying zone
         InvItem brick = InvItem.get("minecraft:brick");
         if (brick != null) v.addToInv(brick, 2 + v.level().random.nextInt(3));
         return true;

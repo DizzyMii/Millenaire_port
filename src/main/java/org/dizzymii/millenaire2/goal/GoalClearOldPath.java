@@ -21,7 +21,14 @@ public class GoalClearOldPath extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        // TODO: Remove obsolete path blocks based on village layout changes
+        // Remove gravel path blocks near the villager's position
+        if (v.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+            net.minecraft.core.BlockPos pos = v.blockPosition().below();
+            if (sl.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.GRAVEL)) {
+                sl.destroyBlock(pos, true);
+                v.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+            }
+        }
         return true;
     }
 

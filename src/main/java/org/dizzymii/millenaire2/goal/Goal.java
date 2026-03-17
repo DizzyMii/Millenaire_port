@@ -160,8 +160,7 @@ public abstract class Goal {
     }
 
     public Point getCurrentGoalTarget(MillVillager villager) {
-        // TODO: return villager.getGoalDestPoint() once MillVillager exposes it
-        return null;
+        return villager.getPathDestPoint();
     }
 
     public int range(MillVillager villager) { return ACTIVATION_RANGE; }

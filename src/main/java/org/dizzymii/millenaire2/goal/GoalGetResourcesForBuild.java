@@ -21,7 +21,17 @@ public class GoalGetResourcesForBuild extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        // TODO: Transfer needed blocks from townhall storage to villager inventory
+        org.dizzymii.millenaire2.village.Building th = v.getTownHallBuilding();
+        if (th != null) {
+            // Take up to 16 of the most available resource from townhall for construction
+            for (java.util.Map.Entry<org.dizzymii.millenaire2.item.InvItem, Integer> entry : th.resManager.resources.entrySet()) {
+                int take = Math.min(entry.getValue(), 16);
+                if (take > 0 && th.resManager.takeGoods(entry.getKey(), take)) {
+                    v.addToInv(entry.getKey(), take);
+                    break; // One stack per trip
+                }
+            }
+        }
         return true;
     }
 

@@ -21,7 +21,19 @@ public class GoalBuildPath extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        // TODO: Place gravel/path blocks along planned village paths
+        // Place a path block at the villager's position if they have gravel in inventory
+        org.dizzymii.millenaire2.item.InvItem gravel = org.dizzymii.millenaire2.item.InvItem.get("minecraft:gravel");
+        if (gravel != null && v.countInv(gravel) > 0) {
+            net.minecraft.core.BlockPos pos = v.blockPosition().below();
+            if (v.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                net.minecraft.world.level.block.state.BlockState current = sl.getBlockState(pos);
+                if (current.canBeReplaced()) {
+                    sl.setBlock(pos, net.minecraft.world.level.block.Blocks.GRAVEL.defaultBlockState(), 3);
+                    v.removeFromInv(gravel, 1);
+                    v.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+                }
+            }
+        }
         return true;
     }
 

@@ -19,8 +19,19 @@ public class GoalGetTool extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        // TODO: Check villager type's required tool and equip from building chest
-        return true; // Tool retrieved (or no tool system yet)
+        // Equip a tool from the home building if the villager type needs tool categories
+        if (v.vtype != null && !v.vtype.toolsCategoriesNeeded.isEmpty()) {
+            org.dizzymii.millenaire2.village.Building home = v.getHomeBuilding();
+            if (home != null) {
+                for (String toolCat : v.vtype.toolsCategoriesNeeded) {
+                    org.dizzymii.millenaire2.item.InvItem tool = org.dizzymii.millenaire2.item.InvItem.get(toolCat);
+                    if (tool != null && v.countInv(tool) == 0 && home.resManager.takeGoods(tool, 1)) {
+                        v.addToInv(tool, 1);
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     @Override

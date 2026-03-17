@@ -19,7 +19,16 @@ public class GoalGetResourcesForShops extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        // TODO: Transfer trade goods from townhall to villager inventory
+        org.dizzymii.millenaire2.village.Building th = v.getTownHallBuilding();
+        if (th != null) {
+            for (java.util.Map.Entry<org.dizzymii.millenaire2.item.InvItem, Integer> entry : th.resManager.resources.entrySet()) {
+                int take = Math.min(entry.getValue(), 8);
+                if (take > 0 && th.resManager.takeGoods(entry.getKey(), take)) {
+                    v.addToInv(entry.getKey(), take);
+                    break;
+                }
+            }
+        }
         return true;
     }
 

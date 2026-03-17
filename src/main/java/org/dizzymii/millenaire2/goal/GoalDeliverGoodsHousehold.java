@@ -19,7 +19,13 @@ public class GoalDeliverGoodsHousehold extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        // TODO: Deposit carried goods into the household building chest
+        org.dizzymii.millenaire2.village.Building home = v.getHomeBuilding();
+        if (home != null) {
+            for (java.util.Map.Entry<org.dizzymii.millenaire2.item.InvItem, Integer> entry : v.inventory.entrySet()) {
+                home.resManager.storeGoods(entry.getKey(), entry.getValue());
+            }
+        }
+        v.inventory.clear();
         return true;
     }
 
