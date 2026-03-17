@@ -199,4 +199,24 @@ public abstract class MillVillager extends PathfinderMob {
     }
 
     // TODO: Full behavior (tick logic, goal execution, pathing, combat, etc.) in later phases
+
+    // ========== Concrete villager subclasses ==========
+
+    public static class GenericMale extends MillVillager {
+        public GenericMale(EntityType<? extends GenericMale> type, Level level) {
+            super(type, level);
+        }
+    }
+
+    public static class GenericSymmFemale extends MillVillager {
+        public GenericSymmFemale(EntityType<? extends GenericSymmFemale> type, Level level) {
+            super(type, level);
+        }
+    }
+
+    public static class GenericAsymmFemale extends MillVillager {
+        public GenericAsymmFemale(EntityType<? extends GenericAsymmFemale> type, Level level) {
+            super(type, level);
+        }
+    }
 }
