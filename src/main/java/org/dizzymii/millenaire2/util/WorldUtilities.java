@@ -100,5 +100,47 @@ public final class WorldUtilities {
         return taken;
     }
 
-    // TODO: putItemsInContainer, spawnItemEntity, getTopSolidBlock, playBlockSound
+    public static int putItemsInContainer(Container container, ItemStack toInsert) {
+        if (container == null || toInsert.isEmpty()) return 0;
+        int inserted = 0;
+        for (int i = 0; i < container.getContainerSize(); i++) {
+            ItemStack slot = container.getItem(i);
+            if (slot.isEmpty()) {
+                int amount = Math.min(toInsert.getCount(), container.getMaxStackSize());
+                container.setItem(i, toInsert.split(amount));
+                inserted += amount;
+            } else if (ItemStack.isSameItemSameComponents(slot, toInsert)) {
+                int space = slot.getMaxStackSize() - slot.getCount();
+                int amount = Math.min(toInsert.getCount(), space);
+                if (amount > 0) {
+                    slot.grow(amount);
+                    toInsert.shrink(amount);
+                    inserted += amount;
+                }
+            }
+            if (toInsert.isEmpty()) break;
+        }
+        return inserted;
+    }
+
+    public static void spawnItemEntity(Level level, BlockPos pos, ItemStack stack) {
+        if (!level.isClientSide && !stack.isEmpty()) {
+            net.minecraft.world.entity.item.ItemEntity entity = new net.minecraft.world.entity.item.ItemEntity(
+                    level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, stack);
+            entity.setDefaultPickUpDelay();
+            level.addFreshEntity(entity);
+        }
+    }
+
+    public static int getTopSolidBlock(Level level, int x, int z) {
+        for (int y = level.getMaxBuildHeight() - 1; y >= level.getMinBuildHeight(); y--) {
+            BlockState state = level.getBlockState(new BlockPos(x, y, z));
+            if (state.isSolid()) return y;
+        }
+        return level.getMinBuildHeight();
+    }
+
+    public static void playBlockSound(Level level, BlockPos pos, net.minecraft.sounds.SoundEvent sound) {
+        level.playSound(null, pos, sound, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
+    }
 }

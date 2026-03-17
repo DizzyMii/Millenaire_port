@@ -56,7 +56,8 @@ public class UserProfile {
     @Nullable public String playerName;
     public boolean donationActivated = false;
 
-    // TODO: List<QuestInstance> questInstances — depends on quest system (Phase 7)
+    // Quest instances tracked per-player; populated when quest system is implemented (Phase 7)
+    public final java.util.List<org.dizzymii.millenaire2.quest.QuestInstance> questInstances = new java.util.ArrayList<>();
 
     // ========== Reputation ==========
 

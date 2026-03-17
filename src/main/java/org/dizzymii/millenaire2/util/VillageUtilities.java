@@ -36,6 +36,17 @@ public final class VillageUtilities {
         return players;
     }
 
-    // TODO: getServerProfile — needs Mill singleton or MillWorldData accessor
-    // TODO: getVillagerSentence — depends on culture dialogue system
+    @javax.annotation.Nullable
+    public static org.dizzymii.millenaire2.world.UserProfile getServerProfile(Level level, net.minecraft.world.entity.player.Player player) {
+        if (level.getServer() == null) return null;
+        net.minecraft.server.level.ServerLevel serverLevel = level.getServer().overworld();
+        org.dizzymii.millenaire2.world.MillWorldData data = org.dizzymii.millenaire2.world.MillWorldData.get(serverLevel);
+        return data.getProfile(player.getUUID());
+    }
+
+    public static String getVillagerSentence(String cultureKey, String sentenceKey) {
+        // Dialogue lookup via culture language system; full implementation requires
+        // CultureLanguage integration on Culture. Returns raw key as fallback for now.
+        return sentenceKey;
+    }
 }
