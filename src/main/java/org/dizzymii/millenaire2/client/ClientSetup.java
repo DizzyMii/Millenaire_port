@@ -22,7 +22,7 @@ public class ClientSetup {
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
-        // TODO: Register keybindings, overlay renderers, etc.
+        event.enqueueWork(ClientProxy::init);
     }
 
     @SubscribeEvent

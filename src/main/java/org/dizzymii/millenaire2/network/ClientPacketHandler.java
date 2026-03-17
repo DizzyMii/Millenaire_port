@@ -223,9 +223,8 @@ public final class ClientPacketHandler {
             int entityId = r.readInt();
             Point villagePos = readOptionalPoint(r);
 
-            // TODO: Open the appropriate screen based on guiId
-            //       (trade, quest, hire, village book, etc.)
             MillLog.minor("ClientPacketHandler", "Open GUI request: " + guiId + " entity=" + entityId);
+            org.dizzymii.millenaire2.client.ClientGuiHandler.openGui(guiId);
         } catch (Exception e) {
             MillLog.error("ClientPacketHandler", "Error handling open GUI", e);
         } finally {
