@@ -97,6 +97,10 @@ public class VillagerType {
     @FieldDocumentation(explanation = "Textures for the villager (random pick).")
     public List<String> textures = new ArrayList<>();
 
+    @ConfigField(type = ParameterType.STRING, paramName = "clothingtexture")
+    @FieldDocumentation(explanation = "Overlay clothing texture rendered on top of the base skin.")
+    public String clothingTexture = null;
+
     @ConfigField(type = ParameterType.GOAL_ADD, paramName = "goal")
     @FieldDocumentation(explanation = "Goal a villager can pursue.")
     public List<String> goals = new ArrayList<>();
