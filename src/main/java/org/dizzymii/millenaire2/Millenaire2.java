@@ -21,11 +21,14 @@ import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import org.dizzymii.millenaire2.block.MillBlocks;
+import org.dizzymii.millenaire2.client.screen.FirePitScreen;
 import org.dizzymii.millenaire2.data.ContentDeployer;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.item.MillItems;
+import org.dizzymii.millenaire2.menu.MillMenuTypes;
 import org.dizzymii.millenaire2.network.MillNetworking;
 import org.slf4j.Logger;
 
@@ -65,11 +68,13 @@ public class Millenaire2 {
         CREATIVE_MODE_TABS.register(modEventBus);
         ENTITY_TYPES.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
+        MillMenuTypes.MENU_TYPES.register(modEventBus);
 
         // Force class loading of registration holders
         MillBlocks.init();
         MillItems.init();
         MillEntities.init();
+        MillMenuTypes.init();
 
         NeoForge.EVENT_BUS.register(this);
 
@@ -97,6 +102,11 @@ public class Millenaire2 {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
             LOGGER.info("{} client setup", MODNAME);
+        }
+
+        @SubscribeEvent
+        public static void registerMenuScreens(RegisterMenuScreensEvent event) {
+            event.register(MillMenuTypes.FIRE_PIT.get(), FirePitScreen::new);
         }
     }
 }
