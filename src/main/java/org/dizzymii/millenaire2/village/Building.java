@@ -70,7 +70,7 @@ public class Building {
     public CopyOnWriteArrayList<String> buildingsBought = new CopyOnWriteArrayList<>();
     public ConcurrentHashMap<BuildingProject.EnumProjects, CopyOnWriteArrayList<BuildingProject>> buildingProjects = new ConcurrentHashMap<>();
 
-    private final Set<Object> villagers = new LinkedHashSet<>(); // TODO: Set<MillVillager>
+    private final Set<MillVillager> villagers = new LinkedHashSet<>();
     private final HashMap<Long, VillagerRecord> vrecords = new HashMap<>();
     private final ConcurrentHashMap<Point, Integer> relations = new ConcurrentHashMap<>();
 
