@@ -26,5 +26,35 @@ public class TextPage {
         lines.add(new TextLine(text));
     }
 
-    // TODO: Implement page layout, word wrapping, image support
+    public void addLine(String text, int colour) {
+        lines.add(new TextLine(text, colour));
+    }
+
+    public void addBlankLine() {
+        lines.add(new TextLine(""));
+    }
+
+    public int getLineCount() { return lines.size(); }
+
+    /**
+     * Word-wraps a long string into multiple TextLines that fit within maxWidth characters.
+     */
+    public void addWrappedText(String text, int maxCharsPerLine) {
+        if (text == null || text.isEmpty()) {
+            addBlankLine();
+            return;
+        }
+        String[] words = text.split(" ");
+        StringBuilder current = new StringBuilder();
+        for (String word : words) {
+            if (current.length() + word.length() + 1 > maxCharsPerLine) {
+                lines.add(new TextLine(current.toString().trim()));
+                current = new StringBuilder();
+            }
+            current.append(word).append(" ");
+        }
+        if (current.length() > 0) {
+            lines.add(new TextLine(current.toString().trim()));
+        }
+    }
 }
