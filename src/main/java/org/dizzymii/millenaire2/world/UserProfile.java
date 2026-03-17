@@ -1,5 +1,10 @@
 package org.dizzymii.millenaire2.world;
 
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.FriendlyByteBuf;
 import org.dizzymii.millenaire2.util.Point;
 
 import javax.annotation.Nullable;
@@ -7,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -103,5 +109,152 @@ public class UserProfile {
     public void addTag(String tag) { if (!profileTags.contains(tag)) profileTags.add(tag); }
     public void removeTag(String tag) { profileTags.remove(tag); }
 
-    // TODO: NBT save/load, packet serialisation
+    // ========== NBT persistence ==========
+
+    public CompoundTag save() {
+        CompoundTag tag = new CompoundTag();
+        if (uuid != null) tag.putUUID("uuid", uuid);
+        if (playerName != null) tag.putString("playerName", playerName);
+        tag.putBoolean("donation", donationActivated);
+
+        // Village reputations
+        ListTag repList = new ListTag();
+        for (Map.Entry<Point, Integer> entry : villageReputations.entrySet()) {
+            CompoundTag e = new CompoundTag();
+            entry.getKey().writeToNBT(e, "p");
+            e.putInt("rep", entry.getValue());
+            repList.add(e);
+        }
+        tag.put("villageRep", repList);
+
+        // Village diplomacy
+        ListTag dipList = new ListTag();
+        for (Map.Entry<Point, Byte> entry : villageDiplomacy.entrySet()) {
+            CompoundTag e = new CompoundTag();
+            entry.getKey().writeToNBT(e, "p");
+            e.putByte("dip", entry.getValue());
+            dipList.add(e);
+        }
+        tag.put("villageDip", dipList);
+
+        // Culture reputations
+        CompoundTag cultureRepTag = new CompoundTag();
+        for (Map.Entry<String, Integer> entry : cultureReputations.entrySet()) {
+            cultureRepTag.putInt(entry.getKey(), entry.getValue());
+        }
+        tag.put("cultureRep", cultureRepTag);
+
+        // Culture languages
+        CompoundTag cultureLangTag = new CompoundTag();
+        for (Map.Entry<String, Integer> entry : cultureLanguages.entrySet()) {
+            cultureLangTag.putInt(entry.getKey(), entry.getValue());
+        }
+        tag.put("cultureLang", cultureLangTag);
+
+        // Tags
+        ListTag tagList = new ListTag();
+        for (String t : profileTags) {
+            tagList.add(StringTag.valueOf(t));
+        }
+        tag.put("tags", tagList);
+
+        // Unlocked content
+        tag.put("unlockedVillagers", saveStringSet(unlockedVillagers));
+        tag.put("unlockedVillages", saveStringSet(unlockedVillages));
+        tag.put("unlockedBuildings", saveStringSet(unlockedBuildings));
+        tag.put("unlockedTradeGoods", saveStringSet(unlockedTradeGoods));
+
+        return tag;
+    }
+
+    public static UserProfile load(CompoundTag tag) {
+        UserProfile p = new UserProfile();
+        if (tag.hasUUID("uuid")) p.uuid = tag.getUUID("uuid");
+        if (tag.contains("playerName")) p.playerName = tag.getString("playerName");
+        p.donationActivated = tag.getBoolean("donation");
+
+        // Village reputations
+        if (tag.contains("villageRep", Tag.TAG_LIST)) {
+            ListTag repList = tag.getList("villageRep", Tag.TAG_COMPOUND);
+            for (int i = 0; i < repList.size(); i++) {
+                CompoundTag e = repList.getCompound(i);
+                Point pt = Point.readFromNBT(e, "p");
+                if (pt != null) p.villageReputations.put(pt, e.getInt("rep"));
+            }
+        }
+
+        // Village diplomacy
+        if (tag.contains("villageDip", Tag.TAG_LIST)) {
+            ListTag dipList = tag.getList("villageDip", Tag.TAG_COMPOUND);
+            for (int i = 0; i < dipList.size(); i++) {
+                CompoundTag e = dipList.getCompound(i);
+                Point pt = Point.readFromNBT(e, "p");
+                if (pt != null) p.villageDiplomacy.put(pt, e.getByte("dip"));
+            }
+        }
+
+        // Culture reputations
+        if (tag.contains("cultureRep", Tag.TAG_COMPOUND)) {
+            CompoundTag cr = tag.getCompound("cultureRep");
+            for (String key : cr.getAllKeys()) {
+                p.cultureReputations.put(key, cr.getInt(key));
+            }
+        }
+
+        // Culture languages
+        if (tag.contains("cultureLang", Tag.TAG_COMPOUND)) {
+            CompoundTag cl = tag.getCompound("cultureLang");
+            for (String key : cl.getAllKeys()) {
+                p.cultureLanguages.put(key, cl.getInt(key));
+            }
+        }
+
+        // Tags
+        if (tag.contains("tags", Tag.TAG_LIST)) {
+            ListTag tagList = tag.getList("tags", Tag.TAG_STRING);
+            for (int i = 0; i < tagList.size(); i++) {
+                p.profileTags.add(tagList.getString(i));
+            }
+        }
+
+        // Unlocked content
+        loadStringSet(tag, "unlockedVillagers", p.unlockedVillagers);
+        loadStringSet(tag, "unlockedVillages", p.unlockedVillages);
+        loadStringSet(tag, "unlockedBuildings", p.unlockedBuildings);
+        loadStringSet(tag, "unlockedTradeGoods", p.unlockedTradeGoods);
+
+        return p;
+    }
+
+    // ========== Packet serialization ==========
+
+    public void writeToBuffer(FriendlyByteBuf buf) {
+        CompoundTag tag = save();
+        buf.writeNbt(tag);
+    }
+
+    public static UserProfile readFromBuffer(FriendlyByteBuf buf) {
+        CompoundTag tag = buf.readNbt();
+        if (tag == null) return new UserProfile();
+        return load(tag);
+    }
+
+    // ========== Helpers ==========
+
+    private static ListTag saveStringSet(Set<String> set) {
+        ListTag list = new ListTag();
+        for (String s : set) {
+            list.add(StringTag.valueOf(s));
+        }
+        return list;
+    }
+
+    private static void loadStringSet(CompoundTag parent, String key, Set<String> target) {
+        if (parent.contains(key, Tag.TAG_LIST)) {
+            ListTag list = parent.getList(key, Tag.TAG_STRING);
+            for (int i = 0; i < list.size(); i++) {
+                target.add(list.getString(i));
+            }
+        }
+    }
 }
