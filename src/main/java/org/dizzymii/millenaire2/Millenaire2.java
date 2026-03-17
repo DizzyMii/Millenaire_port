@@ -19,6 +19,7 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
@@ -30,7 +31,10 @@ import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.item.MillItems;
 import org.dizzymii.millenaire2.menu.MillMenuTypes;
 import org.dizzymii.millenaire2.network.MillNetworking;
+import org.dizzymii.millenaire2.world.MillWorldData;
 import org.slf4j.Logger;
+
+import javax.annotation.Nullable;
 
 @Mod(Millenaire2.MODID)
 public class Millenaire2 {
@@ -38,6 +42,7 @@ public class Millenaire2 {
     public static final String MODNAME = "Millénaire";
     public static final String VERSION = "2.0.0";
     private static final Logger LOGGER = LogUtils.getLogger();
+    @Nullable private static MillWorldData worldData;
 
     // --- Deferred Registers ---
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MODID);
@@ -99,6 +104,22 @@ public class Millenaire2 {
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("{} server starting", MODNAME);
         org.dizzymii.millenaire2.culture.Culture.loadCultures();
+        // Initialize world data from the overworld
+        net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
+        worldData = MillWorldData.get(overworld);
+        LOGGER.info("{} world data loaded: {} buildings", MODNAME, worldData.allBuildings().size());
+    }
+
+    @SubscribeEvent
+    public void onServerTick(ServerTickEvent.Post event) {
+        if (worldData != null) {
+            worldData.tick();
+        }
+    }
+
+    @Nullable
+    public static MillWorldData getWorldData() {
+        return worldData;
     }
 
     @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
