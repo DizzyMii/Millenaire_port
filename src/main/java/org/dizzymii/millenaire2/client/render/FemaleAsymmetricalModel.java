@@ -25,7 +25,18 @@ public class FemaleAsymmetricalModel extends HumanoidModel<MillVillager.GenericA
 
     public static LayerDefinition createBodyLayer() {
         MeshDefinition meshDef = HumanoidModel.createMesh(CubeDeformation.NONE, 0.0F);
-        // TODO: Add asymmetric clothing cubes for sari/wrap model
+        // Female chest geometry
+        meshDef.getRoot().getChild("body")
+                .addOrReplaceChild("chest", net.minecraft.client.model.geom.builders.CubeListBuilder.create()
+                        .texOffs(20, 22)
+                        .addBox(-3.0F, -4.5F, -3.5F, 6.0F, 3.0F, 2.0F),
+                net.minecraft.client.model.geom.PartPose.ZERO);
+        // Asymmetric sari drape over left shoulder
+        meshDef.getRoot().getChild("body")
+                .addOrReplaceChild("sari", net.minecraft.client.model.geom.builders.CubeListBuilder.create()
+                        .texOffs(40, 22)
+                        .addBox(-5.0F, -6.0F, -2.5F, 3.0F, 12.0F, 5.0F),
+                net.minecraft.client.model.geom.PartPose.ZERO);
         return LayerDefinition.create(meshDef, 64, 32);
     }
 }

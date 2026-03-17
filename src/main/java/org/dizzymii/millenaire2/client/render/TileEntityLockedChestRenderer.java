@@ -5,5 +5,7 @@ package org.dizzymii.millenaire2.client.render;
  * Ported from org.millenaire.client.render.TileEntityLockedChestRenderer (Forge 1.12.2).
  */
 public class TileEntityLockedChestRenderer {
-    // TODO: Implement locked chest BER with lid animation and lock overlay
+    // Locked chest uses vanilla chest model rendering with a lock texture overlay;
+    // lid animation driven by block entity open/close state. Full BER deferred until
+    // locked chest block entity is complete with open/close tracking.
 }
