@@ -8,8 +8,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ChestMenu;
-import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SmeltingRecipe;
@@ -40,6 +39,32 @@ public class MillFirePitBlockEntity extends BaseContainerBlockEntity {
     public static final int SLOT_OUTPUT = 2;
     public static final int DEFAULT_COOK_TIME = 200;
 
+    private final ContainerData dataAccess = new ContainerData() {
+        @Override
+        public int get(int index) {
+            return switch (index) {
+                case 0 -> MillFirePitBlockEntity.this.burnTime;
+                case 1 -> MillFirePitBlockEntity.this.burnDuration;
+                case 2 -> MillFirePitBlockEntity.this.cookTime;
+                case 3 -> MillFirePitBlockEntity.this.cookDuration;
+                default -> 0;
+            };
+        }
+
+        @Override
+        public void set(int index, int value) {
+            switch (index) {
+                case 0 -> MillFirePitBlockEntity.this.burnTime = value;
+                case 1 -> MillFirePitBlockEntity.this.burnDuration = value;
+                case 2 -> MillFirePitBlockEntity.this.cookTime = value;
+                case 3 -> MillFirePitBlockEntity.this.cookDuration = value;
+            }
+        }
+
+        @Override
+        public int getCount() { return 4; }
+    };
+
     public MillFirePitBlockEntity(BlockPos pos, BlockState state) {
         super(MillEntities.FIRE_PIT_BE.get(), pos, state);
     }
@@ -66,7 +91,7 @@ public class MillFirePitBlockEntity extends BaseContainerBlockEntity {
 
     @Override
     protected AbstractContainerMenu createMenu(int containerId, Inventory playerInventory) {
-        return new ChestMenu(MenuType.GENERIC_9x1, containerId, playerInventory, this, 1);
+        return new org.dizzymii.millenaire2.menu.FirePitMenu(containerId, playerInventory, this, this.dataAccess);
     }
 
     @Override

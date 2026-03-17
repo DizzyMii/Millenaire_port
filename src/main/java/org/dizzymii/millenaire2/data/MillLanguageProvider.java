@@ -394,6 +394,11 @@ public class MillLanguageProvider extends LanguageProvider {
         addItem(MillItems.PARCHMENT_VILLAGE_SCROLL, "Village Scroll");
         addItem(MillItems.PARCHMENT_SADHU, "Sadhu Parchment");
 
+        // ===== Container Titles =====
+        add("container.millenaire2.fire_pit", "Fire Pit");
+        add("container.millenaire2.locked_chest", "Locked Chest");
+        add("container.millenaire2.import_table", "Import Table");
+
         // ===== Entity =====
         add("entity.millenaire2.mill_villager_male", "Villager");
         add("entity.millenaire2.mill_villager_female_symm", "Villager");
