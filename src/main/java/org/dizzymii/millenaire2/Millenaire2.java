@@ -17,11 +17,16 @@ import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.dizzymii.millenaire2.block.MillBlocks;
+import org.dizzymii.millenaire2.data.ContentDeployer;
+import org.dizzymii.millenaire2.entity.MillEntities;
+import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.item.MillItems;
+import org.dizzymii.millenaire2.network.MillNetworking;
 import org.slf4j.Logger;
 
 @Mod(Millenaire2.MODID)
@@ -51,6 +56,8 @@ public class Millenaire2 {
 
     public Millenaire2(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(this::registerEntityAttributes);
+        modEventBus.addListener(MillNetworking::register);
 
         // Register all deferred registers
         BLOCKS.register(modEventBus);
@@ -62,6 +69,7 @@ public class Millenaire2 {
         // Force class loading of registration holders
         MillBlocks.init();
         MillItems.init();
+        MillEntities.init();
 
         NeoForge.EVENT_BUS.register(this);
 
@@ -70,6 +78,13 @@ public class Millenaire2 {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         LOGGER.info("{} {} common setup", MODNAME, VERSION);
+        event.enqueueWork(ContentDeployer::deployContent);
+    }
+
+    private void registerEntityAttributes(EntityAttributeCreationEvent event) {
+        event.put(MillEntities.GENERIC_MALE.get(), MillVillager.createAttributes().build());
+        event.put(MillEntities.GENERIC_SYMM_FEMALE.get(), MillVillager.createAttributes().build());
+        event.put(MillEntities.GENERIC_ASYMM_FEMALE.get(), MillVillager.createAttributes().build());
     }
 
     @SubscribeEvent
