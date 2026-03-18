@@ -219,10 +219,32 @@ public final class ServerPacketHandler {
     private static void handleMapInfoRequest(IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
         MillLog.minor("ServerPacketHandler", "Map info requested by " + player.getName().getString());
-        // Map info packet contains village positions and culture markers for the minimap
-        // Currently sends empty data — will be populated when MillWorldData tracks village positions
+
+        org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
-        w.writeInt(0); // village count
+
+        if (mw != null) {
+            java.util.Collection<org.dizzymii.millenaire2.village.Building> buildings = mw.allBuildings();
+            // Count townhalls (village markers) for the minimap
+            int count = 0;
+            for (org.dizzymii.millenaire2.village.Building b : buildings) {
+                if (b.isTownhall && b.isActive && b.getPos() != null) count++;
+            }
+            w.writeInt(count);
+            for (org.dizzymii.millenaire2.village.Building b : buildings) {
+                if (!b.isTownhall || !b.isActive || b.getPos() == null) continue;
+                org.dizzymii.millenaire2.util.Point pos = b.getPos();
+                w.writeInt(pos.x);
+                w.writeInt(pos.y);
+                w.writeInt(pos.z);
+                w.writeString(b.cultureKey != null ? b.cultureKey : "");
+                w.writeString(b.getName() != null ? b.getName() : "Village");
+                w.writeInt(b.getVillagerRecords().size());
+            }
+        } else {
+            w.writeInt(0);
+        }
+
         org.dizzymii.millenaire2.network.payloads.MillGenericS2CPayload payload =
                 new org.dizzymii.millenaire2.network.payloads.MillGenericS2CPayload(
                         MillPacketIds.PACKET_MAPINFO, 0, w.toByteArray());
