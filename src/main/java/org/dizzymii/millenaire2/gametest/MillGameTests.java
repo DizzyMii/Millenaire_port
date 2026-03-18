@@ -332,4 +332,243 @@ public class MillGameTests {
 
         helper.succeed();
     }
+
+    // ==================== PointType Colour Mapping ====================
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testPointTypeColoursLoaded(GameTestHelper helper) {
+        helper.assertTrue(
+                org.dizzymii.millenaire2.buildingplan.PointType.colourPoints.size() > 50,
+                "Expected >50 PointType colour mappings, got "
+                        + org.dizzymii.millenaire2.buildingplan.PointType.colourPoints.size());
+
+        // Spot-check a few well-known colours
+        helper.assertFalse(
+                org.dizzymii.millenaire2.buildingplan.PointType.colourPoints.get(0x808080) == null,
+                "Cobblestone colour 0x808080 missing");
+        helper.assertFalse(
+                org.dizzymii.millenaire2.buildingplan.PointType.colourPoints.get(0xFF0000) == null,
+                "Bricks colour 0xFF0000 missing");
+
+        helper.succeed();
+    }
+
+    // ==================== BiomeCultureMapper ====================
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testBiomeCultureMapperLoaded(GameTestHelper helper) {
+        helper.assertTrue(
+                org.dizzymii.millenaire2.world.BiomeCultureMapper.isLoaded(),
+                "BiomeCultureMapper should be loaded at server start");
+
+        // selectCulture should return a non-null culture
+        ServerLevel level = helper.getLevel();
+        net.minecraft.core.BlockPos pos = helper.absolutePos(net.minecraft.core.BlockPos.ZERO);
+        Culture culture = org.dizzymii.millenaire2.world.BiomeCultureMapper.selectCulture(
+                level, pos, level.random);
+        helper.assertFalse(culture == null,
+                "BiomeCultureMapper.selectCulture returned null");
+
+        helper.succeed();
+    }
+
+    // ==================== VillageEconomyLoader ====================
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testVillageEconomyLoaderLoaded(GameTestHelper helper) {
+        helper.assertTrue(
+                org.dizzymii.millenaire2.village.VillageEconomyLoader.isLoaded(),
+                "VillageEconomyLoader should be loaded at server start");
+
+        helper.succeed();
+    }
+
+    // ==================== DiplomacyManager ====================
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testDiplomacyManagerLoaded(GameTestHelper helper) {
+        helper.assertTrue(
+                org.dizzymii.millenaire2.village.DiplomacyManager.isLoaded(),
+                "DiplomacyManager should be loaded at server start");
+
+        helper.succeed();
+    }
+
+    // ==================== BuildingResManager ====================
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testBuildingResManagerStoreAndTake(GameTestHelper helper) {
+        Building b = new Building();
+        org.dizzymii.millenaire2.item.InvItem testItem =
+                org.dizzymii.millenaire2.item.InvItem.get("wheat");
+
+        // If InvItem registry is empty, skip gracefully
+        if (testItem == null) {
+            helper.succeed();
+            return;
+        }
+
+        b.resManager.storeGoods(testItem, 10);
+        helper.assertTrue(b.resManager.countGoods(testItem) == 10,
+                "Expected 10 goods stored, got " + b.resManager.countGoods(testItem));
+
+        boolean took = b.resManager.takeGoods(testItem, 3);
+        helper.assertTrue(took, "takeGoods should succeed");
+        helper.assertTrue(b.resManager.countGoods(testItem) == 7,
+                "Expected 7 goods remaining, got " + b.resManager.countGoods(testItem));
+
+        boolean tookTooMany = b.resManager.takeGoods(testItem, 100);
+        helper.assertFalse(tookTooMany, "takeGoods should fail when not enough stock");
+
+        helper.succeed();
+    }
+
+    // ==================== ConstructionIP Block Placement ====================
+
+    @GameTest(template = "empty", timeoutTicks = 60)
+    public static void testConstructionIPPlacesBlocks(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        net.minecraft.core.BlockPos origin = helper.absolutePos(new net.minecraft.core.BlockPos(1, 1, 1));
+
+        // Create a small ConstructionIP manually with known blocks
+        java.util.List<org.dizzymii.millenaire2.buildingplan.BuildingBlock> blocks = new java.util.ArrayList<>();
+        org.dizzymii.millenaire2.buildingplan.BuildingBlock bb1 =
+                new org.dizzymii.millenaire2.buildingplan.BuildingBlock();
+        bb1.blockState = net.minecraft.world.level.block.Blocks.STONE.defaultBlockState();
+        bb1.x = 0; bb1.y = 0; bb1.z = 0;
+        blocks.add(bb1);
+
+        org.dizzymii.millenaire2.buildingplan.BuildingBlock bb2 =
+                new org.dizzymii.millenaire2.buildingplan.BuildingBlock();
+        bb2.blockState = net.minecraft.world.level.block.Blocks.OAK_PLANKS.defaultBlockState();
+        bb2.x = 1; bb2.y = 0; bb2.z = 0;
+        blocks.add(bb2);
+
+        org.dizzymii.millenaire2.village.BuildingLocation loc =
+                new org.dizzymii.millenaire2.village.BuildingLocation();
+        loc.pos = new Point(origin.getX(), origin.getY(), origin.getZ());
+
+        ConstructionIP cip = new ConstructionIP(loc);
+        cip.setBlocks(blocks);
+
+        helper.assertFalse(cip.isComplete(), "New CIP should not be complete");
+        helper.assertTrue(cip.nbBlocksTotal == 2, "Expected 2 total blocks");
+
+        // Place all blocks
+        int placed = cip.placeBlocks(level, 10);
+        helper.assertTrue(placed == 2, "Expected 2 blocks placed, got " + placed);
+        helper.assertTrue(cip.isComplete(), "CIP should be complete after placing all");
+
+        // Verify blocks exist in the world
+        helper.assertBlockPresent(net.minecraft.world.level.block.Blocks.STONE,
+                new net.minecraft.core.BlockPos(1, 1, 1));
+        helper.assertBlockPresent(net.minecraft.world.level.block.Blocks.OAK_PLANKS,
+                new net.minecraft.core.BlockPos(2, 1, 1));
+
+        helper.succeed();
+    }
+
+    // ==================== Building Tick Progresses Construction ====================
+
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testBuildingTickProgressesConstruction(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        net.minecraft.core.BlockPos abs = helper.absolutePos(new net.minecraft.core.BlockPos(1, 1, 1));
+
+        Building b = new Building();
+        b.isActive = true;
+        b.isTownhall = false;
+        b.world = level;
+        b.setPos(new Point(abs.getX(), abs.getY(), abs.getZ()));
+
+        // Set up a small construction
+        java.util.List<org.dizzymii.millenaire2.buildingplan.BuildingBlock> blocks = new java.util.ArrayList<>();
+        org.dizzymii.millenaire2.buildingplan.BuildingBlock bb =
+                new org.dizzymii.millenaire2.buildingplan.BuildingBlock();
+        bb.blockState = net.minecraft.world.level.block.Blocks.COBBLESTONE.defaultBlockState();
+        bb.x = 0; bb.y = 0; bb.z = 0;
+        blocks.add(bb);
+
+        org.dizzymii.millenaire2.village.BuildingLocation loc =
+                new org.dizzymii.millenaire2.village.BuildingLocation();
+        loc.pos = new Point(abs.getX(), abs.getY(), abs.getZ());
+
+        ConstructionIP cip = new ConstructionIP(loc);
+        cip.setBlocks(blocks);
+        b.currentConstruction = cip;
+
+        helper.assertTrue(b.isUnderConstruction(),
+                "Building should be under construction");
+
+        // Tick 20 times to trigger slowTick
+        for (int i = 0; i < 20; i++) {
+            b.tick();
+        }
+
+        // Construction should be complete (1 block, placed in slowTick)
+        helper.assertFalse(b.isUnderConstruction(),
+                "Construction should be complete after 20 ticks");
+        helper.assertBlockPresent(net.minecraft.world.level.block.Blocks.COBBLESTONE,
+                new net.minecraft.core.BlockPos(1, 1, 1));
+
+        helper.succeed();
+    }
+
+    // ==================== ConstructionIP NBT Round-Trip ====================
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testConstructionIPNBTRoundTrip(GameTestHelper helper) {
+        org.dizzymii.millenaire2.village.BuildingLocation loc =
+                new org.dizzymii.millenaire2.village.BuildingLocation();
+        loc.pos = new Point(10, 64, 20);
+
+        ConstructionIP original = new ConstructionIP(loc);
+        java.util.List<org.dizzymii.millenaire2.buildingplan.BuildingBlock> blocks = new java.util.ArrayList<>();
+
+        org.dizzymii.millenaire2.buildingplan.BuildingBlock bb =
+                new org.dizzymii.millenaire2.buildingplan.BuildingBlock();
+        bb.blockState = net.minecraft.world.level.block.Blocks.BRICKS.defaultBlockState();
+        bb.x = 0; bb.y = 0; bb.z = 0;
+        blocks.add(bb);
+
+        org.dizzymii.millenaire2.buildingplan.BuildingBlock bb2 =
+                new org.dizzymii.millenaire2.buildingplan.BuildingBlock();
+        bb2.blockState = net.minecraft.world.level.block.Blocks.OAK_LOG.defaultBlockState();
+        bb2.x = 1; bb2.y = 0; bb2.z = 0;
+        bb2.secondStep = true;
+        blocks.add(bb2);
+
+        original.setBlocks(blocks);
+        original.placeNextBlock(helper.getLevel()); // place one block
+        helper.assertTrue(original.nbBlocksDone == 1, "Should have placed 1 block");
+
+        // Save and reload
+        net.minecraft.nbt.CompoundTag tag = original.save();
+        ConstructionIP loaded = ConstructionIP.load(tag);
+
+        helper.assertTrue(loaded.nbBlocksDone == 1, "nbBlocksDone not persisted");
+        helper.assertTrue(loaded.nbBlocksTotal == 2, "nbBlocksTotal not persisted");
+        helper.assertFalse(loaded.isComplete(), "Loaded CIP should not be complete (1 block remaining)");
+
+        helper.succeed();
+    }
+
+    // ==================== UserProfile NBT Round-Trip ====================
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testUserProfileNBTRoundTrip(GameTestHelper helper) {
+        UserProfile original = new UserProfile();
+        original.deniers = 500;
+        original.adjustVillageReputation(new Point(100, 64, 200), 75);
+
+        net.minecraft.nbt.CompoundTag tag = original.save();
+        UserProfile loaded = UserProfile.load(tag);
+
+        helper.assertTrue(loaded.deniers == 500,
+                "Deniers not persisted, got " + loaded.deniers);
+        helper.assertTrue(loaded.getVillageReputation(new Point(100, 64, 200)) == 75,
+                "Reputation not persisted");
+
+        helper.succeed();
+    }
 }

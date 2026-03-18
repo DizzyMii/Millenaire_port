@@ -162,6 +162,12 @@ publishing {
     }
 }
 
+// Run GameTests automatically as part of the build lifecycle.
+// 'check' is executed by 'build', so this ensures tests run on every build.
+tasks.named('check') {
+    dependsOn 'runGameTestServer'
+}
+
 // IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
 idea {
     module {
