@@ -1,7 +1,6 @@
 package org.dizzymii.millenaire2.village;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
@@ -164,14 +163,14 @@ public class ConstructionIP {
             location.save(tag, "loc");
         }
 
-        // Save remaining first-pass blocks with full BlockState
+        // Save remaining first-pass blocks with block state
         ListTag firstList = new ListTag();
         for (BuildingBlock bb : firstPassBlocks) {
             firstList.add(saveBuildingBlock(bb));
         }
         tag.put("firstPass", firstList);
 
-        // Save remaining second-pass blocks with full BlockState
+        // Save remaining second-pass blocks with block state
         ListTag secondList = new ListTag();
         for (BuildingBlock bb : secondPassBlocks) {
             secondList.add(saveBuildingBlock(bb));
@@ -207,6 +206,8 @@ public class ConstructionIP {
         return cip;
     }
 
+    // ========== Block NBT helpers ==========
+
     private static CompoundTag saveBuildingBlock(BuildingBlock bb) {
         CompoundTag bt = new CompoundTag();
         bt.putInt("x", bb.x);
@@ -226,7 +227,9 @@ public class ConstructionIP {
         bb.z = bt.getInt("z");
         bb.secondStep = bt.contains("second") ? bt.getBoolean("second") : defaultSecond;
         if (bt.contains("state", Tag.TAG_COMPOUND)) {
-            bb.blockState = NbtUtils.readBlockState(BuiltInRegistries.BLOCK.asLookup(), bt.getCompound("state"));
+            bb.blockState = NbtUtils.readBlockState(
+                    net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),
+                    bt.getCompound("state"));
         }
         return bb;
     }

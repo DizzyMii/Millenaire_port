@@ -21,12 +21,21 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  */
 public class BlockMillSapling extends Block implements BonemealableBlock {
 
+    public enum TreeType { APPLE, OLIVE, PISTACHIO, CHERRY, SAKURA }
+
     public static final IntegerProperty STAGE = IntegerProperty.create("stage", 0, 1);
     private static final VoxelShape SHAPE = Block.box(2.0, 0.0, 2.0, 14.0, 12.0, 14.0);
 
-    public BlockMillSapling(BlockBehaviour.Properties props) {
+    private final TreeType treeType;
+
+    public BlockMillSapling(BlockBehaviour.Properties props, TreeType treeType) {
         super(props);
+        this.treeType = treeType;
         this.registerDefaultState(this.stateDefinition.any().setValue(STAGE, 0));
+    }
+
+    public BlockMillSapling(BlockBehaviour.Properties props) {
+        this(props, TreeType.APPLE);
     }
 
     @Override
@@ -60,25 +69,16 @@ public class BlockMillSapling extends Block implements BonemealableBlock {
     }
 
     private void growTree(ServerLevel level, BlockPos pos, RandomSource random) {
-        // Replace sapling with oak log + leaves as fallback.
-        // Custom tree generators (WorldGenTree subclasses) will be wired in Phase 10.
-        level.setBlock(pos, net.minecraft.world.level.block.Blocks.OAK_LOG.defaultBlockState(), 3);
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                for (int dy = 3; dy <= 5; dy++) {
-                    BlockPos leafPos = pos.offset(dx, dy, dz);
-                    if (level.isEmptyBlock(leafPos)) {
-                        level.setBlock(leafPos, net.minecraft.world.level.block.Blocks.OAK_LEAVES.defaultBlockState(), 3);
-                    }
-                }
-            }
-        }
-        // Place trunk
-        for (int y = 1; y <= 3; y++) {
-            BlockPos logPos = pos.above(y);
-            if (level.isEmptyBlock(logPos)) {
-                level.setBlock(logPos, net.minecraft.world.level.block.Blocks.OAK_LOG.defaultBlockState(), 3);
-            }
+        level.removeBlock(pos, false);
+        boolean success = switch (treeType) {
+            case APPLE -> new org.dizzymii.millenaire2.world.WorldGenAppleTree().generate(level, random, pos);
+            case OLIVE -> new org.dizzymii.millenaire2.world.WorldGenOliveTree().generate(level, random, pos);
+            case PISTACHIO -> new org.dizzymii.millenaire2.world.WorldGenPistachio().generate(level, random, pos);
+            case CHERRY -> new org.dizzymii.millenaire2.world.WorldGenCherry().generate(level, random, pos);
+            case SAKURA -> new org.dizzymii.millenaire2.world.WorldGenSakura().generate(level, random, pos);
+        };
+        if (!success) {
+            level.setBlock(pos, this.defaultBlockState().setValue(STAGE, 1), 4);
         }
     }
 

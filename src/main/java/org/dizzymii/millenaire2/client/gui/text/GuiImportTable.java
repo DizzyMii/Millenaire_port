@@ -2,6 +2,9 @@ package org.dizzymii.millenaire2.client.gui.text;
 
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
+import org.dizzymii.millenaire2.network.ClientPacketSender;
+import org.dizzymii.millenaire2.network.MillPacketIds;
+import org.dizzymii.millenaire2.network.PacketDataHelper;
 
 /**
  * Import table screen — allows importing custom building plans from PNG files.
@@ -31,7 +34,9 @@ public class GuiImportTable extends GuiText {
     }
 
     private void importPlan() {
-        // Trigger plan import from file system
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeString("custom-plan"); // placeholder plan path
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_IMPORTTABLE_IMPORTBUILDINGPLAN, w.toByteArray());
         onClose();
     }
 }

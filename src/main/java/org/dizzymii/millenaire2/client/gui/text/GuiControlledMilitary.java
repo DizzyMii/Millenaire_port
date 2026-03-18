@@ -49,13 +49,13 @@ public class GuiControlledMilitary extends GuiText {
 
     private void sendPatrol() {
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
-        w.writeInt(0); // 0 = patrol
-        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_TOGGLE_STANCE, w);
+        w.writeInt(-1); // entity ID from context
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_MILITARY_RAID, w.toByteArray());
     }
 
     private void setDefend() {
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
-        w.writeInt(1); // 1 = defend
-        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_TOGGLE_STANCE, w);
+        w.writeInt(-1); // entity ID from context
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_MILITARY_CANCEL_RAID, w.toByteArray());
     }
 }

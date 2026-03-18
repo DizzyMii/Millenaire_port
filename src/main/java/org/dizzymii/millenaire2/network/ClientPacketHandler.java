@@ -32,6 +32,18 @@ public final class ClientPacketHandler {
     @Nullable public static QuestClientEntry cachedQuest = null;
     public static int cachedQuestVillagerEntityId = -1;
 
+    // Client-side profile cache
+    public static final java.util.HashMap<String, Integer> cachedVillageReputations = new java.util.HashMap<>();
+    public static final java.util.HashMap<String, Integer> cachedCultureReputations = new java.util.HashMap<>();
+    public static final java.util.HashMap<String, Integer> cachedCultureLanguages = new java.util.HashMap<>();
+    public static int cachedProfileDeniers = 0;
+
+    // Client-side building cache
+    public static final java.util.HashMap<String, BuildingSyncEntry> cachedBuildings = new java.util.HashMap<>();
+
+    // Client-side map village markers
+    public static final List<VillageMapMarker> cachedMapMarkers = new ArrayList<>();
+
     private ClientPacketHandler() {}
 
     public static void handleGenericS2C(MillGenericS2CPayload payload) {
@@ -218,9 +230,39 @@ public final class ClientPacketHandler {
         PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
         try {
             int readUpdateType = r.readInt();
-            // Apply reputation/language data to client-side profile cache
-            MillLog.minor("ClientPacketHandler", "Received profile update type: " + readUpdateType);
-            // Profile data is logged; full client-side caching will use a mirror of UserProfile
+            if (readUpdateType == 1 || readUpdateType == 2) { // UPDATE_ALL or UPDATE_REPUTATION
+                // Village reputations
+                int villageRepCount = r.hasRemaining() ? r.readInt() : 0;
+                cachedVillageReputations.clear();
+                for (int i = 0; i < villageRepCount; i++) {
+                    boolean hasPoint = r.readBoolean();
+                    if (hasPoint) {
+                        int px = r.readInt(); int py = r.readInt(); int pz = r.readInt();
+                        int rep = r.readInt();
+                        cachedVillageReputations.put(px + "," + py + "," + pz, rep);
+                    }
+                }
+                // Culture reputations
+                int cultureRepCount = r.hasRemaining() ? r.readInt() : 0;
+                cachedCultureReputations.clear();
+                for (int i = 0; i < cultureRepCount; i++) {
+                    String key = r.readString();
+                    int rep = r.readInt();
+                    cachedCultureReputations.put(key, rep);
+                }
+                cachedProfileDeniers = r.hasRemaining() ? r.readInt() : 0;
+            }
+            if (readUpdateType == 1 || readUpdateType == 6) { // UPDATE_ALL or UPDATE_LANGUAGE
+                int langCount = r.hasRemaining() ? r.readInt() : 0;
+                cachedCultureLanguages.clear();
+                for (int i = 0; i < langCount; i++) {
+                    String key = r.readString();
+                    int level = r.readInt();
+                    cachedCultureLanguages.put(key, level);
+                }
+            }
+            MillLog.minor("ClientPacketHandler", "Profile update type " + readUpdateType
+                    + ": " + cachedCultureReputations.size() + " culture reps, deniers=" + cachedProfileDeniers);
         } catch (Exception e) {
             MillLog.error("ClientPacketHandler", "Error handling profile sync", e);
         } finally {
@@ -251,14 +293,14 @@ public final class ClientPacketHandler {
     private static void handleBuildingSync(byte[] data) {
         PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
         try {
-            // Read building identification
             Point pos = readOptionalPoint(r);
             String name = r.hasRemaining() ? r.readString() : "";
             String cultureKey = r.hasRemaining() ? r.readString() : "";
             boolean isTownhall = r.hasRemaining() && r.readBoolean();
+            String posKey = pos != null ? pos.x + "," + pos.y + "," + pos.z : "unknown";
+            cachedBuildings.put(posKey, new BuildingSyncEntry(pos, name, cultureKey, isTownhall));
             MillLog.minor("ClientPacketHandler", "Building sync: " + name + " at " + pos
                     + " culture=" + cultureKey + " townhall=" + isTownhall);
-            // Client-side building cache will be updated when client village tracking is implemented
         } catch (Exception e) {
             MillLog.error("ClientPacketHandler", "Error handling building sync", e);
         } finally {
@@ -273,7 +315,8 @@ public final class ClientPacketHandler {
         try {
             int chestEntityId = r.readInt();
             MillLog.minor("ClientPacketHandler", "Locked chest data for entity: " + chestEntityId);
-            // Chest contents will be displayed in the locked chest GUI screen
+            // Open chest GUI with entity reference
+            org.dizzymii.millenaire2.client.ClientGuiHandler.openGui(org.dizzymii.millenaire2.network.MillPacketIds.GUI_MILLCHEST);
         } catch (Exception e) {
             MillLog.error("ClientPacketHandler", "Error handling locked chest", e);
         } finally {
@@ -287,8 +330,13 @@ public final class ClientPacketHandler {
         PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
         try {
             int villageCount = r.readInt();
+            cachedMapMarkers.clear();
+            for (int i = 0; i < villageCount; i++) {
+                Point pos = readOptionalPoint(r);
+                String culture = r.hasRemaining() ? r.readString() : "";
+                cachedMapMarkers.add(new VillageMapMarker(pos, culture));
+            }
             MillLog.minor("ClientPacketHandler", "Map info received: " + villageCount + " villages");
-            // Village markers for minimap overlay will be cached here
         } catch (Exception e) {
             MillLog.error("ClientPacketHandler", "Error handling map info", e);
         } finally {
@@ -426,6 +474,30 @@ public final class ClientPacketHandler {
             this.name = name;
             this.distance = distance;
             this.isLoneBuilding = isLoneBuilding;
+        }
+    }
+
+    public static class BuildingSyncEntry {
+        @Nullable public final Point pos;
+        public final String name;
+        public final String cultureKey;
+        public final boolean isTownhall;
+
+        public BuildingSyncEntry(@Nullable Point pos, String name, String cultureKey, boolean isTownhall) {
+            this.pos = pos;
+            this.name = name;
+            this.cultureKey = cultureKey;
+            this.isTownhall = isTownhall;
+        }
+    }
+
+    public static class VillageMapMarker {
+        @Nullable public final Point pos;
+        public final String cultureKey;
+
+        public VillageMapMarker(@Nullable Point pos, String cultureKey) {
+            this.pos = pos;
+            this.cultureKey = cultureKey;
         }
     }
 }

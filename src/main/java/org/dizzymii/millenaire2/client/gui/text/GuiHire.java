@@ -38,8 +38,9 @@ public class GuiHire extends GuiText {
 
     private void hire(String unitType) {
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeInt(-1); // entity ID will be set from context
         w.writeString(unitType);
-        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_HIRE_HIRE, w);
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_HIRE_HIRE, w.toByteArray());
         onClose();
     }
 }

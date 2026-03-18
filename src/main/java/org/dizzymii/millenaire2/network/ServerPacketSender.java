@@ -203,14 +203,31 @@ public final class ServerPacketSender {
     }
 
     private static void writeReputations(PacketDataHelper.Writer w, UserProfile profile) {
-        // Culture reputations — write count then key/value pairs
-        // Profile doesn't expose its maps directly, so we write what's accessible
-        // For now write an empty count — will be filled when profile maps are exposed
-        w.writeInt(0);
+        // Village reputations
+        java.util.Map<Point, Integer> villageReps = profile.getVillageReputations();
+        w.writeInt(villageReps.size());
+        for (java.util.Map.Entry<Point, Integer> entry : villageReps.entrySet()) {
+            writePoint(w, entry.getKey());
+            w.writeInt(entry.getValue());
+        }
+        // Culture reputations
+        java.util.Map<String, Integer> cultureReps = profile.getCultureReputations();
+        w.writeInt(cultureReps.size());
+        for (java.util.Map.Entry<String, Integer> entry : cultureReps.entrySet()) {
+            w.writeString(entry.getKey());
+            w.writeInt(entry.getValue());
+        }
+        // Deniers
+        w.writeInt(profile.deniers);
     }
 
     private static void writeLanguages(PacketDataHelper.Writer w, UserProfile profile) {
-        w.writeInt(0);
+        java.util.Map<String, Integer> langs = profile.getCultureLanguages();
+        w.writeInt(langs.size());
+        for (java.util.Map.Entry<String, Integer> entry : langs.entrySet()) {
+            w.writeString(entry.getKey());
+            w.writeInt(entry.getValue());
+        }
     }
 
     // ========== Data classes ==========

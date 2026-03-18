@@ -321,6 +321,12 @@ public class Building {
 
         if (needed != null) {
             startNewBuilding(needed, culture);
+            return;
+        }
+
+        // 3. Try to build walls if culture has wall types and village is large enough
+        if (builtPlanSets.size() >= 3 && !culture.wallTypes.isEmpty()) {
+            tryBuildWallSegment(culture, builtPlanSets);
         }
     }
 
@@ -375,6 +381,98 @@ public class Building {
             mw.addBuilding(newBuilding, newPos);
             mw.setDirty();
             MillLog.minor("Building", "Village expansion: new building " + newPlanSetKey + " at " + newPos);
+        }
+    }
+
+    /**
+     * Attempt to place a wall segment around the village perimeter.
+     * Picks the first WallType from the culture and places blocks in a ring.
+     */
+    private void tryBuildWallSegment(Culture culture, java.util.Set<String> builtPlanSets) {
+        if (pos == null || !(world instanceof ServerLevel serverLevel)) return;
+
+        // Check if wall plan sets exist and are already built
+        for (BuildingPlanSet ps : culture.planSets.values()) {
+            if (ps.isWallSegment && !builtPlanSets.contains(ps.key)) {
+                BuildingPlan wallPlan = ps.getInitialPlan();
+                if (wallPlan != null && wallPlan.hasImage()) {
+                    startNewBuilding(ps.key, culture);
+                    return;
+                }
+            }
+        }
+
+        // Fallback: place wall blocks directly using WallType data
+        org.dizzymii.millenaire2.culture.WallType wallType =
+                culture.wallTypes.values().stream().findFirst().orElse(null);
+        if (wallType == null || wallType.wallBlocks.isEmpty()) return;
+
+        // Resolve the wall block
+        net.minecraft.resources.ResourceLocation blockId =
+                net.minecraft.resources.ResourceLocation.tryParse(wallType.wallBlocks.get(0));
+        if (blockId == null) return;
+        net.minecraft.world.level.block.Block wallBlock =
+                net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(blockId);
+        if (wallBlock == net.minecraft.world.level.block.Blocks.AIR) return;
+        net.minecraft.world.level.block.state.BlockState wallState = wallBlock.defaultBlockState();
+
+        // Calculate village bounding box from buildings
+        int minX = pos.x, maxX = pos.x, minZ = pos.z, maxZ = pos.z;
+        for (Building b : mw.getBuildingsMap().values()) {
+            if (!isSameVillage(b) || b.getPos() == null) continue;
+            minX = Math.min(minX, b.getPos().x - 10);
+            maxX = Math.max(maxX, b.getPos().x + 10);
+            minZ = Math.min(minZ, b.getPos().z - 10);
+            maxZ = Math.max(maxZ, b.getPos().z + 10);
+        }
+
+        // Place wall blocks along perimeter at ground level
+        int y = pos.y;
+        int placed = 0;
+        for (int h = 0; h < wallType.height; h++) {
+            for (int x = minX; x <= maxX; x++) {
+                placeWallBlock(serverLevel, x, y + h, minZ, wallState);
+                placeWallBlock(serverLevel, x, y + h, maxZ, wallState);
+            }
+            for (int z = minZ + 1; z < maxZ; z++) {
+                placeWallBlock(serverLevel, minX, y + h, z, wallState);
+                placeWallBlock(serverLevel, maxX, y + h, z, wallState);
+            }
+            placed++;
+        }
+
+        // Place top blocks if defined
+        if (!wallType.topBlocks.isEmpty()) {
+            net.minecraft.resources.ResourceLocation topId =
+                    net.minecraft.resources.ResourceLocation.tryParse(wallType.topBlocks.get(0));
+            if (topId != null) {
+                net.minecraft.world.level.block.Block topBlock =
+                        net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(topId);
+                if (topBlock != net.minecraft.world.level.block.Blocks.AIR) {
+                    net.minecraft.world.level.block.state.BlockState topState = topBlock.defaultBlockState();
+                    for (int x = minX; x <= maxX; x++) {
+                        placeWallBlock(serverLevel, x, y + wallType.height, minZ, topState);
+                        placeWallBlock(serverLevel, x, y + wallType.height, maxZ, topState);
+                    }
+                    for (int z = minZ + 1; z < maxZ; z++) {
+                        placeWallBlock(serverLevel, minX, y + wallType.height, z, topState);
+                        placeWallBlock(serverLevel, maxX, y + wallType.height, z, topState);
+                    }
+                }
+            }
+        }
+
+        if (placed > 0) {
+            MillLog.minor("Building", "Village wall construction: " + wallType.key + " around " + getName());
+            mw.setDirty();
+        }
+    }
+
+    private void placeWallBlock(ServerLevel level, int x, int y, int z,
+                                net.minecraft.world.level.block.state.BlockState state) {
+        net.minecraft.core.BlockPos bp = new net.minecraft.core.BlockPos(x, y, z);
+        if (level.isEmptyBlock(bp) || level.getBlockState(bp).canBeReplaced()) {
+            level.setBlock(bp, state, 3);
         }
     }
 

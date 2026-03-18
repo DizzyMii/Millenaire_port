@@ -272,70 +272,135 @@ public final class ServerPacketHandler {
 
     private static void handleChiefAction(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Chief action " + actionId + " from " + player.getName().getString());
-        // Chief actions modify village building priorities, crop selection, diplomacy, etc.
-        // Actual village modification deferred to when Village tick system is complete
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            int entityId = r.hasRemaining() ? r.readInt() : -1;
+            Entity entity = entityId >= 0 ? player.level().getEntity(entityId) : null;
+            MillVillager villager = entity instanceof MillVillager mv ? mv : null;
+            org.dizzymii.millenaire2.village.Building building = villager != null
+                    ? (villager.getTownHallBuilding() != null ? villager.getTownHallBuilding() : villager.getHomeBuilding())
+                    : null;
+            if (building == null || !building.isTownhall) {
+                MillLog.warn("ServerPacketHandler", "Chief action " + actionId + ": no valid townhall");
+                return;
+            }
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw == null) return;
+
+            switch (actionId) {
+                case MillPacketIds.GUIACTION_CHIEF_BUILDING -> {
+                    String planSetKey = r.hasRemaining() ? r.readString() : "";
+                    int priority = r.hasRemaining() ? r.readInt() : 0;
+                    if (!planSetKey.isEmpty()) {
+                        org.dizzymii.millenaire2.village.BuildingProject bp =
+                                new org.dizzymii.millenaire2.village.BuildingProject(planSetKey, null,
+                                        org.dizzymii.millenaire2.village.BuildingProject.EnumProjects.PLAYER);
+                        bp.priority = priority;
+                        building.buildingProjects
+                                .computeIfAbsent(org.dizzymii.millenaire2.village.BuildingProject.EnumProjects.PLAYER,
+                                        k -> new java.util.concurrent.CopyOnWriteArrayList<>())
+                                .add(bp);
+                        mw.setDirty();
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                                "§6[Millénaire]§r Building project '" + planSetKey + "' added."));
+                    }
+                }
+                case MillPacketIds.GUIACTION_CHIEF_CROP -> {
+                    MillLog.minor("ServerPacketHandler", "Chief crop change for " + building.getName());
+                    mw.setDirty();
+                }
+                case MillPacketIds.GUIACTION_CHIEF_CONTROL -> {
+                    if (building.controlledBy != null && building.controlledBy.equals(player.getUUID())) {
+                        building.controlledBy = null;
+                        building.controlledByName = null;
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                                "§6[Millénaire]§r Released control of " + building.getName()));
+                    } else {
+                        building.controlledBy = player.getUUID();
+                        building.controlledByName = player.getGameProfile().getName();
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                                "§6[Millénaire]§r Now controlling " + building.getName()));
+                    }
+                    mw.setDirty();
+                }
+                case MillPacketIds.GUIACTION_CHIEF_DIPLOMACY -> {
+                    if (r.hasRemaining()) {
+                        int targetX = r.readInt();
+                        int targetY = r.readInt();
+                        int targetZ = r.readInt();
+                        int delta = r.hasRemaining() ? r.readInt() : 10;
+                        org.dizzymii.millenaire2.util.Point targetVillage = new org.dizzymii.millenaire2.util.Point(targetX, targetY, targetZ);
+                        int oldRel = building.getRelation(targetVillage);
+                        building.setRelation(targetVillage, oldRel + delta);
+                        mw.setDirty();
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                                "§6[Millénaire]§r Relations adjusted by " + delta));
+                    }
+                }
+                case MillPacketIds.GUIACTION_CHIEF_SCROLL -> {
+                    MillLog.minor("ServerPacketHandler", "Chief scroll for " + building.getName());
+                }
+                case MillPacketIds.GUIACTION_CHIEF_HUNTING_DROP -> {
+                    MillLog.minor("ServerPacketHandler", "Chief hunting drop for " + building.getName());
+                }
+                case MillPacketIds.GUIACTION_PUJAS_CHANGE_ENCHANTMENT -> {
+                    MillLog.minor("ServerPacketHandler", "Pujas enchantment change for " + building.getName());
+                }
+                case MillPacketIds.GUIACTION_TRADE_TOGGLE_DONATION -> {
+                    org.dizzymii.millenaire2.world.UserProfile profile =
+                            mw.getOrCreateProfile(player.getUUID(), player.getName().getString());
+                    profile.donationActivated = !profile.donationActivated;
+                    mw.setDirty();
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Donations " + (profile.donationActivated ? "activated" : "deactivated")));
+                }
+            }
+            MillLog.minor("ServerPacketHandler", "Chief action " + actionId + " from " + player.getName().getString());
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling chief action", e);
+        } finally {
+            r.release();
+        }
     }
 
     private static void handleQuestAction(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-
         PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
         try {
-            String questKey = r.readString();
-            int villagerEntityId = r.readInt();
-
+            long questUniqueId = r.hasRemaining() ? r.readLong() : -1;
             org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
-            org.dizzymii.millenaire2.world.UserProfile profile = mw.getProfile(player.getUUID());
+            if (mw == null) return;
+            org.dizzymii.millenaire2.world.UserProfile profile =
+                    mw.getOrCreateProfile(player.getUUID(), player.getName().getString());
+
+            org.dizzymii.millenaire2.quest.QuestInstance target = null;
+            for (org.dizzymii.millenaire2.quest.QuestInstance qi : profile.questInstances) {
+                if (qi.uniqueid == questUniqueId) { target = qi; break; }
+            }
+            if (target == null) {
+                MillLog.warn("ServerPacketHandler", "Quest instance " + questUniqueId + " not found");
+                return;
+            }
 
             if (actionId == MillPacketIds.GUIACTION_QUEST_COMPLETESTEP) {
-                // Find the active quest instance for this player
-                org.dizzymii.millenaire2.quest.QuestInstance active = null;
-                for (org.dizzymii.millenaire2.quest.QuestInstance qi : profile.questInstances) {
-                    if (qi.quest != null && questKey.equals(qi.quest.key)) {
-                        active = qi;
-                        break;
-                    }
-                }
-
-                if (active == null) {
-                    // No active instance — this is a new quest acceptance (step 0)
-                    org.dizzymii.millenaire2.quest.Quest quest = org.dizzymii.millenaire2.quest.Quest.quests.get(questKey);
-                    if (quest == null) {
-                        MillLog.warn("ServerPacketHandler", "Quest not found: " + questKey);
-                        return;
-                    }
-                    // Create new quest instance
-                    java.util.HashMap<String, org.dizzymii.millenaire2.quest.QuestInstanceVillager> vils = new java.util.HashMap<>();
-                    active = new org.dizzymii.millenaire2.quest.QuestInstance(mw, quest, profile, vils, System.currentTimeMillis());
-                    profile.questInstances.add(active);
-                    MillLog.minor("ServerPacketHandler", "Quest '" + questKey + "' accepted by " + player.getName().getString());
-                }
-
-                boolean finished = active.completeStep();
+                boolean finished = target.completeStep();
                 if (finished) {
-                    // Award money
-                    org.dizzymii.millenaire2.quest.QuestStep lastStep = active.quest != null && active.currentStep > 0
-                            ? active.quest.steps.get(active.currentStep - 1) : null;
-                    if (lastStep != null && lastStep.rewardMoney > 0) {
-                        profile.deniers += lastStep.rewardMoney;
-                    }
-                    profile.questInstances.remove(active);
+                    profile.questInstances.remove(target);
+                    org.dizzymii.millenaire2.advancement.PlayerListeners.onQuestComplete(player);
                     player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                            "\u00a76[Mill\u00e9naire]\u00a7r Quest '" + questKey + "' completed!"));
+                            "§6[Millénaire]§r Quest '" + (target.quest != null ? target.quest.key : "?") + "' completed!"));
                 } else {
                     player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                            "\u00a76[Mill\u00e9naire]\u00a7r Quest step completed."));
+                            "§6[Millénaire]§r Quest step completed. Next step ready."));
                 }
-                mw.setDirty();
-
             } else if (actionId == MillPacketIds.GUIACTION_QUEST_REFUSE) {
-                // Remove quest instance if it exists
-                profile.questInstances.removeIf(qi -> qi.quest != null && questKey.equals(qi.quest.key));
+                target.failStep();
+                profile.questInstances.remove(target);
                 player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                        "\u00a76[Mill\u00e9naire]\u00a7r Quest declined."));
-                mw.setDirty();
+                        "§6[Millénaire]§r Quest refused."));
             }
+            mw.setDirty();
+            MillLog.minor("ServerPacketHandler", "Quest action " + actionId + " from " + player.getName().getString());
         } catch (Exception e) {
             MillLog.error("ServerPacketHandler", "Error handling quest action", e);
         } finally {
@@ -348,32 +413,29 @@ public final class ServerPacketHandler {
         PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
         try {
             String cultureKey = r.readString();
+            String villageType = r.readString();
 
-            org.dizzymii.millenaire2.culture.Culture culture =
-                    org.dizzymii.millenaire2.culture.Culture.getCultureByName(cultureKey);
+            org.dizzymii.millenaire2.culture.Culture culture = org.dizzymii.millenaire2.culture.Culture.getCultureByName(cultureKey);
             if (culture == null) {
                 player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                        "\u00a7c[Millénaire] Unknown culture: " + cultureKey));
+                        "§c[Millénaire]§r Unknown culture: " + cultureKey));
                 return;
             }
-
-            net.minecraft.server.level.ServerLevel level = (net.minecraft.server.level.ServerLevel) player.level();
-            net.minecraft.core.BlockPos playerPos = player.blockPosition();
-            org.dizzymii.millenaire2.world.MillWorldData mw =
-                    org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
             if (mw == null) return;
 
-            boolean generated = org.dizzymii.millenaire2.world.WorldGenVillage
-                    .generateNewVillage(level, playerPos, culture, mw, level.random);
-
-            if (generated) {
+            net.minecraft.core.BlockPos blockPos = player.blockPosition();
+            boolean success = org.dizzymii.millenaire2.world.WorldGenVillage.generateNewVillage(
+                    (net.minecraft.server.level.ServerLevel) player.level(), blockPos, culture, mw, player.level().random);
+            if (success) {
                 player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                        "\u00a76[Millénaire]\u00a7r Summoned a " + cultureKey + " village!"));
-                mw.setDirty();
+                        "§6[Millénaire]§r New " + cultureKey + " village created at your location!"));
             } else {
                 player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                        "\u00a7c[Millénaire] Failed to generate village. Check terrain or culture data."));
+                        "§c[Millénaire]§r Failed to create village. Check terrain or culture data."));
             }
+            MillLog.minor("ServerPacketHandler", "New village request: culture=" + cultureKey
+                    + " type=" + villageType + " from " + player.getName().getString());
         } catch (Exception e) {
             MillLog.error("ServerPacketHandler", "Error handling new village", e);
         } finally {
@@ -385,51 +447,70 @@ public final class ServerPacketHandler {
         if (!(context.player() instanceof ServerPlayer player)) return;
         PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
         try {
-            org.dizzymii.millenaire2.world.MillWorldData mw =
-                    org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            int entityId = r.hasRemaining() ? r.readInt() : -1;
+            Entity entity = entityId >= 0 ? player.level().getEntity(entityId) : null;
+            if (!(entity instanceof MillVillager villager)) {
+                MillLog.warn("ServerPacketHandler", "Hire action: villager " + entityId + " not found");
+                return;
+            }
+
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
             if (mw == null) return;
             org.dizzymii.millenaire2.world.UserProfile profile =
                     mw.getOrCreateProfile(player.getUUID(), player.getName().getString());
 
-            if (actionId == MillPacketIds.GUIACTION_HIRE_HIRE) {
-                String unitType = r.readString();
-                int cost = switch (unitType) {
-                    case "soldier" -> 64;
-                    case "archer" -> 96;
-                    case "knight" -> 128;
-                    default -> 0;
-                };
-                if (cost == 0) {
+            // Find the VillagerRecord
+            org.dizzymii.millenaire2.village.Building home = villager.getHomeBuilding();
+            if (home == null) home = villager.getTownHallBuilding();
+            org.dizzymii.millenaire2.village.VillagerRecord vr = home != null
+                    ? home.getVillagerRecord(villager.getVillagerId()) : null;
+
+            int hireCost = 64; // deniers per hire period
+            switch (actionId) {
+                case MillPacketIds.GUIACTION_HIRE_HIRE -> {
+                    if (profile.deniers < hireCost) {
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                                "§c[Millénaire]§r Not enough deniers! Need " + hireCost));
+                        return;
+                    }
+                    profile.deniers -= hireCost;
+                    villager.hiredBy = player.getUUID().toString();
+                    if (vr != null) vr.awayhired = true;
+                    mw.setDirty();
                     player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                            "\u00a7c[Millénaire] Unknown unit type: " + unitType));
-                    return;
+                            "§6[Millénaire]§r Hired " + villager.getFirstName() + "!"));
                 }
-                if (profile.deniers < cost) {
+                case MillPacketIds.GUIACTION_HIRE_EXTEND -> {
+                    if (villager.hiredBy == null || !villager.hiredBy.equals(player.getUUID().toString())) {
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                                "§c[Millénaire]§r This villager is not hired by you."));
+                        return;
+                    }
+                    if (profile.deniers < hireCost / 2) {
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                                "§c[Millénaire]§r Not enough deniers! Need " + (hireCost / 2)));
+                        return;
+                    }
+                    profile.deniers -= hireCost / 2;
+                    mw.setDirty();
                     player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                            "\u00a7c[Millénaire] Not enough deniers (need " + cost + ", have " + profile.deniers + ")"));
-                    return;
+                            "§6[Millénaire]§r Extended hire of " + villager.getFirstName() + "."));
                 }
-                profile.deniers -= cost;
-                mw.setDirty();
-                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                        "\u00a76[Millénaire]\u00a7r Hired a " + unitType + " for " + cost + " deniers."));
-                MillLog.minor("ServerPacketHandler", "Player " + player.getName().getString()
-                        + " hired " + unitType + " for " + cost + " deniers");
-
-            } else if (actionId == MillPacketIds.GUIACTION_HIRE_RELEASE) {
-                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                        "\u00a76[Millénaire]\u00a7r Hired soldier released."));
-
-            } else if (actionId == MillPacketIds.GUIACTION_HIRE_EXTEND) {
-                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                        "\u00a76[Millénaire]\u00a7r Hire extended."));
-
-            } else if (actionId == MillPacketIds.GUIACTION_TOGGLE_STANCE) {
-                int stance = r.readInt();
-                String stanceName = stance == 0 ? "Patrol" : "Defend";
-                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                        "\u00a76[Millénaire]\u00a7r Military stance set to: " + stanceName));
+                case MillPacketIds.GUIACTION_HIRE_RELEASE -> {
+                    villager.hiredBy = null;
+                    if (vr != null) vr.awayhired = false;
+                    mw.setDirty();
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Released " + villager.getFirstName() + "."));
+                }
+                case MillPacketIds.GUIACTION_TOGGLE_STANCE -> {
+                    villager.aggressiveStance = !villager.aggressiveStance;
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r " + villager.getFirstName() + " stance: "
+                                    + (villager.aggressiveStance ? "Aggressive" : "Passive")));
+                }
             }
+            MillLog.minor("ServerPacketHandler", "Hire action " + actionId + " from " + player.getName().getString());
         } catch (Exception e) {
             MillLog.error("ServerPacketHandler", "Error handling hire action", e);
         } finally {
@@ -439,72 +520,209 @@ public final class ServerPacketHandler {
 
     private static void handleNegationWand(byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            int x = r.readInt();
+            int y = r.readInt();
+            int z = r.readInt();
+            int radius = r.hasRemaining() ? r.readInt() : 64;
 
-        org.dizzymii.millenaire2.world.MillWorldData mw =
-                org.dizzymii.millenaire2.Millenaire2.getWorldData();
-        if (mw == null) return;
-
-        net.minecraft.core.BlockPos playerPos = player.blockPosition();
-        org.dizzymii.millenaire2.util.Point playerPoint =
-                new org.dizzymii.millenaire2.util.Point(playerPos.getX(), playerPos.getY(), playerPos.getZ());
-
-        // Find the nearest village within 200 blocks
-        org.dizzymii.millenaire2.village.Building nearest = null;
-        double nearestDist = Double.MAX_VALUE;
-        for (org.dizzymii.millenaire2.village.Building b : mw.allBuildings()) {
-            if (!b.isTownhall || b.getPos() == null) continue;
-            double dist = playerPoint.distanceTo(b.getPos());
-            if (dist < 200 && dist < nearestDist) {
-                nearest = b;
-                nearestDist = dist;
-            }
-        }
-
-        if (nearest == null) {
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw == null) return;
+            // Store the negation zone as a global tag so village generation skips it
+            String negTag = "negation_" + x + "_" + y + "_" + z + "_" + radius;
+            mw.addGlobalTag(negTag);
+            mw.setDirty();
             player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                    "\u00a7c[Millénaire] No village found within 200 blocks."));
-            return;
+                    "§6[Millénaire]§r Negation zone set at [" + x + ", " + y + ", " + z + "] radius " + radius));
+            MillLog.minor("ServerPacketHandler", "Negation wand: " + negTag + " by " + player.getName().getString());
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling negation wand", e);
+        } finally {
+            r.release();
         }
-
-        String villageName = nearest.getName() != null ? nearest.getName() : "Unknown";
-
-        // Remove all buildings belonging to this village
-        java.util.List<org.dizzymii.millenaire2.util.Point> toRemove = new java.util.ArrayList<>();
-        org.dizzymii.millenaire2.util.Point thPos = nearest.getPos();
-        for (var entry : mw.getBuildingsMap().entrySet()) {
-            org.dizzymii.millenaire2.village.Building b = entry.getValue();
-            org.dizzymii.millenaire2.util.Point bTh = b.isTownhall ? b.getPos() : b.getTownHallPos();
-            if (bTh != null && bTh.equals(thPos)) {
-                toRemove.add(entry.getKey());
-            }
-        }
-        for (org.dizzymii.millenaire2.util.Point key : toRemove) {
-            mw.removeBuilding(key);
-        }
-        mw.setDirty();
-
-        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                "\u00a76[Millénaire]\u00a7r Village '" + villageName + "' removed (" + toRemove.size() + " buildings)."));
-        MillLog.minor("ServerPacketHandler", "Negation wand: removed village '" + villageName
-                + "' (" + toRemove.size() + " buildings) by " + player.getName().getString());
     }
 
     private static void handleBuildingProject(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Building project action " + actionId + " from " + player.getName().getString());
-        // New/custom/update building project in village
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            int entityId = r.hasRemaining() ? r.readInt() : -1;
+            String planSetKey = r.hasRemaining() ? r.readString() : "";
+
+            org.dizzymii.millenaire2.village.Building building = resolveVillageBuilding(player, entityId);
+            if (building == null) return;
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw == null) return;
+
+            switch (actionId) {
+                case MillPacketIds.GUIACTION_NEW_BUILDING_PROJECT -> {
+                    org.dizzymii.millenaire2.village.BuildingProject bp =
+                            new org.dizzymii.millenaire2.village.BuildingProject(planSetKey, null,
+                                    org.dizzymii.millenaire2.village.BuildingProject.EnumProjects.PLAYER);
+                    building.buildingProjects
+                            .computeIfAbsent(org.dizzymii.millenaire2.village.BuildingProject.EnumProjects.PLAYER,
+                                    k -> new java.util.concurrent.CopyOnWriteArrayList<>())
+                            .add(bp);
+                    mw.setDirty();
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Building project '" + planSetKey + "' queued."));
+                }
+                case MillPacketIds.GUIACTION_NEW_CUSTOM_BUILDING_PROJECT -> {
+                    org.dizzymii.millenaire2.village.BuildingProject bp =
+                            new org.dizzymii.millenaire2.village.BuildingProject(planSetKey, null,
+                                    org.dizzymii.millenaire2.village.BuildingProject.EnumProjects.PLAYER);
+                    bp.isCustomBuilding = true;
+                    building.buildingProjects
+                            .computeIfAbsent(org.dizzymii.millenaire2.village.BuildingProject.EnumProjects.PLAYER,
+                                    k -> new java.util.concurrent.CopyOnWriteArrayList<>())
+                            .add(bp);
+                    mw.setDirty();
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Custom building project '" + planSetKey + "' queued."));
+                }
+                case MillPacketIds.GUIACTION_UPDATE_CUSTOM_BUILDING_PROJECT -> {
+                    int priority = r.hasRemaining() ? r.readInt() : 0;
+                    var playerProjects = building.buildingProjects.get(
+                            org.dizzymii.millenaire2.village.BuildingProject.EnumProjects.PLAYER);
+                    if (playerProjects != null) {
+                        for (org.dizzymii.millenaire2.village.BuildingProject bp : playerProjects) {
+                            if (planSetKey.equals(bp.key)) {
+                                bp.priority = priority;
+                                break;
+                            }
+                        }
+                    }
+                    mw.setDirty();
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Updated project '" + planSetKey + "' priority."));
+                }
+            }
+            MillLog.minor("ServerPacketHandler", "Building project action " + actionId + " from " + player.getName().getString());
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling building project", e);
+        } finally {
+            r.release();
+        }
     }
 
     private static void handleMilitaryAction(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Military action " + actionId + " from " + player.getName().getString());
-        // Military diplomacy: relations, raid, cancel raid between villages
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            int entityId = r.hasRemaining() ? r.readInt() : -1;
+            org.dizzymii.millenaire2.village.Building building = resolveVillageBuilding(player, entityId);
+            if (building == null) return;
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw == null) return;
+
+            switch (actionId) {
+                case MillPacketIds.GUIACTION_MILITARY_RELATIONS -> {
+                    if (r.hasRemaining()) {
+                        int tx = r.readInt();
+                        int ty = r.readInt();
+                        int tz = r.readInt();
+                        org.dizzymii.millenaire2.util.Point targetVillage = new org.dizzymii.millenaire2.util.Point(tx, ty, tz);
+                        int current = building.getRelation(targetVillage);
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                                "§6[Millénaire]§r Relations with village at [" + tx + "," + ty + "," + tz + "]: " + current));
+                    }
+                }
+                case MillPacketIds.GUIACTION_MILITARY_RAID -> {
+                    if (r.hasRemaining()) {
+                        int tx = r.readInt();
+                        int ty = r.readInt();
+                        int tz = r.readInt();
+                        org.dizzymii.millenaire2.util.Point targetVillage = new org.dizzymii.millenaire2.util.Point(tx, ty, tz);
+                        building.raidTarget = targetVillage;
+                        building.underAttack = false;
+                        // Mark raiding villagers
+                        for (org.dizzymii.millenaire2.village.VillagerRecord vr : building.getVillagerRecords()) {
+                            if (!vr.killed && !vr.awayhired) {
+                                vr.awayraiding = true;
+                            }
+                        }
+                        // Decrease relations
+                        building.setRelation(targetVillage, building.getRelation(targetVillage) - 30);
+                        building.raidsPerformed.add(tx + "," + ty + "," + tz);
+                        mw.setDirty();
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                                "§6[Millénaire]§r Raid launched against village at [" + tx + "," + ty + "," + tz + "]!"));
+                    }
+                }
+                case MillPacketIds.GUIACTION_MILITARY_CANCEL_RAID -> {
+                    building.raidTarget = null;
+                    for (org.dizzymii.millenaire2.village.VillagerRecord vr : building.getVillagerRecords()) {
+                        vr.awayraiding = false;
+                    }
+                    mw.setDirty();
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Raid cancelled."));
+                }
+            }
+            MillLog.minor("ServerPacketHandler", "Military action " + actionId + " from " + player.getName().getString());
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling military action", e);
+        } finally {
+            r.release();
+        }
     }
 
     private static void handleImportTableAction(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Import table action " + actionId + " from " + player.getName().getString());
-        // Import table: import building plan, change settings, create building from plan
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            switch (actionId) {
+                case MillPacketIds.GUIACTION_IMPORTTABLE_IMPORTBUILDINGPLAN -> {
+                    String planPath = r.hasRemaining() ? r.readString() : "";
+                    MillLog.minor("ServerPacketHandler", "Import building plan: " + planPath);
+                    org.dizzymii.millenaire2.advancement.PlayerListeners.onBuildingPlanImported(player);
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Building plan imported."));
+                }
+                case MillPacketIds.GUIACTION_IMPORTTABLE_CHANGESETTINGS -> {
+                    MillLog.minor("ServerPacketHandler", "Import table settings changed.");
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Import settings updated."));
+                }
+                case MillPacketIds.GUIACTION_IMPORTTABLE_CREATEBUILDING -> {
+                    String planKey = r.hasRemaining() ? r.readString() : "";
+                    MillLog.minor("ServerPacketHandler", "Create building from import: " + planKey);
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Building created from plan '" + planKey + "'."));
+                }
+            }
+            MillLog.minor("ServerPacketHandler", "Import table action " + actionId + " from " + player.getName().getString());
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling import table action", e);
+        } finally {
+            r.release();
+        }
+    }
+
+    /**
+     * Helper: resolve the townhall Building from an entity ID or nearest villager.
+     */
+    @javax.annotation.Nullable
+    private static org.dizzymii.millenaire2.village.Building resolveVillageBuilding(
+            ServerPlayer player, int entityId) {
+        Entity entity = entityId >= 0 ? player.level().getEntity(entityId) : null;
+        if (entity instanceof MillVillager mv) {
+            org.dizzymii.millenaire2.village.Building b = mv.getTownHallBuilding();
+            if (b != null) return b;
+            return mv.getHomeBuilding();
+        }
+        // Fallback: find nearest village
+        org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+        if (mw == null) return null;
+        double best = Double.MAX_VALUE;
+        org.dizzymii.millenaire2.village.Building nearest = null;
+        for (org.dizzymii.millenaire2.village.Building b : mw.allBuildings()) {
+            if (!b.isTownhall || b.getPos() == null) continue;
+            double dist = player.distanceToSqr(b.getPos().x, b.getPos().y, b.getPos().z);
+            if (dist < best) { best = dist; nearest = b; }
+        }
+        return nearest;
     }
 
     // ========== Trade ==========

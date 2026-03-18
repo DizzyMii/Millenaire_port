@@ -2,74 +2,61 @@ package org.dizzymii.millenaire2.client.gui.text;
 
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
-import org.dizzymii.millenaire2.network.ClientPacketHandler;
 import org.dizzymii.millenaire2.network.ClientPacketSender;
 import org.dizzymii.millenaire2.network.MillPacketIds;
 import org.dizzymii.millenaire2.network.PacketDataHelper;
+import org.dizzymii.millenaire2.quest.QuestInstance;
+
+import javax.annotation.Nullable;
 
 /**
  * Quest display screen — shows quest description, current step, and accept/decline buttons.
- * Reads from ClientPacketHandler.cachedQuest populated by PACKET_QUESTINSTANCE.
  */
 public class GuiQuest extends GuiText {
 
-    public GuiQuest() {
+    @Nullable private final QuestInstance questInstance;
+
+    public GuiQuest(@Nullable QuestInstance qi) {
         super(Component.literal("Quest"));
+        this.questInstance = qi;
     }
+
+    public GuiQuest() { this(null); }
 
     @Override
     protected void init() {
         super.init();
         lines.clear();
 
-        ClientPacketHandler.QuestClientEntry q = ClientPacketHandler.cachedQuest;
-
-        if (q != null) {
-            addLine("Quest: " + q.questKey);
-            addLine("Step: " + (q.stepIndex + 1) + " / " + q.totalSteps);
+        if (questInstance != null && questInstance.quest != null) {
+            addLine("Quest: " + questInstance.quest.key);
+            addLine("Step: " + (questInstance.currentStep + 1) + " / " + questInstance.quest.steps.size());
             addLine("");
-            if (!q.stepLabel.isEmpty()) addLine(q.stepLabel);
-            if (!q.stepDescription.isEmpty()) addLine(q.stepDescription);
-            addLine("");
-            if (q.rewardMoney > 0) addLine("Reward: " + q.rewardMoney + " deniers");
-            if (q.rewardReputation > 0) addLine("Reputation: +" + q.rewardReputation);
-
-            int btnY = guiTop + BG_HEIGHT - 55;
-            if (q.isOffer) {
-                addRenderableWidget(Button.builder(Component.literal("Accept"), btn -> acceptQuest())
-                        .bounds(guiLeft + MARGIN, btnY, 65, 20).build());
-                addRenderableWidget(Button.builder(Component.literal("Decline"), btn -> onClose())
-                        .bounds(guiLeft + MARGIN + 70, btnY, 65, 20).build());
-            } else {
-                addRenderableWidget(Button.builder(Component.literal("Complete"), btn -> completeStep())
-                        .bounds(guiLeft + MARGIN, btnY, 75, 20).build());
-                addRenderableWidget(Button.builder(Component.literal("Close"), btn -> onClose())
-                        .bounds(guiLeft + MARGIN + 80, btnY, 65, 20).build());
+            if (questInstance.currentStep < questInstance.quest.steps.size()) {
+                String desc = questInstance.quest.steps.get(questInstance.currentStep)
+                        .getDescription("en");
+                addLine(desc != null ? desc : "Continue your quest...");
             }
         } else {
             addLine("No active quest.");
             addLine("");
             addLine("Speak to a village leader to receive quests.");
         }
+
+        // Accept/Decline buttons only if quest is offered but not yet started
+        if (questInstance == null) {
+            int btnY = guiTop + BG_HEIGHT - 55;
+            addRenderableWidget(Button.builder(Component.literal("Accept"), btn -> acceptQuest())
+                    .bounds(guiLeft + MARGIN, btnY, 65, 20).build());
+            addRenderableWidget(Button.builder(Component.literal("Decline"), btn -> onClose())
+                    .bounds(guiLeft + MARGIN + 70, btnY, 65, 20).build());
+        }
     }
 
     private void acceptQuest() {
-        ClientPacketHandler.QuestClientEntry q = ClientPacketHandler.cachedQuest;
-        if (q == null) return;
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
-        w.writeString(q.questKey);
-        w.writeInt(ClientPacketHandler.cachedQuestVillagerEntityId);
-        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_QUEST_COMPLETESTEP, w);
-        onClose();
-    }
-
-    private void completeStep() {
-        ClientPacketHandler.QuestClientEntry q = ClientPacketHandler.cachedQuest;
-        if (q == null) return;
-        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
-        w.writeString(q.questKey);
-        w.writeInt(ClientPacketHandler.cachedQuestVillagerEntityId);
-        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_QUEST_COMPLETESTEP, w);
+        w.writeLong(questInstance != null ? questInstance.uniqueid : -1);
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_QUEST_COMPLETESTEP, w.toByteArray());
         onClose();
     }
 }
