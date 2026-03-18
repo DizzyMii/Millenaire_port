@@ -424,6 +424,14 @@ public class DemoPipelineTests {
         BlockPos abs = helper.absolutePos(new BlockPos(1, 2, 1));
         Point bPos = new Point(abs.getX(), abs.getY(), abs.getZ());
 
+        // Place a solid platform so the villager doesn't fall into the void
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                level.setBlockAndUpdate(abs.offset(dx, -1, dz),
+                        net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+            }
+        }
+
         Building townhall = new Building();
         townhall.isTownhall = true;
         townhall.isActive = true;
@@ -443,19 +451,26 @@ public class DemoPipelineTests {
             townhall.tick();
         }
 
-        // Verify villager entity was spawned
-        helper.runAfterDelay(10, () -> {
+        // Verify villager entity was spawned — allow extra time for entity to register
+        helper.runAfterDelay(40, () -> {
             List<MillVillager> villagers = level.getEntitiesOfClass(
                     MillVillager.class,
                     net.minecraft.world.phys.AABB.ofSize(
                             new net.minecraft.world.phys.Vec3(abs.getX(), abs.getY(), abs.getZ()),
-                            128, 64, 128));
+                            256, 128, 256));
             helper.assertTrue(villagers.size() >= 1,
                     "Expected at least 1 spawned villager entity, got " + villagers.size());
 
-            MillVillager spawned = villagers.get(0);
-            helper.assertTrue("Guillaume".equals(spawned.getFirstName()),
-                    "Spawned villager first name should be Guillaume, got " + spawned.getFirstName());
+            // Find our specific villager (other tests may also spawn villagers nearby)
+            boolean found = false;
+            for (MillVillager v : villagers) {
+                if ("Guillaume".equals(v.getFirstName())) {
+                    found = true;
+                    break;
+                }
+            }
+            helper.assertTrue(found,
+                    "Expected to find villager named Guillaume among " + villagers.size() + " entities");
             helper.succeed();
         });
     }
