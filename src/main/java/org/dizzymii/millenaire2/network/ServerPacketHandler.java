@@ -80,10 +80,24 @@ public final class ServerPacketHandler {
                         building.getTradeGoods(), profile.deniers, rep, vName);
             }
 
-            // Open trade GUI for the villager
-            ServerPacketSender.sendOpenGui(player, MillPacketIds.GUI_TRADE, villager.getId(), villager.townHallPoint);
+            // Check for quest offering before opening trade GUI
+            boolean questOffered = false;
+            if (mw != null) {
+                org.dizzymii.millenaire2.world.UserProfile prof =
+                        mw.getOrCreateProfile(player.getUUID(), player.getName().getString());
+                org.dizzymii.millenaire2.util.Point vp = building != null
+                        ? (building.getTownHallPos() != null ? building.getTownHallPos() : building.getPos())
+                        : null;
+                questOffered = tryOfferQuest(player, villager, prof, mw, vp);
+            }
+
+            // Open trade GUI if no quest was offered
+            if (!questOffered) {
+                ServerPacketSender.sendOpenGui(player, MillPacketIds.GUI_TRADE, villager.getId(), villager.townHallPoint);
+            }
             MillLog.minor("ServerPacketHandler", "Player " + player.getName().getString()
-                    + " interacted with villager " + villager.getFirstName());
+                    + " interacted with villager " + villager.getFirstName()
+                    + (questOffered ? " (quest offered)" : " (trade)"));
         } catch (Exception e) {
             MillLog.error("ServerPacketHandler", "Error handling villager interact", e);
         } finally {
@@ -745,6 +759,51 @@ public final class ServerPacketHandler {
             if (dist < best) { best = dist; nearest = b; }
         }
         return nearest;
+    }
+
+    // ========== Quest offering ==========
+
+    /**
+     * Try to offer a quest to the player during villager interaction.
+     * Checks all loaded quests against eligibility (reputation, tags, chance).
+     * Returns true if a quest was offered (quest GUI opened instead of trade).
+     */
+    private static boolean tryOfferQuest(ServerPlayer player, MillVillager villager,
+                                          org.dizzymii.millenaire2.world.UserProfile profile,
+                                          org.dizzymii.millenaire2.world.MillWorldData mw,
+                                          @javax.annotation.Nullable org.dizzymii.millenaire2.util.Point villagePos) {
+        if (org.dizzymii.millenaire2.quest.Quest.quests.isEmpty()) return false;
+
+        // Don't offer if player already has max simultaneous quests
+        if (profile.questInstances.size() >= 3) return false;
+
+        // Check each quest for eligibility
+        for (org.dizzymii.millenaire2.quest.Quest quest : org.dizzymii.millenaire2.quest.Quest.quests.values()) {
+            if (quest.key == null) continue;
+            if (!quest.canStart(profile, mw, villagePos)) continue;
+
+            // Check if player already has this quest active
+            boolean alreadyActive = false;
+            for (org.dizzymii.millenaire2.quest.QuestInstance qi : profile.questInstances) {
+                if (qi.quest != null && quest.key.equals(qi.quest.key)) {
+                    alreadyActive = true;
+                    break;
+                }
+            }
+            if (alreadyActive) continue;
+
+            // Probability check (chanceperhour converted to per-interaction ~1/20 of hourly)
+            double chance = quest.chanceperhour / 20.0;
+            if (chance > 0 && player.level().random.nextDouble() > chance) continue;
+
+            // Quest is eligible — send offer to client and open quest GUI
+            ServerPacketSender.sendQuestInstance(player, villager.getId(), quest, 0, true);
+            ServerPacketSender.sendOpenGui(player, MillPacketIds.GUI_QUEST, villager.getId(), villagePos);
+
+            MillLog.minor("ServerPacketHandler", "Offered quest '" + quest.key + "' to " + player.getName().getString());
+            return true;
+        }
+        return false;
     }
 
     // ========== Trade ==========

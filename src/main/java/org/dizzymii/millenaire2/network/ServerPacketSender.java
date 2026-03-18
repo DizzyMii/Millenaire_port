@@ -189,6 +189,42 @@ public final class ServerPacketSender {
         PacketDistributor.sendToPlayer(target, payload);
     }
 
+    /**
+     * Send a quest offer or active quest step to a player.
+     * The client uses this to populate the quest GUI.
+     */
+    public static void sendQuestInstance(ServerPlayer target, int villagerEntityId,
+                                          org.dizzymii.millenaire2.quest.Quest quest,
+                                          int stepIndex, boolean isOffer) {
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeString(quest.key != null ? quest.key : "");
+        w.writeInt(stepIndex);
+        w.writeInt(quest.steps.size());
+
+        // Send step description and label for the current step
+        String desc = "";
+        String label = "";
+        int rewardMoney = 0;
+        int rewardRep = 0;
+        if (stepIndex >= 0 && stepIndex < quest.steps.size()) {
+            org.dizzymii.millenaire2.quest.QuestStep step = quest.steps.get(stepIndex);
+            desc = step.descriptions.getOrDefault("en", "");
+            label = step.labels.getOrDefault("en", quest.key != null ? quest.key : "Quest");
+            rewardMoney = step.rewardMoney;
+            rewardRep = step.rewardReputation;
+        }
+        w.writeString(desc);
+        w.writeString(label);
+        w.writeInt(rewardMoney);
+        w.writeInt(rewardRep);
+        w.writeInt(villagerEntityId);
+        w.writeBoolean(isOffer);
+
+        MillGenericS2CPayload payload = new MillGenericS2CPayload(
+                MillPacketIds.PACKET_QUESTINSTANCE, 0, w.toByteArray());
+        PacketDistributor.sendToPlayer(target, payload);
+    }
+
     // ========== Internal helpers ==========
 
     private static void writePoint(PacketDataHelper.Writer w, @Nullable Point p) {
