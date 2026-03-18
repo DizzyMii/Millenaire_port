@@ -325,7 +325,8 @@ public class PointType {
                 int colour = parseRGB(colourStr);
                 if (colour < 0) { skipped++; continue; }
 
-                boolean secondStep = "true".equalsIgnoreCase(secondStepStr);
+                // secondStepStr can be "true", "false", or "true,open=false" (extra props embedded)
+                boolean secondStep = secondStepStr.startsWith("true");
 
                 if (blockId.isEmpty()) {
                     // Special type — no block
