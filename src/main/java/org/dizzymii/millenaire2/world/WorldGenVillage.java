@@ -135,13 +135,12 @@ public class WorldGenVillage {
         townhall.mw = worldData;
         townhall.world = level;
 
-        // Use the already-loaded plan image data via ConstructionIP.fromBuildingPlan
-        // (avoids re-reading PNGs from disk which may fail if paths differ)
+        // Place all blocks instantly from the plan
         ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, villagePos, level);
         if (cip != null) {
             cip.orientation = location.orientation;
-            townhall.currentConstruction = cip;
-            MillLog.minor("WorldGenVillage", "Construction queued: " + cip.nbBlocksTotal + " blocks for " + planSet.key);
+            int placed = cip.placeBlocks(level, Integer.MAX_VALUE);
+            MillLog.minor("WorldGenVillage", "Placed " + placed + " blocks instantly for " + planSet.key);
         } else {
             MillLog.warn("WorldGenVillage", "No constructable blocks from plan: " + planSet.key);
         }

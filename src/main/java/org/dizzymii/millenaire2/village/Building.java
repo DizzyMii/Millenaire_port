@@ -185,14 +185,14 @@ public class Building {
         BuildingPlan nextPlan = planSet.getPlan(nextLevel);
         if (nextPlan == null) return false;
 
-        // Start construction from the plan
+        // Place all upgrade blocks instantly
         if (pos != null && nextPlan.hasImage() && world instanceof ServerLevel serverLevel) {
             ConstructionIP cip = ConstructionIP.fromBuildingPlan(nextPlan, pos, serverLevel);
             if (cip != null) {
-                currentConstruction = cip;
+                int placed = cip.placeBlocks(serverLevel, Integer.MAX_VALUE);
                 buildingLevel = nextLevel;
                 if (mw != null) mw.setDirty();
-                MillLog.minor("Building", "Started upgrade to level " + nextLevel + " for: " + name);
+                MillLog.minor("Building", "Upgraded to level " + nextLevel + ": placed " + placed + " blocks for " + name);
                 return true;
             }
         }
@@ -374,13 +374,13 @@ public class Building {
         newBuilding.mw = mw;
         newBuilding.world = world;
 
-        // Start construction
+        // Place all blocks instantly
         ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, newPos, serverLevel);
         if (cip != null) {
-            newBuilding.currentConstruction = cip;
+            int placed = cip.placeBlocks(serverLevel, Integer.MAX_VALUE);
             mw.addBuilding(newBuilding, newPos);
             mw.setDirty();
-            MillLog.minor("Building", "Village expansion: new building " + newPlanSetKey + " at " + newPos);
+            MillLog.minor("Building", "Village expansion: placed " + placed + " blocks for " + newPlanSetKey + " at " + newPos);
         }
     }
 

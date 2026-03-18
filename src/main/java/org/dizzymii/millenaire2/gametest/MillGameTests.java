@@ -681,11 +681,9 @@ public class MillGameTests {
         helper.assertFalse(townhall.world == null,
                 "world is null — construction will never tick");
 
-        // The generated building should have active construction
-        helper.assertTrue(townhall.isUnderConstruction(),
-                "Townhall should have active construction from PNG plan");
-        helper.assertTrue(townhall.currentConstruction.nbBlocksTotal > 0,
-                "Construction has 0 blocks — PNG plan not resolved correctly");
+        // Buildings are placed instantly — no active construction should remain
+        helper.assertFalse(townhall.isUnderConstruction(),
+                "Townhall should NOT have active construction — blocks are placed instantly");
 
         helper.succeed();
     }
