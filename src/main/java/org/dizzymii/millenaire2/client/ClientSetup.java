@@ -9,6 +9,8 @@ import org.dizzymii.millenaire2.Millenaire2;
 import org.dizzymii.millenaire2.client.render.FemaleAsymmetricalModel;
 import org.dizzymii.millenaire2.client.render.FemaleSymmetricalModel;
 import org.dizzymii.millenaire2.client.render.MillVillagerModel;
+import org.dizzymii.millenaire2.client.render.FemaleAsymmetricalRenderer;
+import org.dizzymii.millenaire2.client.render.FemaleSymmetricalRenderer;
 import org.dizzymii.millenaire2.client.render.MillVillagerRenderer;
 import org.dizzymii.millenaire2.entity.MillEntities;
 
@@ -33,7 +35,7 @@ public class ClientSetup {
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(MillEntities.GENERIC_MALE.get(), MillVillagerRenderer::new);
-        // TODO: Register female symm/asymm renderers and other entity renderers
-        //       (targeted mobs, wall decoration) once their renderers are created.
+        event.registerEntityRenderer(MillEntities.GENERIC_SYMM_FEMALE.get(), FemaleSymmetricalRenderer::new);
+        event.registerEntityRenderer(MillEntities.GENERIC_ASYMM_FEMALE.get(), FemaleAsymmetricalRenderer::new);
     }
 }
