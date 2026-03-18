@@ -681,9 +681,9 @@ public class MillGameTests {
         helper.assertFalse(townhall.world == null,
                 "world is null — construction will never tick");
 
-        // Buildings are placed instantly — no active construction should remain
-        helper.assertFalse(townhall.isUnderConstruction(),
-                "Townhall should NOT have active construction — blocks are placed instantly");
+        // Construction is gradual — townhall should have active construction queued
+        helper.assertTrue(townhall.isUnderConstruction(),
+                "Townhall should have active construction queued for gradual building");
 
         helper.succeed();
     }

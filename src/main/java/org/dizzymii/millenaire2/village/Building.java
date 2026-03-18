@@ -15,6 +15,7 @@ import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.item.TradeGood;
 import org.dizzymii.millenaire2.util.MillLog;
+import org.dizzymii.millenaire2.world.WorldGenVillage;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.world.MillWorldData;
 
@@ -185,14 +186,16 @@ public class Building {
         BuildingPlan nextPlan = planSet.getPlan(nextLevel);
         if (nextPlan == null) return false;
 
-        // Place all upgrade blocks instantly
+        // Queue gradual construction for the upgrade (original behavior)
         if (pos != null && nextPlan.hasImage() && world instanceof ServerLevel serverLevel) {
+            WorldGenVillage.prepareTerrain(serverLevel, pos, nextPlan.width, nextPlan.length);
             ConstructionIP cip = ConstructionIP.fromBuildingPlan(nextPlan, pos, serverLevel);
             if (cip != null) {
-                int placed = cip.placeBlocks(serverLevel, Integer.MAX_VALUE);
+                if (location != null) cip.orientation = location.orientation;
+                currentConstruction = cip;
                 buildingLevel = nextLevel;
                 if (mw != null) mw.setDirty();
-                MillLog.minor("Building", "Upgraded to level " + nextLevel + ": placed " + placed + " blocks for " + name);
+                MillLog.minor("Building", "Upgrade queued to level " + nextLevel + ": " + cip.nbBlocksTotal + " blocks for " + name);
                 return true;
             }
         }
@@ -274,18 +277,76 @@ public class Building {
         if (isActive && isTownhall && tickCounter % 72000 == 0) {
             DiplomacyManager.tickRelationDecay(this);
         }
+
+        // Village discovery: scan for nearby townhalls every ~5 minutes (6000 ticks)
+        if (isActive && isTownhall && mw != null && tickCounter % 6000 == 0) {
+            discoverNearbyVillages();
+        }
+    }
+
+    private static final int VILLAGE_DISCOVERY_RANGE = 500;
+
+    private void discoverNearbyVillages() {
+        if (pos == null || mw == null) return;
+        for (Building b : mw.allBuildings()) {
+            if (b == this || !b.isTownhall || !b.isActive || b.getPos() == null) continue;
+            if (isSameVillage(b)) continue;
+            Point otherPos = b.getPos();
+            double dist = Math.sqrt(Math.pow(pos.x - otherPos.x, 2) + Math.pow(pos.z - otherPos.z, 2));
+            if (dist > VILLAGE_DISCOVERY_RANGE) continue;
+            if (relations.containsKey(otherPos)) continue;
+            // Discover this village — initialize neutral relations with culture affinity
+            int initialRelation = RELATION_NEUTRAL;
+            if (cultureKey != null && b.cultureKey != null) {
+                initialRelation = DiplomacyManager.getCultureAffinity(cultureKey, b.cultureKey);
+            }
+            setRelation(otherPos, initialRelation);
+            b.setRelation(pos, initialRelation);
+            if (mw != null) mw.setDirty();
+            MillLog.minor("Building", "Village discovery: " + getName() + " discovered " + b.getName()
+                    + " (dist=" + (int) dist + ", relation=" + initialRelation + ")");
+        }
     }
 
     // ========== Village expansion ==========
 
+    private static final int MIN_POPULATION_FOR_EXPANSION = 3;
+    private static final int MIN_RESOURCES_FOR_EXPANSION = 16;
+
     /**
      * Townhall checks all buildings in the village for possible upgrades,
      * then checks if new buildings from the VillageType should be constructed.
+     * Gated by: no concurrent construction, minimum population, minimum resources.
      */
     private void checkVillageExpansion() {
         if (mw == null || cultureKey == null) return;
         Culture culture = Culture.getCultureByName(cultureKey);
         if (culture == null) return;
+
+        // Gate: no expansion if any village building is already under construction
+        int villagePopulation = 0;
+        boolean anyUnderConstruction = false;
+        for (Building b : mw.getBuildingsMap().values()) {
+            if (!isSameVillage(b)) continue;
+            if (b.isUnderConstruction()) anyUnderConstruction = true;
+            for (VillagerRecord vr : b.getVillagerRecords()) {
+                if (!vr.killed) villagePopulation++;
+            }
+        }
+        if (anyUnderConstruction) return;
+
+        // Gate: minimum village population before expanding
+        if (villagePopulation < MIN_POPULATION_FOR_EXPANSION) return;
+
+        // Gate: townhall must have minimum resources
+        int totalResources = 0;
+        for (int qty : resManager.resources.values()) {
+            totalResources += qty;
+        }
+        if (totalResources < MIN_RESOURCES_FOR_EXPANSION) {
+            MillLog.minor("Building", "Village expansion deferred: only " + totalResources + " resources (need " + MIN_RESOURCES_FOR_EXPANSION + ")");
+            return;
+        }
 
         // 1. Try to upgrade existing buildings that are idle
         for (Building b : mw.getBuildingsMap().values()) {
@@ -295,7 +356,7 @@ public class Building {
             if (b.canUpgrade()) {
                 if (b.tryUpgrade()) {
                     MillLog.minor("Building", "Village expansion: upgrading " + b.getName());
-                    return; // One upgrade per cycle
+                    return;
                 }
             }
         }
@@ -344,6 +405,7 @@ public class Building {
 
     /**
      * Start construction of a new building near the townhall.
+     * Searches for a suitable terrain position within radius of the townhall.
      */
     private void startNewBuilding(String newPlanSetKey, Culture culture) {
         if (pos == null || !(world instanceof ServerLevel serverLevel)) return;
@@ -352,36 +414,99 @@ public class Building {
         BuildingPlan initialPlan = planSet.getInitialPlan();
         if (initialPlan == null || !initialPlan.hasImage()) return;
 
-        // Find a position near the townhall (offset by existing building count)
-        int buildingCount = 0;
+        // Collect existing building positions to avoid overlap
+        java.util.Set<Point> existingPositions = new java.util.HashSet<>();
         for (Building b : mw.getBuildingsMap().values()) {
-            if (isSameVillage(b)) buildingCount++;
+            if (isSameVillage(b) && b.getPos() != null) existingPositions.add(b.getPos());
         }
-        int offsetX = ((buildingCount % 4) - 1) * 20;
-        int offsetZ = ((buildingCount / 4) + 1) * 20;
-        Point newPos = new Point(pos.x + offsetX, pos.y, pos.z + offsetZ);
+
+        // Search for a suitable site in expanding rings around the townhall
+        Point bestSite = findBuildingSite(serverLevel, pos, initialPlan.width, initialPlan.length, existingPositions);
+        if (bestSite == null) {
+            MillLog.warn("Building", "No suitable site found for " + newPlanSetKey + " near " + pos);
+            return;
+        }
 
         // Create the building
+        BuildingLocation loc = new BuildingLocation();
+        loc.planKey = newPlanSetKey;
+        loc.cultureKey = cultureKey;
+        loc.pos = bestSite;
+        loc.orientation = serverLevel.random.nextInt(4);
+        loc.width = initialPlan.width;
+        loc.length = initialPlan.length;
+        loc.level = 0;
+
         Building newBuilding = new Building();
         newBuilding.cultureKey = cultureKey;
         newBuilding.planSetKey = newPlanSetKey;
         newBuilding.villageTypeKey = villageTypeKey;
         newBuilding.buildingLevel = 0;
         newBuilding.isActive = true;
-        newBuilding.setPos(newPos);
+        newBuilding.setPos(bestSite);
         newBuilding.setTownHallPos(pos);
         newBuilding.setName(planSet.name != null ? planSet.name : newPlanSetKey);
+        newBuilding.location = loc;
         newBuilding.mw = mw;
         newBuilding.world = world;
 
-        // Place all blocks instantly
-        ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, newPos, serverLevel);
+        // Prepare terrain and queue gradual construction (original behavior)
+        WorldGenVillage.prepareTerrain(serverLevel, bestSite, initialPlan.width, initialPlan.length);
+        ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, bestSite, serverLevel);
         if (cip != null) {
-            int placed = cip.placeBlocks(serverLevel, Integer.MAX_VALUE);
-            mw.addBuilding(newBuilding, newPos);
+            cip.orientation = loc.orientation;
+            newBuilding.currentConstruction = cip;
+            mw.addBuilding(newBuilding, bestSite);
             mw.setDirty();
-            MillLog.minor("Building", "Village expansion: placed " + placed + " blocks for " + newPlanSetKey + " at " + newPos);
+            MillLog.minor("Building", "Village expansion: queued " + cip.nbBlocksTotal + " blocks for " + newPlanSetKey + " at " + bestSite);
         }
+    }
+
+    /**
+     * Find a suitable building site near the townhall by scanning candidate
+     * positions in expanding rings, evaluating terrain flatness and avoiding overlap.
+     */
+    @Nullable
+    private Point findBuildingSite(ServerLevel level, Point center, int bWidth, int bLength,
+                                    java.util.Set<Point> existing) {
+        int minSpacing = Math.max(bWidth, bLength) + 4;
+        Point best = null;
+        double bestScore = -1;
+
+        // Search in rings from 15 to 80 blocks out, stepping by 5
+        for (int radius = 15; radius <= 80; radius += 5) {
+            for (int angle = 0; angle < 360; angle += 30) {
+                double rad = Math.toRadians(angle);
+                int cx = center.x + (int) (radius * Math.cos(rad));
+                int cz = center.z + (int) (radius * Math.sin(rad));
+
+                // Check overlap with existing buildings
+                boolean tooClose = false;
+                for (Point ep : existing) {
+                    double dist = Math.sqrt(Math.pow(cx - ep.x, 2) + Math.pow(cz - ep.z, 2));
+                    if (dist < minSpacing) { tooClose = true; break; }
+                }
+                if (tooClose) continue;
+
+                // Find ground level
+                int groundY = WorldGenVillage.findGroundLevel(level, new net.minecraft.core.BlockPos(cx, 0, cz));
+                if (groundY < 0) continue;
+
+                // Check terrain flatness
+                net.minecraft.core.BlockPos groundPos = new net.minecraft.core.BlockPos(cx, groundY, cz);
+                double flatness = WorldGenVillage.evaluateTerrainFlat(level, groundPos, Math.max(bWidth, bLength) / 2 + 2);
+                if (flatness < 0.6) continue;
+
+                // Score: prefer closer + flatter sites
+                double distToCenter = Math.sqrt(Math.pow(cx - center.x, 2) + Math.pow(cz - center.z, 2));
+                double score = flatness * 100 - distToCenter * 0.5;
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = new Point(cx, groundY, cz);
+                }
+            }
+        }
+        return best;
     }
 
     /**

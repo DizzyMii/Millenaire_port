@@ -135,12 +135,13 @@ public class WorldGenVillage {
         townhall.mw = worldData;
         townhall.world = level;
 
-        // Place all blocks instantly from the plan
+        // Prepare terrain and queue gradual construction (original behavior)
+        prepareTerrain(level, villagePos, initialPlan.width, initialPlan.length);
         ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, villagePos, level);
         if (cip != null) {
             cip.orientation = location.orientation;
-            int placed = cip.placeBlocks(level, Integer.MAX_VALUE);
-            MillLog.minor("WorldGenVillage", "Placed " + placed + " blocks instantly for " + planSet.key);
+            townhall.currentConstruction = cip;
+            MillLog.minor("WorldGenVillage", "Queued construction (" + cip.nbBlocksTotal + " blocks) for " + planSet.key);
         } else {
             MillLog.warn("WorldGenVillage", "No constructable blocks from plan: " + planSet.key);
         }
@@ -343,7 +344,7 @@ public class WorldGenVillage {
 
     // ========== Terrain utilities ==========
 
-    private static int findGroundLevel(ServerLevel level, BlockPos pos) {
+    public static int findGroundLevel(ServerLevel level, BlockPos pos) {
         // Scan down from world height to find the first solid block
         for (int y = level.getMaxBuildHeight() - 1; y > level.getMinBuildHeight(); y--) {
             BlockPos check = new BlockPos(pos.getX(), y, pos.getZ());
@@ -359,7 +360,7 @@ public class WorldGenVillage {
      * Evaluates how flat/buildable the terrain is around a position.
      * Returns a 0.0-1.0 value indicating % of positions within radius that are suitable.
      */
-    private static double evaluateTerrainFlat(ServerLevel level, BlockPos center, int radius) {
+    public static double evaluateTerrainFlat(ServerLevel level, BlockPos center, int radius) {
         int total = 0;
         int usable = 0;
         int baseY = center.getY();
@@ -375,6 +376,54 @@ public class WorldGenVillage {
             }
         }
         return total > 0 ? (double) usable / total : 0.0;
+    }
+
+    /**
+     * Prepare terrain for building construction: level the ground, clear vegetation,
+     * fill gaps, and create a flat foundation at the building's Y level.
+     */
+    public static void prepareTerrain(ServerLevel level, Point origin, int width, int length) {
+        if (origin == null) return;
+        int baseY = origin.y;
+        int halfW = width / 2 + 1;
+        int halfL = length / 2 + 1;
+
+        for (int dx = -halfW; dx <= halfW; dx++) {
+            for (int dz = -halfL; dz <= halfL; dz++) {
+                int x = origin.x + dx;
+                int z = origin.z + dz;
+
+                // Clear blocks above the building level (trees, tall grass, etc.)
+                for (int dy = 0; dy < 12; dy++) {
+                    BlockPos above = new BlockPos(x, baseY + dy, z);
+                    BlockState aboveState = level.getBlockState(above);
+                    if (!aboveState.isAir() && aboveState.canBeReplaced()) {
+                        level.setBlock(above, Blocks.AIR.defaultBlockState(), 3);
+                    } else if (aboveState.is(Blocks.OAK_LOG) || aboveState.is(Blocks.BIRCH_LOG)
+                            || aboveState.is(Blocks.SPRUCE_LOG) || aboveState.is(Blocks.JUNGLE_LOG)
+                            || aboveState.is(Blocks.ACACIA_LOG) || aboveState.is(Blocks.DARK_OAK_LOG)
+                            || aboveState.is(Blocks.OAK_LEAVES) || aboveState.is(Blocks.BIRCH_LEAVES)
+                            || aboveState.is(Blocks.SPRUCE_LEAVES) || aboveState.is(Blocks.JUNGLE_LEAVES)
+                            || aboveState.is(Blocks.ACACIA_LEAVES) || aboveState.is(Blocks.DARK_OAK_LEAVES)) {
+                        level.setBlock(above, Blocks.AIR.defaultBlockState(), 3);
+                    }
+                }
+
+                // Fill gaps below the building level to create a flat foundation
+                BlockPos groundPos = new BlockPos(x, baseY - 1, z);
+                BlockState groundState = level.getBlockState(groundPos);
+                if (groundState.isAir() || groundState.is(Blocks.WATER)) {
+                    level.setBlock(groundPos, Blocks.DIRT.defaultBlockState(), 3);
+                }
+
+                // Clear the block at building level if it's not air
+                BlockPos buildPos = new BlockPos(x, baseY, z);
+                BlockState buildState = level.getBlockState(buildPos);
+                if (!buildState.isAir()) {
+                    level.setBlock(buildPos, Blocks.AIR.defaultBlockState(), 3);
+                }
+            }
+        }
     }
 
     private static long chunkKey(int chunkX, int chunkZ) {
