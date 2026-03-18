@@ -130,6 +130,7 @@ public class WorldGenVillage {
         townhall.setTownHallPos(villagePos);
         townhall.location = location;
         townhall.mw = worldData;
+        townhall.world = level;
 
         // Use the already-loaded plan image data via ConstructionIP.fromBuildingPlan
         // (avoids re-reading PNGs from disk which may fail if paths differ)

@@ -107,6 +107,7 @@ public class Millenaire2 {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("{} server starting", MODNAME);
+        org.dizzymii.millenaire2.util.DataExtractor.extractIfNeeded();
         org.dizzymii.millenaire2.buildingplan.PointType.loadFromServer(event.getServer());
         org.dizzymii.millenaire2.culture.Culture.loadCultures();
         org.dizzymii.millenaire2.world.BiomeCultureMapper.loadFromServer(event.getServer());

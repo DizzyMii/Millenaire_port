@@ -342,13 +342,14 @@ public class MillGameTests {
                 "Expected >50 PointType colour mappings, got "
                         + org.dizzymii.millenaire2.buildingplan.PointType.colourPoints.size());
 
-        // Spot-check a few well-known colours
+        // Spot-check a few well-known colours from blocklist.txt
+        // Cobblestone = 76/76/76 = 0x4C4C4C, Bricks = 128/0/0 = 0x800000
         helper.assertFalse(
-                org.dizzymii.millenaire2.buildingplan.PointType.colourPoints.get(0x808080) == null,
-                "Cobblestone colour 0x808080 missing");
+                org.dizzymii.millenaire2.buildingplan.PointType.colourPoints.get(0x4C4C4C) == null,
+                "Cobblestone colour 0x4C4C4C missing");
         helper.assertFalse(
-                org.dizzymii.millenaire2.buildingplan.PointType.colourPoints.get(0xFF0000) == null,
-                "Bricks colour 0xFF0000 missing");
+                org.dizzymii.millenaire2.buildingplan.PointType.colourPoints.get(0x800000) == null,
+                "Bricks colour 0x800000 missing");
 
         helper.succeed();
     }

@@ -216,6 +216,61 @@ public class LegacyBlockMapping {
         BLOCK_MAP.put("minecraft:prismarine;1", "minecraft:prismarine_bricks");
         BLOCK_MAP.put("minecraft:prismarine;2", "minecraft:dark_prismarine");
 
+        // ===== Upper slabs (meta 8+) =====
+        BLOCK_MAP.put("minecraft:wooden_slab;8", "minecraft:oak_slab");
+        BLOCK_MAP.put("minecraft:wooden_slab;9", "minecraft:spruce_slab");
+        BLOCK_MAP.put("minecraft:wooden_slab;10", "minecraft:birch_slab");
+        BLOCK_MAP.put("minecraft:wooden_slab;11", "minecraft:jungle_slab");
+        BLOCK_MAP.put("minecraft:wooden_slab;12", "minecraft:acacia_slab");
+        BLOCK_MAP.put("minecraft:wooden_slab;13", "minecraft:dark_oak_slab");
+        BLOCK_MAP.put("minecraft:stone_slab;8", "minecraft:smooth_stone_slab");
+        BLOCK_MAP.put("minecraft:stone_slab;9", "minecraft:sandstone_slab");
+        BLOCK_MAP.put("minecraft:stone_slab;11", "minecraft:cobblestone_slab");
+        BLOCK_MAP.put("minecraft:stone_slab;12", "minecraft:brick_slab");
+        BLOCK_MAP.put("minecraft:stone_slab;13", "minecraft:stone_brick_slab");
+        BLOCK_MAP.put("minecraft:stone_slab2;0", "minecraft:red_sandstone_slab");
+        BLOCK_MAP.put("minecraft:stone_slab2;8", "minecraft:red_sandstone_slab");
+        BLOCK_MAP.put("minecraft:double_stone_slab;0", "minecraft:smooth_stone");
+
+        // ===== Millenaire legacy block → modern millenaire2 block =====
+        BLOCK_MAP.put("millenaire2:wood_deco;0", "millenaire2:timber_frame_plain");
+        BLOCK_MAP.put("millenaire2:wood_deco;1", "millenaire2:timber_frame_cross");
+        BLOCK_MAP.put("millenaire2:wood_deco;2", "millenaire2:thatch");
+        BLOCK_MAP.put("millenaire2:stone_deco;0", "millenaire2:mud_brick");
+        BLOCK_MAP.put("millenaire2:stone_deco;2", "millenaire2:stone_decoration");
+        BLOCK_MAP.put("millenaire2:earth_deco;0", "millenaire2:mud_brick");
+        BLOCK_MAP.put("millenaire2:pathdirt;1", "millenaire2:path_dirt");
+        BLOCK_MAP.put("millenaire2:pathgravel;1", "millenaire2:path_gravel");
+        BLOCK_MAP.put("millenaire2:pathslabs;1", "millenaire2:path_slabs");
+        BLOCK_MAP.put("millenaire2:pathsandstone;1", "millenaire2:path_sandstone");
+        BLOCK_MAP.put("millenaire2:pathochretiles;1", "millenaire2:path_ochre_tiles");
+        BLOCK_MAP.put("millenaire2:pathgravelslabs;1", "millenaire2:path_gravel_slabs");
+        BLOCK_MAP.put("millenaire2:pathsnow;1", "millenaire2:path_snow");
+        BLOCK_MAP.put("millenaire2:pathdirt_slab;1", "millenaire2:slab_path_dirt");
+        BLOCK_MAP.put("millenaire2:pathgravel_slab;1", "millenaire2:slab_path_gravel");
+        BLOCK_MAP.put("millenaire2:pathslabs_slab;1", "millenaire2:slab_path_slabs");
+        BLOCK_MAP.put("millenaire2:pathsandstone_slab;1", "millenaire2:slab_path_sandstone");
+        BLOCK_MAP.put("millenaire2:pathochretiles_slab;1", "millenaire2:slab_path_ochre_tiles");
+        BLOCK_MAP.put("millenaire2:pathgravelslabs_slab;1", "millenaire2:slab_path_gravel_slabs");
+        BLOCK_MAP.put("millenaire2:pathsnow_slab;1", "millenaire2:slab_path_snow");
+        BLOCK_MAP.put("millenaire2:crop_maize;0", "millenaire2:crop_maize");
+        BLOCK_MAP.put("millenaire2:crop_maize;7", "millenaire2:crop_maize");
+
+        // ===== Other legacy renames =====
+        BLOCK_MAP.put("minecraft:standing_sign", "minecraft:oak_sign");
+        BLOCK_MAP.put("minecraft:wooden_door", "minecraft:oak_door");
+        BLOCK_MAP.put("minecraft:wooden_pressure_plate", "minecraft:oak_pressure_plate");
+        BLOCK_MAP.put("minecraft:melon_block", "minecraft:melon");
+        BLOCK_MAP.put("minecraft:lit_redstone_lamp", "minecraft:redstone_lamp");
+        BLOCK_MAP.put("minecraft:flowing_lava", "minecraft:lava");
+        BLOCK_MAP.put("minecraft:portal", "minecraft:nether_portal");
+        BLOCK_MAP.put("minecraft:yellow_flower", "minecraft:dandelion");
+        BLOCK_MAP.put("minecraft:red_mushroom_block", "minecraft:red_mushroom_block");
+        BLOCK_MAP.put("minecraft:brown_mushroom_block", "minecraft:brown_mushroom_block");
+        BLOCK_MAP.put("minecraft:heavy_weighted_pressure_plate", "minecraft:heavy_weighted_pressure_plate");
+        BLOCK_MAP.put("minecraft:stone_pressure_plate", "minecraft:stone_pressure_plate");
+        BLOCK_MAP.put("minecraft:redstone_wire", "minecraft:redstone_wire");
+
         // ===== Miscellaneous renames =====
         BLOCK_MAP.put("minecraft:cobblestone_wall;0", "minecraft:cobblestone_wall");
         BLOCK_MAP.put("minecraft:cobblestone_wall;1", "minecraft:mossy_cobblestone_wall");
@@ -312,6 +367,8 @@ public class LegacyBlockMapping {
         if (legacyId.contains(";")) {
             String baseId = legacyId.substring(0, legacyId.indexOf(';'));
             mapped = BLOCK_MAP.get(baseId + ";0");
+            if (mapped != null) return mapped;
+            mapped = BLOCK_MAP.get(baseId);
             if (mapped != null) return mapped;
             return baseId;
         }

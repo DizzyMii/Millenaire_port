@@ -15,9 +15,11 @@ import org.dizzymii.millenaire2.block.MillBlocks;
 import org.dizzymii.millenaire2.item.InvItem;
 import org.dizzymii.millenaire2.util.MillLog;
 
+import org.dizzymii.millenaire2.util.LegacyBlockMapping;
+import org.dizzymii.millenaire2.util.MillCommonUtilities;
+
 import javax.annotation.Nullable;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -162,72 +164,306 @@ public class PointType {
         return costBlockState;
     }
 
+    // ===== Legacy variant → modern block ID mapping =====
+    private static final Map<String, String> VARIANT_MAP = new HashMap<>();
+    static {
+        // Stone variants
+        VARIANT_MAP.put("minecraft:stone;variant=stone", "minecraft:stone");
+        VARIANT_MAP.put("minecraft:stone;variant=granite", "minecraft:granite");
+        VARIANT_MAP.put("minecraft:stone;variant=smooth_granite", "minecraft:polished_granite");
+        VARIANT_MAP.put("minecraft:stone;variant=diorite", "minecraft:diorite");
+        VARIANT_MAP.put("minecraft:stone;variant=smooth_diorite", "minecraft:polished_diorite");
+        VARIANT_MAP.put("minecraft:stone;variant=andesite", "minecraft:andesite");
+        VARIANT_MAP.put("minecraft:stone;variant=smooth_andesite", "minecraft:polished_andesite");
+        // Dirt
+        VARIANT_MAP.put("minecraft:dirt;variant=dirt", "minecraft:dirt");
+        VARIANT_MAP.put("minecraft:dirt;variant=coarse_dirt", "minecraft:coarse_dirt");
+        VARIANT_MAP.put("minecraft:dirt;variant=podzol", "minecraft:podzol");
+        // Planks
+        VARIANT_MAP.put("minecraft:planks;variant=oak", "minecraft:oak_planks");
+        VARIANT_MAP.put("minecraft:planks;variant=spruce", "minecraft:spruce_planks");
+        VARIANT_MAP.put("minecraft:planks;variant=birch", "minecraft:birch_planks");
+        VARIANT_MAP.put("minecraft:planks;variant=jungle", "minecraft:jungle_planks");
+        VARIANT_MAP.put("minecraft:planks;variant=acacia", "minecraft:acacia_planks");
+        VARIANT_MAP.put("minecraft:planks;variant=dark_oak", "minecraft:dark_oak_planks");
+        // Logs
+        VARIANT_MAP.put("minecraft:log;variant=oak", "minecraft:oak_log");
+        VARIANT_MAP.put("minecraft:log;variant=spruce", "minecraft:spruce_log");
+        VARIANT_MAP.put("minecraft:log;variant=birch", "minecraft:birch_log");
+        VARIANT_MAP.put("minecraft:log;variant=jungle", "minecraft:jungle_log");
+        VARIANT_MAP.put("minecraft:log2;variant=acacia", "minecraft:acacia_log");
+        VARIANT_MAP.put("minecraft:log2;variant=dark_oak", "minecraft:dark_oak_log");
+        // Leaves
+        VARIANT_MAP.put("minecraft:leaves;variant=oak", "minecraft:oak_leaves");
+        VARIANT_MAP.put("minecraft:leaves;variant=spruce", "minecraft:spruce_leaves");
+        VARIANT_MAP.put("minecraft:leaves;variant=birch", "minecraft:birch_leaves");
+        VARIANT_MAP.put("minecraft:leaves;variant=jungle", "minecraft:jungle_leaves");
+        VARIANT_MAP.put("minecraft:leaves2;variant=acacia", "minecraft:acacia_leaves");
+        VARIANT_MAP.put("minecraft:leaves2;variant=dark_oak", "minecraft:dark_oak_leaves");
+        // Saplings (blocklist uses type= instead of variant=)
+        VARIANT_MAP.put("minecraft:sapling;variant=oak", "minecraft:oak_sapling");
+        VARIANT_MAP.put("minecraft:sapling;variant=spruce", "minecraft:spruce_sapling");
+        VARIANT_MAP.put("minecraft:sapling;variant=birch", "minecraft:birch_sapling");
+        VARIANT_MAP.put("minecraft:sapling;variant=jungle", "minecraft:jungle_sapling");
+        VARIANT_MAP.put("minecraft:sapling;variant=acacia", "minecraft:acacia_sapling");
+        VARIANT_MAP.put("minecraft:sapling;variant=dark_oak", "minecraft:dark_oak_sapling");
+        // Double plants
+        VARIANT_MAP.put("minecraft:double_plant;variant=sunflower", "minecraft:sunflower");
+        VARIANT_MAP.put("minecraft:double_plant;variant=syringa", "minecraft:lilac");
+        VARIANT_MAP.put("minecraft:double_plant;variant=double_grass", "minecraft:tall_grass");
+        VARIANT_MAP.put("minecraft:double_plant;variant=double_fern", "minecraft:large_fern");
+        VARIANT_MAP.put("minecraft:double_plant;variant=double_rose", "minecraft:rose_bush");
+        VARIANT_MAP.put("minecraft:double_plant;variant=paeonia", "minecraft:peony");
+        // Stone slabs
+        VARIANT_MAP.put("minecraft:stone_slab;variant=quartz", "minecraft:quartz_slab");
+        // Wood slabs
+        VARIANT_MAP.put("minecraft:wooden_slab;variant=oak", "minecraft:oak_slab");
+        VARIANT_MAP.put("minecraft:wooden_slab;variant=spruce", "minecraft:spruce_slab");
+        VARIANT_MAP.put("minecraft:wooden_slab;variant=birch", "minecraft:birch_slab");
+        VARIANT_MAP.put("minecraft:wooden_slab;variant=jungle", "minecraft:jungle_slab");
+        VARIANT_MAP.put("minecraft:wooden_slab;variant=acacia", "minecraft:acacia_slab");
+        VARIANT_MAP.put("minecraft:wooden_slab;variant=dark_oak", "minecraft:dark_oak_slab");
+        // Stone deco variants (millenaire)
+        VARIANT_MAP.put("millenaire2:stone_deco;variant=mudbrick", "millenaire2:mud_brick");
+        VARIANT_MAP.put("millenaire2:stone_deco;variant=byzantine_mosaic_red", "millenaire2:stone_decoration");
+        VARIANT_MAP.put("millenaire2:stone_deco;variant=byzantine_mosaic_blue", "millenaire2:stone_decoration");
+        // Wood deco variants (millenaire)
+        VARIANT_MAP.put("millenaire2:wood_deco;variant=timberframeplain", "millenaire2:timber_frame_plain");
+        VARIANT_MAP.put("millenaire2:wood_deco;variant=timberframecross", "millenaire2:timber_frame_cross");
+        VARIANT_MAP.put("millenaire2:wood_deco;variant=thatch", "millenaire2:thatch");
+        // Extended mud brick variants
+        VARIANT_MAP.put("millenaire2:extended_mud_brick;variant=mudbrick_smooth", "millenaire2:mud_brick_extended");
+        VARIANT_MAP.put("millenaire2:extended_mud_brick;variant=mudbrick_seljuk_ornamented", "millenaire2:mud_brick_extended");
+        VARIANT_MAP.put("millenaire2:extended_mud_brick;variant=mudbrick_seljuk_decorated", "millenaire2:mud_brick_extended");
+    }
+
     /**
-     * Load colour mappings from data-driven JSON, falling back to hardcoded defaults.
-     * JSON location: data/millenaire2/pointtypes/colour_map.json
-     * Users and datapacks can override or extend this file.
+     * Load colour mappings — tries blocklist.txt first (authoritative source for
+     * PNG plan colours), then JSON datapack, then hardcoded defaults.
      */
     public static void loadFromServer(@Nullable MinecraftServer server) {
         colourPoints.clear();
-        boolean loaded = false;
-        if (server != null) {
-            try {
-                ResourceManager rm = server.getResourceManager();
-                ResourceLocation loc = ResourceLocation.fromNamespaceAndPath("millenaire2", "pointtypes/colour_map.json");
-                Optional<Resource> opt = rm.getResource(loc);
-                if (opt.isPresent()) {
-                    try (InputStream is = opt.get().open();
-                         InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
-                        JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
-                        int count = 0;
 
-                        if (root.has("blocks")) {
-                            JsonObject blocks = root.getAsJsonObject("blocks");
-                            for (Map.Entry<String, JsonElement> entry : blocks.entrySet()) {
-                                try {
-                                    int colour = Integer.parseInt(entry.getKey().trim(), 16);
-                                    JsonObject val = entry.getValue().getAsJsonObject();
-                                    String blockId = val.get("block").getAsString();
-                                    boolean second = val.has("secondStep") && val.get("secondStep").getAsBoolean();
-                                    ResourceLocation rl = ResourceLocation.parse(blockId);
-                                    Block block = BuiltInRegistries.BLOCK.get(rl);
-                                    if (block != Blocks.AIR || "minecraft:air".equals(blockId)) {
-                                        registerBlock(colour, blockId, block, second);
-                                        count++;
-                                    } else {
-                                        MillLog.warn(null, "PointType JSON: unknown block: " + blockId);
-                                    }
-                                } catch (Exception e) {
-                                    MillLog.warn(null, "PointType JSON: bad block entry: " + entry.getKey());
-                                }
-                            }
-                        }
+        // First try: load from blocklist.txt (the original Millenaire colour table)
+        if (loadFromBlocklist()) return;
 
-                        if (root.has("special")) {
-                            JsonObject specials = root.getAsJsonObject("special");
-                            for (Map.Entry<String, JsonElement> entry : specials.entrySet()) {
-                                try {
-                                    int colour = Integer.parseInt(entry.getKey().trim(), 16);
-                                    String type = entry.getValue().getAsString();
-                                    registerSpecial(colour, type);
-                                    count++;
-                                } catch (Exception e) {
-                                    MillLog.warn(null, "PointType JSON: bad special entry: " + entry.getKey());
-                                }
-                            }
-                        }
+        // Second try: load from JSON datapack
+        if (server != null && loadFromJson(server)) return;
 
-                        MillLog.minor(null, "PointType: loaded " + count + " colour mappings from JSON datapack");
-                        loaded = true;
+        // Fallback: hardcoded defaults
+        registerDefaults();
+    }
+
+    /**
+     * Load colour mappings from the legacy blocklist.txt file.
+     * This is the authoritative colour table that all PNG building plans
+     * were designed against in the original Millenaire mod.
+     */
+    private static boolean loadFromBlocklist() {
+        File blocklistFile = new File(MillCommonUtilities.getMillenaireContentDir(), "blocklist.txt");
+        if (!blocklistFile.exists()) {
+            MillLog.warn(null, "PointType: blocklist.txt not found at " + blocklistFile);
+            return false;
+        }
+
+        int blockCount = 0;
+        int specialCount = 0;
+        int skipped = 0;
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(blocklistFile), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("//")) continue;
+
+                String[] fields = line.split(";", -1);
+                if (fields.length < 5) continue;
+
+                String label = fields[0].trim();
+                String blockId = fields[1].trim();
+                String metaOrProps = fields[2].trim();
+                String secondStepStr = fields[3].trim();
+                String colourStr = fields[4].trim();
+
+                int colour = parseRGB(colourStr);
+                if (colour < 0) { skipped++; continue; }
+
+                boolean secondStep = "true".equalsIgnoreCase(secondStepStr);
+
+                if (blockId.isEmpty()) {
+                    // Special type — no block
+                    registerSpecial(colour, label);
+                    specialCount++;
+                } else {
+                    // Block type — resolve to modern block
+                    BlockState resolved = resolveBlockState(blockId, metaOrProps);
+                    if (resolved != null && resolved.getBlock() != Blocks.AIR) {
+                        PointType pt = new PointType(colour, label,
+                                resolved.getBlock(), resolved, secondStep);
+                        colourPoints.put(colour, pt);
+                        blockCount++;
+                    } else if ("minecraft:air".equals(blockId)) {
+                        registerBlock(colour, label, Blocks.AIR, false);
+                        blockCount++;
+                    } else {
+                        // Register as special to avoid "unknown colour" warnings for PNGs
+                        registerSpecial(colour, label);
+                        specialCount++;
                     }
                 }
-            } catch (Exception e) {
-                MillLog.error(null, "PointType: failed to load JSON colour map, using defaults", e);
+            }
+        } catch (IOException e) {
+            MillLog.error(null, "PointType: failed to read blocklist.txt", e);
+            return false;
+        }
+
+        MillLog.major(null, "PointType: loaded " + blockCount + " blocks + "
+                + specialCount + " specials from blocklist.txt (" + skipped + " skipped)");
+        return blockCount > 0 || specialCount > 0;
+    }
+
+    private static int parseRGB(String colourStr) {
+        try {
+            String[] parts = colourStr.split("/");
+            if (parts.length != 3) return -1;
+            int r = Math.min(255, Math.max(0, Integer.parseInt(parts[0].trim())));
+            int g = Math.min(255, Math.max(0, Integer.parseInt(parts[1].trim())));
+            int b = Math.min(255, Math.max(0, Integer.parseInt(parts[2].trim())));
+            return (r << 16) | (g << 8) | b;
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    @Nullable
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static BlockState resolveBlockState(String legacyId, String metaOrProps) {
+        // Remap millenaire: → millenaire2:
+        if (legacyId.startsWith("millenaire:")) {
+            legacyId = "millenaire2:" + legacyId.substring("millenaire:".length());
+        }
+
+        String modernId;
+        Map<String, String> properties = new HashMap<>();
+
+        // Try numeric metadata first
+        try {
+            int meta = Integer.parseInt(metaOrProps);
+            modernId = LegacyBlockMapping.mapBlock(legacyId + ";" + meta);
+        } catch (NumberFormatException e) {
+            // Parse property string: "variant=oak,axis=y" or "facing=west,half=bottom"
+            String variant = null;
+            for (String prop : metaOrProps.split(",")) {
+                prop = prop.trim();
+                if (prop.startsWith("variant=")) {
+                    variant = prop.substring("variant=".length());
+                } else if (prop.startsWith("type=")) {
+                    variant = prop.substring("type=".length());
+                } else if (prop.contains("=")) {
+                    String[] kv = prop.split("=", 2);
+                    if (!kv[0].trim().equals("decayable")) { // skip legacy-only props
+                        properties.put(kv[0].trim(), kv[1].trim());
+                    }
+                }
+            }
+
+            if (variant != null) {
+                String mapped = VARIANT_MAP.get(legacyId + ";variant=" + variant);
+                modernId = (mapped != null) ? mapped : LegacyBlockMapping.mapBlock(legacyId);
+            } else {
+                modernId = LegacyBlockMapping.mapBlock(legacyId);
             }
         }
-        if (!loaded) {
-            registerDefaults();
+
+        // Resolve block from registry
+        try {
+            ResourceLocation rl = ResourceLocation.parse(modernId);
+            Block block = BuiltInRegistries.BLOCK.get(rl);
+            if (block == Blocks.AIR && !"minecraft:air".equals(modernId)) {
+                return null;
+            }
+
+            BlockState state = block.defaultBlockState();
+
+            // Apply parsed properties (facing, half, axis, etc.)
+            for (Map.Entry<String, String> entry : properties.entrySet()) {
+                for (net.minecraft.world.level.block.state.properties.Property<?> prop
+                        : state.getProperties()) {
+                    if (prop.getName().equals(entry.getKey())) {
+                        Optional<?> val = prop.getValue(entry.getValue());
+                        if (val.isPresent()) {
+                            state = state.setValue(
+                                    (net.minecraft.world.level.block.state.properties.Property) prop,
+                                    (Comparable) val.get());
+                        }
+                        break;
+                    }
+                }
+            }
+
+            return state;
+        } catch (Exception e) {
+            return null;
         }
+    }
+
+    /**
+     * Load from JSON datapack (colour_map.json). Used as second fallback.
+     */
+    private static boolean loadFromJson(@Nullable MinecraftServer server) {
+        if (server == null) return false;
+        try {
+            ResourceManager rm = server.getResourceManager();
+            ResourceLocation loc = ResourceLocation.fromNamespaceAndPath(
+                    "millenaire2", "pointtypes/colour_map.json");
+            Optional<Resource> opt = rm.getResource(loc);
+            if (opt.isPresent()) {
+                try (InputStream is = opt.get().open();
+                     InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+                    JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+                    int count = 0;
+
+                    if (root.has("blocks")) {
+                        JsonObject blocks = root.getAsJsonObject("blocks");
+                        for (Map.Entry<String, JsonElement> entry : blocks.entrySet()) {
+                            try {
+                                int colour = Integer.parseInt(entry.getKey().trim(), 16);
+                                JsonObject val = entry.getValue().getAsJsonObject();
+                                String blockId = val.get("block").getAsString();
+                                boolean second = val.has("secondStep")
+                                        && val.get("secondStep").getAsBoolean();
+                                ResourceLocation rl = ResourceLocation.parse(blockId);
+                                Block block = BuiltInRegistries.BLOCK.get(rl);
+                                if (block != Blocks.AIR || "minecraft:air".equals(blockId)) {
+                                    registerBlock(colour, blockId, block, second);
+                                    count++;
+                                }
+                            } catch (Exception ignored) {}
+                        }
+                    }
+
+                    if (root.has("special")) {
+                        JsonObject specials = root.getAsJsonObject("special");
+                        for (Map.Entry<String, JsonElement> entry : specials.entrySet()) {
+                            try {
+                                int colour = Integer.parseInt(entry.getKey().trim(), 16);
+                                String type = entry.getValue().getAsString();
+                                registerSpecial(colour, type);
+                                count++;
+                            } catch (Exception ignored) {}
+                        }
+                    }
+
+                    MillLog.minor(null, "PointType: loaded " + count
+                            + " colour mappings from JSON datapack");
+                    return count > 0;
+                }
+            }
+        } catch (Exception e) {
+            MillLog.error(null, "PointType: failed to load JSON colour map", e);
+        }
+        return false;
     }
 
     /**
