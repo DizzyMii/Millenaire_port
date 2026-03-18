@@ -14,6 +14,7 @@ import org.dizzymii.millenaire2.culture.VillagerType;
 import org.dizzymii.millenaire2.goal.MillGoal;
 import org.dizzymii.millenaire2.item.InvItem;
 import org.dizzymii.millenaire2.util.Point;
+import org.dizzymii.millenaire2.village.FamilyData;
 
 import java.util.HashMap;
 
@@ -33,6 +34,8 @@ public abstract class MillVillager extends PathfinderMob {
             SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Integer> DATA_GENDER =
             SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<String> DATA_SPOUSE_NAME =
+            SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.STRING);
 
     // --- Constants ---
     public static final int MALE = 1;
@@ -88,6 +91,7 @@ public abstract class MillVillager extends PathfinderMob {
     public boolean isUsingHandToHand;
     public boolean isRaider = false;
     private long villagerId = -1L;
+    public final FamilyData familyData = new FamilyData();
 
     protected MillVillager(EntityType<? extends MillVillager> type, Level level) {
         super(type, level);
@@ -107,6 +111,7 @@ public abstract class MillVillager extends PathfinderMob {
         builder.define(DATA_FIRST_NAME, "");
         builder.define(DATA_FAMILY_NAME, "");
         builder.define(DATA_GENDER, 0);
+        builder.define(DATA_SPOUSE_NAME, "");
     }
 
     // --- Name accessors ---
@@ -116,6 +121,8 @@ public abstract class MillVillager extends PathfinderMob {
     public void setFamilyName(String name) { this.entityData.set(DATA_FAMILY_NAME, name); }
     public int getGender() { return this.entityData.get(DATA_GENDER); }
     public void setGender(int gender) { this.entityData.set(DATA_GENDER, gender); }
+    public String getSpouseName() { return this.entityData.get(DATA_SPOUSE_NAME); }
+    public void setSpouseName(String name) { this.entityData.set(DATA_SPOUSE_NAME, name); }
 
     public long getVillagerId() { return villagerId; }
     public void setVillagerId(long id) { this.villagerId = id; }
@@ -156,6 +163,7 @@ public abstract class MillVillager extends PathfinderMob {
             tag.putString("hiredBy", hiredBy);
             tag.putLong("hiredUntil", hiredUntil);
         }
+        tag.put("familyData", familyData.save());
     }
 
     @Override
@@ -180,6 +188,10 @@ public abstract class MillVillager extends PathfinderMob {
             hiredBy = tag.getString("hiredBy");
             hiredUntil = tag.getLong("hiredUntil");
         }
+        if (tag.contains("familyData")) {
+            familyData.load(tag.getCompound("familyData"));
+            setSpouseName(familyData.getSpouseName());
+        }
     }
 
     // --- Inventory helpers ---
@@ -197,6 +209,34 @@ public abstract class MillVillager extends PathfinderMob {
     public void removeFromInv(InvItem item, int count) {
         addToInv(item, -count);
     }
+
+    // --- Marriage helpers ---
+
+    /**
+     * Marries this villager to another. Updates both villagers' family data and synched spouse name.
+     */
+    public void marryTo(MillVillager partner) {
+        String thisFullName = getFirstName() + " " + getFamilyName();
+        String partnerFullName = partner.getFirstName() + " " + partner.getFamilyName();
+
+        this.familyData.marry(partner.getVillagerId(), partnerFullName);
+        partner.familyData.marry(this.getVillagerId(), thisFullName);
+
+        // Female takes male's family name (with maiden name preserved)
+        if (this.isFemale()) {
+            this.familyData.setMaidenName(this.getFamilyName());
+            this.setFamilyName(partner.getFamilyName());
+        } else if (partner.isFemale()) {
+            partner.familyData.setMaidenName(partner.getFamilyName());
+            partner.setFamilyName(this.getFamilyName());
+        }
+
+        this.setSpouseName(partnerFullName);
+        partner.setSpouseName(thisFullName);
+    }
+
+    public boolean isMarried() { return familyData.isMarried(); }
+    public boolean isChildVillager() { return familyData.isChild(); }
 
     // TODO: Full behavior (tick logic, goal execution, pathing, combat, etc.) in later phases
 
