@@ -235,6 +235,42 @@ public class PointType {
         VARIANT_MAP.put("millenaire2:extended_mud_brick;variant=mudbrick_smooth", "millenaire2:mud_brick_extended");
         VARIANT_MAP.put("millenaire2:extended_mud_brick;variant=mudbrick_seljuk_ornamented", "millenaire2:mud_brick_extended");
         VARIANT_MAP.put("millenaire2:extended_mud_brick;variant=mudbrick_seljuk_decorated", "millenaire2:mud_brick_extended");
+        // Stained hardened clay / terracotta (color= key in blocklist)
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=white", "minecraft:white_terracotta");
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=orange", "minecraft:orange_terracotta");
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=magenta", "minecraft:magenta_terracotta");
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=light_blue", "minecraft:light_blue_terracotta");
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=yellow", "minecraft:yellow_terracotta");
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=lime", "minecraft:lime_terracotta");
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=pink", "minecraft:pink_terracotta");
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=gray", "minecraft:gray_terracotta");
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=silver", "minecraft:light_gray_terracotta");
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=cyan", "minecraft:cyan_terracotta");
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=purple", "minecraft:purple_terracotta");
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=blue", "minecraft:blue_terracotta");
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=brown", "minecraft:brown_terracotta");
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=green", "minecraft:green_terracotta");
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=red", "minecraft:red_terracotta");
+        VARIANT_MAP.put("minecraft:stained_hardened_clay;variant=black", "minecraft:black_terracotta");
+        // Stained glass variants (millenaire)
+        VARIANT_MAP.put("millenaire2:stained_glass;variant=white", "millenaire2:stained_glass");
+        VARIANT_MAP.put("millenaire2:stained_glass;variant=yellow", "millenaire2:stained_glass");
+        VARIANT_MAP.put("millenaire2:stained_glass;variant=yellow_red", "millenaire2:stained_glass");
+        VARIANT_MAP.put("millenaire2:stained_glass;variant=red_blue", "millenaire2:stained_glass");
+        VARIANT_MAP.put("millenaire2:stained_glass;variant=green_blue", "millenaire2:stained_glass");
+        // Sod variants (millenaire)
+        VARIANT_MAP.put("millenaire2:sod;variant=oak", "millenaire2:sod");
+        VARIANT_MAP.put("millenaire2:sod;variant=spruce", "millenaire2:sod");
+        VARIANT_MAP.put("millenaire2:sod;variant=birch", "millenaire2:sod");
+        VARIANT_MAP.put("millenaire2:sod;variant=jungle", "millenaire2:sod");
+        VARIANT_MAP.put("millenaire2:sod;variant=acacia", "millenaire2:sod");
+        VARIANT_MAP.put("millenaire2:sod;variant=dark_oak", "millenaire2:sod");
+        // Quartz variants
+        VARIANT_MAP.put("minecraft:quartz_block;variant=default", "minecraft:quartz_block");
+        VARIANT_MAP.put("minecraft:quartz_block;variant=chiseled", "minecraft:chiseled_quartz_block");
+        VARIANT_MAP.put("minecraft:quartz_block;variant=lines_x", "minecraft:quartz_pillar");
+        VARIANT_MAP.put("minecraft:quartz_block;variant=lines_y", "minecraft:quartz_pillar");
+        VARIANT_MAP.put("minecraft:quartz_block;variant=lines_z", "minecraft:quartz_pillar");
     }
 
     /**
@@ -360,6 +396,8 @@ public class PointType {
                     variant = prop.substring("variant=".length());
                 } else if (prop.startsWith("type=")) {
                     variant = prop.substring("type=".length());
+                } else if (prop.startsWith("color=")) {
+                    variant = prop.substring("color=".length());
                 } else if (prop.contains("=")) {
                     String[] kv = prop.split("=", 2);
                     if (!kv[0].trim().equals("decayable")) { // skip legacy-only props

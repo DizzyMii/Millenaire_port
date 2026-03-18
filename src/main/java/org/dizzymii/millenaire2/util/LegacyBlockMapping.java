@@ -256,6 +256,46 @@ public class LegacyBlockMapping {
         BLOCK_MAP.put("millenaire2:crop_maize;0", "millenaire2:crop_maize");
         BLOCK_MAP.put("millenaire2:crop_maize;7", "millenaire2:crop_maize");
 
+        // ===== Beds =====
+        BLOCK_MAP.put("minecraft:bed", "minecraft:white_bed");
+
+        // ===== Trapdoors =====
+        BLOCK_MAP.put("minecraft:trapdoor", "minecraft:oak_trapdoor");
+
+        // ===== Concrete =====
+        BLOCK_MAP.put("minecraft:concrete;0", "minecraft:white_concrete");
+        BLOCK_MAP.put("minecraft:concrete;1", "minecraft:orange_concrete");
+        BLOCK_MAP.put("minecraft:concrete;2", "minecraft:magenta_concrete");
+        BLOCK_MAP.put("minecraft:concrete;3", "minecraft:light_blue_concrete");
+        BLOCK_MAP.put("minecraft:concrete;4", "minecraft:yellow_concrete");
+        BLOCK_MAP.put("minecraft:concrete;5", "minecraft:lime_concrete");
+        BLOCK_MAP.put("minecraft:concrete;6", "minecraft:pink_concrete");
+        BLOCK_MAP.put("minecraft:concrete;7", "minecraft:gray_concrete");
+        BLOCK_MAP.put("minecraft:concrete;8", "minecraft:light_gray_concrete");
+        BLOCK_MAP.put("minecraft:concrete;9", "minecraft:cyan_concrete");
+        BLOCK_MAP.put("minecraft:concrete;10", "minecraft:purple_concrete");
+        BLOCK_MAP.put("minecraft:concrete;11", "minecraft:blue_concrete");
+        BLOCK_MAP.put("minecraft:concrete;12", "minecraft:brown_concrete");
+        BLOCK_MAP.put("minecraft:concrete;13", "minecraft:green_concrete");
+        BLOCK_MAP.put("minecraft:concrete;14", "minecraft:red_concrete");
+        BLOCK_MAP.put("minecraft:concrete;15", "minecraft:black_concrete");
+
+        // ===== Glazed terracotta renames =====
+        BLOCK_MAP.put("minecraft:silver_glazed_terracotta", "minecraft:light_gray_glazed_terracotta");
+
+        // ===== Millenaire legacy renames =====
+        BLOCK_MAP.put("millenaire2:snowwall;0", "millenaire2:wall_snow");
+        BLOCK_MAP.put("millenaire2:snowbrick;0", "millenaire2:snow_brick");
+        BLOCK_MAP.put("millenaire2:icebrick;0", "millenaire2:ice_brick");
+        BLOCK_MAP.put("millenaire2:leaves_olivetree;1", "millenaire2:leaves_olivetree");
+        BLOCK_MAP.put("millenaire2:wood_deco;3", "millenaire2:thatch");
+        BLOCK_MAP.put("millenaire2:stone_deco;5", "millenaire2:cooked_brick");
+        BLOCK_MAP.put("millenaire2:stone_deco;6", "millenaire2:stone_decoration");
+        BLOCK_MAP.put("millenaire2:byzantine_tiles_slab", "millenaire2:slab_byzantine_tiles");
+        BLOCK_MAP.put("millenaire2:gray_tiles_slab", "millenaire2:slab_gray_tiles");
+        BLOCK_MAP.put("millenaire2:green_tiles_slab", "millenaire2:slab_green_tiles");
+        BLOCK_MAP.put("millenaire2:red_tiles_slab", "millenaire2:slab_red_tiles");
+
         // ===== Other legacy renames =====
         BLOCK_MAP.put("minecraft:standing_sign", "minecraft:oak_sign");
         BLOCK_MAP.put("minecraft:wooden_door", "minecraft:oak_door");
