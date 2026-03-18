@@ -188,7 +188,7 @@ public class Culture {
     }
 
     private void loadNameLists(VirtualDir cultureDir) {
-        VirtualDir namesDir = cultureDir.getChildDirectory("names");
+        VirtualDir namesDir = cultureDir.getChildDirectory("namelists");
         if (namesDir == null || !namesDir.exists()) return;
 
         for (File file : namesDir.listFiles()) {
@@ -256,7 +256,7 @@ public class Culture {
     }
 
     private void loadVillageTypes(VirtualDir cultureDir) {
-        VirtualDir villagesDir = cultureDir.getChildDirectory("villagetypes");
+        VirtualDir villagesDir = cultureDir.getChildDirectory("villages");
         if (villagesDir == null || !villagesDir.exists()) return;
 
         for (File file : villagesDir.listFiles()) {

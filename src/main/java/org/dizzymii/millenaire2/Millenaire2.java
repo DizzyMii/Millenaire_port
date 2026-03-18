@@ -108,6 +108,9 @@ public class Millenaire2 {
         net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
         worldData = MillWorldData.get(overworld);
         LOGGER.info("{} world data loaded: {} buildings", MODNAME, worldData.allBuildings().size());
+
+        // Register empty GameTest templates
+        org.dizzymii.millenaire2.gametest.GameTestSetup.ensureTemplates(overworld);
     }
 
     @Nullable

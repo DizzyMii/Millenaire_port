@@ -148,6 +148,10 @@ public class VillageType {
     @FieldDocumentation(explanation = "Villager types for lone buildings.")
     public List<String> loneVillagers = new ArrayList<>();
 
+    @ConfigField(type = ParameterType.BOOLEAN, paramName = "carriesraid", defaultValue = "false")
+    @FieldDocumentation(explanation = "Whether this village type carries out raids.")
+    public boolean carriesRaid = false;
+
     public VillageType(Culture culture, String key) {
         this.culture = culture;
         this.key = key;
