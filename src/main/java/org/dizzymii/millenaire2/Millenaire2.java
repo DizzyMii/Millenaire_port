@@ -27,6 +27,7 @@ import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.item.MillItems;
 import org.dizzymii.millenaire2.network.MillNetworking;
+import org.dizzymii.millenaire2.sound.MillSounds;
 import org.slf4j.Logger;
 
 @Mod(Millenaire2.MODID)
@@ -65,6 +66,7 @@ public class Millenaire2 {
         CREATIVE_MODE_TABS.register(modEventBus);
         ENTITY_TYPES.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
+        MillSounds.SOUND_EVENTS.register(modEventBus);
 
         // Force class loading of registration holders
         MillBlocks.init();
