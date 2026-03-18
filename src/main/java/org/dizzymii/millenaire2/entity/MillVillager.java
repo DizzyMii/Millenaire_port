@@ -5,6 +5,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -237,6 +238,34 @@ public abstract class MillVillager extends PathfinderMob {
 
     public boolean isMarried() { return familyData.isMarried(); }
     public boolean isChildVillager() { return familyData.isChild(); }
+
+    // --- Held item rendering ---
+
+    /**
+     * Syncs the custom heldItem/heldItemOffHand fields into vanilla equipment slots
+     * so that the built-in ItemInHandLayer renders them.
+     * Call this whenever heldItem or heldItemOffHand changes.
+     */
+    public void syncHeldItems() {
+        this.setItemSlot(EquipmentSlot.MAINHAND, heldItem);
+        this.setItemSlot(EquipmentSlot.OFFHAND, heldItemOffHand);
+    }
+
+    /**
+     * Sets the main hand item and syncs it to the equipment slot for rendering.
+     */
+    public void setHeldItem(ItemStack stack) {
+        this.heldItem = stack;
+        this.setItemSlot(EquipmentSlot.MAINHAND, stack);
+    }
+
+    /**
+     * Sets the off-hand item and syncs it to the equipment slot for rendering.
+     */
+    public void setHeldItemOffHand(ItemStack stack) {
+        this.heldItemOffHand = stack;
+        this.setItemSlot(EquipmentSlot.OFFHAND, stack);
+    }
 
     // TODO: Full behavior (tick logic, goal execution, pathing, combat, etc.) in later phases
 
