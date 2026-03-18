@@ -1,0 +1,74 @@
+{
+  "_comment": "Data-driven village expansion thresholds and resource production rates. Users/datapacks can override.",
+  "expansion": {
+    "upgrade_check_interval_ticks": 1200,
+    "min_buildings_for_walls": 3,
+    "min_buildings_for_secondary": 2,
+    "max_concurrent_constructions": 1,
+    "construction_blocks_per_villager_tick": 3
+  },
+  "resource_production": {
+    "_comment": "Production rates per building type per cycle (200 ticks = 10 seconds). Key = building plan set key or tag. 'items' is a list of {item, count} produced per cycle.",
+    "townhall": {
+      "items": [
+        { "item": "wheat", "count": 1 }
+      ]
+    },
+    "farm": {
+      "items": [
+        { "item": "wheat", "count": 3 },
+        { "item": "carrot", "count": 1 },
+        { "item": "potato", "count": 1 }
+      ]
+    },
+    "bakery": {
+      "items": [
+        { "item": "bread", "count": 2 }
+      ],
+      "consumes": [
+        { "item": "wheat", "count": 3 }
+      ]
+    },
+    "lumberjack": {
+      "items": [
+        { "item": "oak_log", "count": 2 },
+        { "item": "oak_planks", "count": 4 }
+      ]
+    },
+    "mine": {
+      "items": [
+        { "item": "cobblestone", "count": 4 },
+        { "item": "iron_ore", "count": 1 },
+        { "item": "coal", "count": 2 }
+      ]
+    },
+    "forge": {
+      "items": [
+        { "item": "iron_ingot", "count": 1 }
+      ],
+      "consumes": [
+        { "item": "iron_ore", "count": 1 },
+        { "item": "coal", "count": 1 }
+      ]
+    },
+    "fishery": {
+      "items": [
+        { "item": "cod", "count": 2 }
+      ]
+    },
+    "weaver": {
+      "items": [
+        { "item": "string", "count": 2 },
+        { "item": "white_wool", "count": 1 }
+      ]
+    }
+  },
+  "resource_capacity": {
+    "_comment": "Maximum resources a building can hold. Default applies if not specified.",
+    "default": 64,
+    "townhall": 256,
+    "farm": 128,
+    "mine": 128,
+    "forge": 96
+  }
+}

@@ -381,20 +381,14 @@ public class Building {
     // ========== Resource production ==========
 
     /**
-     * Produce resources based on building type. Culture-specific production rates
-     * will be driven by BuildingPlan tags; for now use basic defaults.
+     * Produce resources based on building type using data-driven economy config.
      */
     private void tickResourceProduction() {
         // Only buildings with villagers produce resources
         if (vrecords.isEmpty()) return;
 
-        // Basic production: 1 unit of a generic resource per cycle
-        // Full production logic will read from culture config when resource definitions are loaded
-        if (isTownhall) {
-            org.dizzymii.millenaire2.item.InvItem wheat = org.dizzymii.millenaire2.item.InvItem.get("wheat");
-            if (wheat != null) {
-                resManager.storeGoods(wheat, 1);
-            }
+        if (VillageEconomyLoader.tickProduction(this) && mw != null) {
+            mw.setDirty();
         }
     }
 
