@@ -270,74 +270,101 @@ public abstract class MillVillager extends PathfinderMob {
     }
 
     private void selectNewGoal() {
+        long dayTime = this.level().getDayTime() % 24000;
+        int hour = (int) (dayTime / 1000 + 6) % 24;
         boolean isNight = !this.level().isDay();
 
-        // Try to find a suitable goal from the villager type's goal list
-        if (vtype != null && !vtype.goals.isEmpty()) {
-            for (String gKey : vtype.goals) {
-                Goal g = Goal.goals.get(gKey);
-                if (g == null) continue;
-                if (isNight && !g.canBeDoneAtNight()) continue;
-                if (!isNight && !g.canBeDoneInDayTime()) continue;
+        // Phase 1: Night (sleep at home)
+        if (isNight) {
+            if (tryActivateGoal("sleep", Goal.sleep)) return;
+            // Can't sleep — go home and idle
+            if (tryGoHome()) return;
+            return;
+        }
 
-                // Check time-of-day restrictions
-                if (g.minimumHour >= 0 || g.maximumHour >= 0) {
-                    long dayTime = this.level().getDayTime() % 24000;
-                    int hour = (int) (dayTime / 1000 + 6) % 24;
+        // Phase 2: Early morning (6-8) — eat/idle at home
+        if (hour >= 6 && hour < 8) {
+            if (tryActivateGoal("eatatinn", Goal.goals.get("eatatinn"))) return;
+            if (tryGoHome()) return;
+        }
+
+        // Phase 3: Work hours (8-18) — prioritize construction, then type goals
+        if (hour >= 8 && hour < 18) {
+            // Priority: help with active construction in the village
+            if (tryActivateGoal("construction", Goal.construction)) return;
+            if (tryActivateGoal("getresourcesforupgrade", Goal.goals.get("getresourcesforupgrade"))) return;
+
+            // Run through villager-type-specific goals
+            if (vtype != null && !vtype.goals.isEmpty()) {
+                for (String gKey : vtype.goals) {
+                    Goal g = Goal.goals.get(gKey);
+                    if (g == null) continue;
+                    if (!g.canBeDoneInDayTime()) continue;
+
                     if (g.minimumHour >= 0 && hour < g.minimumHour) continue;
                     if (g.maximumHour >= 0 && hour > g.maximumHour) continue;
-                }
 
-                // Check cooldown
-                Long lastTime = lastGoalTime.get(g);
-                if (lastTime != null && (this.level().getGameTime() - lastTime) < Goal.STANDARD_DELAY / 50) {
-                    continue;
-                }
-
-                // Try to get a destination for this goal
-                try {
-                    GoalInformation info = g.getDestination(this);
-                    if (info != null && info.hasTarget()) {
-                        setActiveGoal(gKey, g, info);
-                        return;
+                    Long lastTime = lastGoalTime.get(g);
+                    if (lastTime != null && (this.level().getGameTime() - lastTime) < Goal.STANDARD_DELAY / 50) {
+                        continue;
                     }
-                } catch (Exception e) {
-                    MillLog.error(this, "Error getting destination for goal: " + gKey, e);
-                }
-            }
-        }
 
-        // Fallback: sleep at night, idle wander during day
-        if (isNight && Goal.sleep != null) {
-            try {
-                GoalInformation info = Goal.sleep.getDestination(this);
-                if (info != null && info.hasTarget()) {
-                    setActiveGoal("sleep", Goal.sleep, info);
-                    return;
-                }
-            } catch (Exception ignored) {}
-        }
-
-        // Daytime idle: try socialise, otherwise wander near home
-        if (!isNight) {
-            if (Goal.gosocialise != null) {
-                try {
-                    GoalInformation info = Goal.gosocialise.getDestination(this);
-                    if (info != null && info.hasTarget()) {
-                        setActiveGoal("gosocialise", Goal.gosocialise, info);
-                        return;
+                    try {
+                        GoalInformation info = g.getDestination(this);
+                        if (info != null && info.hasTarget()) {
+                            setActiveGoal(gKey, g, info);
+                            return;
+                        }
+                    } catch (Exception e) {
+                        MillLog.error(this, "Error getting destination for goal: " + gKey, e);
                     }
-                } catch (Exception ignored) {}
-            }
-            // Random wander near home point
-            Point wanderTarget = housePoint != null ? housePoint : townHallPoint;
-            if (wanderTarget != null) {
-                int dx = this.getRandom().nextInt(11) - 5;
-                int dz = this.getRandom().nextInt(11) - 5;
-                Point wander = new Point(wanderTarget.x + dx, wanderTarget.y, wanderTarget.z + dz);
-                this.getNavigation().moveTo(wander.x + 0.5, wander.y, wander.z + 0.5, 0.5);
+                }
             }
         }
+
+        // Phase 4: Evening (18-20) — socialise, eat, go home
+        if (hour >= 18 && hour < 20) {
+            if (tryActivateGoal("gosocialise", Goal.gosocialise)) return;
+            if (tryActivateGoal("eatatinn", Goal.goals.get("eatatinn"))) return;
+            if (tryGoHome()) return;
+        }
+
+        // Phase 5: Late evening (20+) — go home to sleep
+        if (hour >= 20) {
+            if (tryGoHome()) return;
+        }
+
+        // Fallback: socialise or wander
+        if (tryActivateGoal("gosocialise", Goal.gosocialise)) return;
+
+        Point wanderTarget = housePoint != null ? housePoint : townHallPoint;
+        if (wanderTarget != null) {
+            int dx = this.getRandom().nextInt(11) - 5;
+            int dz = this.getRandom().nextInt(11) - 5;
+            Point wander = new Point(wanderTarget.x + dx, wanderTarget.y, wanderTarget.z + dz);
+            this.getNavigation().moveTo(wander.x + 0.5, wander.y, wander.z + 0.5, 0.5);
+        }
+    }
+
+    private boolean tryActivateGoal(String key, @Nullable Goal g) {
+        if (g == null) return false;
+        try {
+            GoalInformation info = g.getDestination(this);
+            if (info != null && info.hasTarget()) {
+                setActiveGoal(key, g, info);
+                return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    private boolean tryGoHome() {
+        Point home = housePoint != null ? housePoint : townHallPoint;
+        if (home == null) return false;
+        double dist = this.distanceToSqr(home.x + 0.5, home.y, home.z + 0.5);
+        if (dist < 4.0) return false;
+        this.getNavigation().moveTo(home.x + 0.5, home.y, home.z + 0.5, 0.6);
+        return true;
     }
 
     private void setActiveGoal(String key, Goal goal, GoalInformation info) {
