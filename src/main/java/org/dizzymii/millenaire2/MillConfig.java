@@ -65,6 +65,14 @@ public class MillConfig {
             .comment("Whether village raids are enabled")
             .define("gameplay.raidsEnabled", true);
 
+    private static final ModConfigSpec.BooleanValue USE_CUSTOM_PATHING = BUILDER
+            .comment("Use custom A*/JPS pathfinding instead of vanilla navigation. Experimental — leave false for stability.")
+            .define("gameplay.useCustomPathing", false);
+
+    private static final ModConfigSpec.IntValue CONSTRUCTION_BLOCKS_PER_TICK = BUILDER
+            .comment("Number of blocks placed per slow tick during construction")
+            .defineInRange("gameplay.constructionBlocksPerTick", 5, 1, 50);
+
     private static final ModConfigSpec.BooleanValue GENERATE_HELP_DATA = BUILDER
             .comment("Generate help data files (dev option)")
             .define("dev.generateHelpData", false);
@@ -89,6 +97,8 @@ public class MillConfig {
     public static int logConstruction;
     public static int logVillager;
     public static boolean raidsEnabled;
+    public static boolean useCustomPathing;
+    public static int constructionBlocksPerTick;
     public static boolean generateHelpData;
     public static boolean devMode;
 
@@ -107,6 +117,8 @@ public class MillConfig {
         logConstruction = LOG_CONSTRUCTION.get();
         logVillager = LOG_VILLAGER.get();
         raidsEnabled = RAIDS_ENABLED.get();
+        useCustomPathing = USE_CUSTOM_PATHING.get();
+        constructionBlocksPerTick = CONSTRUCTION_BLOCKS_PER_TICK.get();
         generateHelpData = GENERATE_HELP_DATA.get();
         devMode = DEV_MODE.get();
     }

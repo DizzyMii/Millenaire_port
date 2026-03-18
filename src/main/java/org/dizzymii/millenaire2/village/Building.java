@@ -219,10 +219,11 @@ public class Building {
         isAreaLoaded = world.hasChunkAt(pos.toBlockPos());
         if (!isAreaLoaded) return;
 
-        // Progress construction (place up to 5 blocks per slow tick)
+        // Progress construction (config-driven blocks per slow tick)
         if (currentConstruction != null && !currentConstruction.isComplete()
                 && world instanceof ServerLevel serverLevel) {
-            int placed = currentConstruction.placeBlocks(serverLevel, 5);
+            int placed = currentConstruction.placeBlocks(serverLevel,
+                    org.dizzymii.millenaire2.MillConfig.constructionBlocksPerTick);
             if (placed > 0 && mw != null) mw.setDirty();
             if (currentConstruction.isComplete()) {
                 MillLog.minor("Building", "Construction complete for: " + name);
