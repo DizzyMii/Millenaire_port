@@ -2,6 +2,9 @@ package org.dizzymii.millenaire2.client.gui.text;
 
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
+import org.dizzymii.millenaire2.network.ClientPacketSender;
+import org.dizzymii.millenaire2.network.MillPacketIds;
+import org.dizzymii.millenaire2.network.PacketDataHelper;
 
 /**
  * Hiring screen — lists available mercenaries/soldiers for hire and their costs.
@@ -34,7 +37,9 @@ public class GuiHire extends GuiText {
     }
 
     private void hire(String unitType) {
-        // Send hire packet to server with unitType
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeString(unitType);
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_HIRE_HIRE, w);
         onClose();
     }
 }

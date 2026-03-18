@@ -2,6 +2,9 @@ package org.dizzymii.millenaire2.client.gui.text;
 
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
+import org.dizzymii.millenaire2.network.ClientPacketSender;
+import org.dizzymii.millenaire2.network.MillPacketIds;
+import org.dizzymii.millenaire2.network.PacketDataHelper;
 
 /**
  * Negation wand screen — confirms village removal within the wand's area.
@@ -32,7 +35,8 @@ public class GuiNegationWand extends GuiText {
     }
 
     private void confirmNegation() {
-        // Send negation packet to server
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_NEGATION_WAND, w);
         onClose();
     }
 }

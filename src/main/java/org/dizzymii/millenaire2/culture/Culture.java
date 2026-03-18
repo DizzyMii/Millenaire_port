@@ -89,6 +89,10 @@ public class Culture {
         return cultures.get(name);
     }
 
+    public static java.util.Set<String> getAllCultureKeys() {
+        return cultures.keySet();
+    }
+
     /**
      * Clear all loaded cultures (for reload support).
      */
