@@ -30,6 +30,7 @@ import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.item.MillItems;
 import org.dizzymii.millenaire2.menu.MillMenuTypes;
 import org.dizzymii.millenaire2.network.MillNetworking;
+import org.dizzymii.millenaire2.sound.MillSounds;
 import org.dizzymii.millenaire2.world.MillWorldData;
 import org.slf4j.Logger;
 
@@ -73,6 +74,7 @@ public class Millenaire2 {
         ENTITY_TYPES.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
         MillMenuTypes.MENU_TYPES.register(modEventBus);
+        MillSounds.SOUND_EVENTS.register(modEventBus);
 
         // Force class loading of registration holders
         MillBlocks.init();

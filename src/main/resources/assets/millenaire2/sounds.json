@@ -1,7 +1,72 @@
 {
   "norman_bells": {
     "category": "block",
-    "subtitle": "millenaire.sound.norman_bells",
-    "sounds": [ "millenaire:norman_bells" ]
+    "subtitle": "millenaire2.sound.norman_bells",
+    "sounds": [ "millenaire2:norman_bells" ]
+  },
+  "villager_working": {
+    "category": "neutral",
+    "subtitle": "millenaire2.sound.villager_working",
+    "sounds": [ "millenaire2:villager_working" ]
+  },
+  "villager_eating": {
+    "category": "neutral",
+    "subtitle": "millenaire2.sound.villager_eating",
+    "sounds": [ "millenaire2:villager_eating" ]
+  },
+  "villager_sleeping": {
+    "category": "neutral",
+    "subtitle": "millenaire2.sound.villager_sleeping",
+    "sounds": [ "millenaire2:villager_sleeping" ]
+  },
+  "villager_trading": {
+    "category": "neutral",
+    "subtitle": "millenaire2.sound.villager_trading",
+    "sounds": [ "millenaire2:villager_trading" ]
+  },
+  "villager_greeting": {
+    "category": "neutral",
+    "subtitle": "millenaire2.sound.villager_greeting",
+    "sounds": [ "millenaire2:villager_greeting" ]
+  },
+  "villager_hurt": {
+    "category": "neutral",
+    "subtitle": "millenaire2.sound.villager_hurt",
+    "sounds": [ "millenaire2:villager_hurt" ]
+  },
+  "villager_death": {
+    "category": "neutral",
+    "subtitle": "millenaire2.sound.villager_death",
+    "sounds": [ "millenaire2:villager_death" ]
+  },
+  "construction_hammer": {
+    "category": "block",
+    "subtitle": "millenaire2.sound.construction_hammer",
+    "sounds": [ "millenaire2:construction_hammer" ]
+  },
+  "construction_complete": {
+    "category": "block",
+    "subtitle": "millenaire2.sound.construction_complete",
+    "sounds": [ "millenaire2:construction_complete" ]
+  },
+  "villager_attack": {
+    "category": "hostile",
+    "subtitle": "millenaire2.sound.villager_attack",
+    "sounds": [ "millenaire2:villager_attack" ]
+  },
+  "villager_bow_shoot": {
+    "category": "hostile",
+    "subtitle": "millenaire2.sound.villager_bow_shoot",
+    "sounds": [ "millenaire2:villager_bow_shoot" ]
+  },
+  "quest_accepted": {
+    "category": "neutral",
+    "subtitle": "millenaire2.sound.quest_accepted",
+    "sounds": [ "millenaire2:quest_accepted" ]
+  },
+  "quest_completed": {
+    "category": "neutral",
+    "subtitle": "millenaire2.sound.quest_completed",
+    "sounds": [ "millenaire2:quest_completed" ]
   }
 }

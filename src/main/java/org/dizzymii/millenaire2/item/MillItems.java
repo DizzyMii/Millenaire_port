@@ -42,10 +42,10 @@ public class MillItems {
 
     // ========== Wands ==========
     public static final DeferredItem<Item> SUMMONING_WAND = registerItem("summoningwand", () -> new ItemSummoningWand(props1()));
-    public static final DeferredItem<Item> NEGATION_WAND = registerItem("negationwand", () -> new Item(props1()));
+    public static final DeferredItem<Item> NEGATION_WAND = registerItem("negationwand", () -> new ItemNegationWand(props1()));
 
     // ========== Purse ==========
-    public static final DeferredItem<Item> PURSE = registerItem("purse", () -> new Item(props1()));
+    public static final DeferredItem<Item> PURSE = registerItem("purse", () -> new ItemPurse(props1()));
 
     // ========== Food — Norman ==========
     public static final DeferredItem<Item> CIDER_APPLE = registerItem("ciderapple",
@@ -185,10 +185,10 @@ public class MillItems {
     public static final DeferredItem<Item> CULTURE_BANNER = registerItem("culturebanner", () -> new Item(props()));
 
     // ========== Amulets ==========
-    public static final DeferredItem<Item> AMULET_VISHNU = registerItem("vishnu_amulet", () -> new Item(props1()));
-    public static final DeferredItem<Item> AMULET_ALCHEMIST = registerItem("alchemist_amulet", () -> new Item(props1()));
-    public static final DeferredItem<Item> AMULET_YGGDRASIL = registerItem("yggdrasil_amulet", () -> new Item(props1()));
-    public static final DeferredItem<Item> AMULET_SKOLL_HATI = registerItem("skoll_hati_amulet", () -> new Item(props1()));
+    public static final DeferredItem<Item> AMULET_VISHNU = registerItem("vishnu_amulet", () -> new ItemAmuletVishnu(props1().durability(64)));
+    public static final DeferredItem<Item> AMULET_ALCHEMIST = registerItem("alchemist_amulet", () -> new ItemAmuletAlchemist(props1().durability(32)));
+    public static final DeferredItem<Item> AMULET_YGGDRASIL = registerItem("yggdrasil_amulet", () -> new ItemAmuletYggdrasil(props1().durability(64)));
+    public static final DeferredItem<Item> AMULET_SKOLL_HATI = registerItem("skoll_hati_amulet", () -> new ItemAmuletSkollHati(props1().durability(16)));
 
     // ========== Norman Tools ==========
     public static final DeferredItem<Item> NORMAN_BROADSWORD = registerItem("normanbroadsword",
@@ -238,10 +238,10 @@ public class MillItems {
     public static final DeferredItem<Item> INUIT_TRIDENT = registerItem("inuittrident",
             () -> new SwordItem(Tiers.IRON, props().attributes(SwordItem.createAttributes(Tiers.IRON, 3, -2.4f)).durability(20)));
 
-    // ========== Bows (stubbed as plain items — custom BowItem behavior later) ==========
-    public static final DeferredItem<Item> YUMI_BOW = registerItem("yumibow", () -> new Item(props1().durability(384)));
-    public static final DeferredItem<Item> INUIT_BOW = registerItem("inuitbow", () -> new Item(props1().durability(384)));
-    public static final DeferredItem<Item> SELJUK_BOW = registerItem("seljukbow", () -> new Item(props1().durability(384)));
+    // ========== Bows ==========
+    public static final DeferredItem<Item> YUMI_BOW = registerItem("yumibow", () -> new ItemMillenaireBow(props1().durability(384)));
+    public static final DeferredItem<Item> INUIT_BOW = registerItem("inuitbow", () -> new ItemMillenaireBow(props1().durability(384)));
+    public static final DeferredItem<Item> SELJUK_BOW = registerItem("seljukbow", () -> new ItemMillenaireBow(props1().durability(384)));
 
     // ========== Armor — Norman (stubbed as plain items, proper ArmorItem later) ==========
     public static final DeferredItem<Item> NORMAN_HELMET = registerItem("normanhelmet", () -> new Item(props1()));
@@ -290,24 +290,24 @@ public class MillItems {
     public static final DeferredItem<Item> MAYAN_QUEST_CROWN = registerItem("mayanquestcrown", () -> new Item(props1()));
 
     // ========== Parchments ==========
-    public static final DeferredItem<Item> PARCHMENT_NORMAN_VILLAGERS = registerItem("parchment_normanvillagers", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_NORMAN_BUILDINGS = registerItem("parchment_normanbuildings", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_NORMAN_ITEMS = registerItem("parchment_normanitems", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_NORMAN_COMPLETE = registerItem("parchment_normanfull", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_INDIAN_VILLAGERS = registerItem("parchment_indianvillagers", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_INDIAN_BUILDINGS = registerItem("parchment_indianbuildings", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_INDIAN_ITEMS = registerItem("parchment_indianitems", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_INDIAN_COMPLETE = registerItem("parchment_indianfull", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_MAYAN_VILLAGERS = registerItem("parchment_mayanvillagers", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_MAYAN_BUILDINGS = registerItem("parchment_mayanbuildings", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_MAYAN_ITEMS = registerItem("parchment_mayanitems", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_MAYAN_COMPLETE = registerItem("parchment_mayanfull", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_JAPANESE_VILLAGERS = registerItem("parchment_japanesevillagers", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_JAPANESE_BUILDINGS = registerItem("parchment_japanesebuildings", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_JAPANESE_ITEMS = registerItem("parchment_japaneseitems", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_JAPANESE_COMPLETE = registerItem("parchment_japanesefull", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_VILLAGE_SCROLL = registerItem("parchment_villagescroll", () -> new Item(props1()));
-    public static final DeferredItem<Item> PARCHMENT_SADHU = registerItem("parchment_sadhu", () -> new Item(props1()));
+    public static final DeferredItem<Item> PARCHMENT_NORMAN_VILLAGERS = registerItem("parchment_normanvillagers", () -> new ItemParchment(props1(), "norman_villagers"));
+    public static final DeferredItem<Item> PARCHMENT_NORMAN_BUILDINGS = registerItem("parchment_normanbuildings", () -> new ItemParchment(props1(), "norman_buildings"));
+    public static final DeferredItem<Item> PARCHMENT_NORMAN_ITEMS = registerItem("parchment_normanitems", () -> new ItemParchment(props1(), "norman_items"));
+    public static final DeferredItem<Item> PARCHMENT_NORMAN_COMPLETE = registerItem("parchment_normanfull", () -> new ItemParchment(props1(), "norman_complete"));
+    public static final DeferredItem<Item> PARCHMENT_INDIAN_VILLAGERS = registerItem("parchment_indianvillagers", () -> new ItemParchment(props1(), "indian_villagers"));
+    public static final DeferredItem<Item> PARCHMENT_INDIAN_BUILDINGS = registerItem("parchment_indianbuildings", () -> new ItemParchment(props1(), "indian_buildings"));
+    public static final DeferredItem<Item> PARCHMENT_INDIAN_ITEMS = registerItem("parchment_indianitems", () -> new ItemParchment(props1(), "indian_items"));
+    public static final DeferredItem<Item> PARCHMENT_INDIAN_COMPLETE = registerItem("parchment_indianfull", () -> new ItemParchment(props1(), "indian_complete"));
+    public static final DeferredItem<Item> PARCHMENT_MAYAN_VILLAGERS = registerItem("parchment_mayanvillagers", () -> new ItemParchment(props1(), "mayan_villagers"));
+    public static final DeferredItem<Item> PARCHMENT_MAYAN_BUILDINGS = registerItem("parchment_mayanbuildings", () -> new ItemParchment(props1(), "mayan_buildings"));
+    public static final DeferredItem<Item> PARCHMENT_MAYAN_ITEMS = registerItem("parchment_mayanitems", () -> new ItemParchment(props1(), "mayan_items"));
+    public static final DeferredItem<Item> PARCHMENT_MAYAN_COMPLETE = registerItem("parchment_mayanfull", () -> new ItemParchment(props1(), "mayan_complete"));
+    public static final DeferredItem<Item> PARCHMENT_JAPANESE_VILLAGERS = registerItem("parchment_japanesevillagers", () -> new ItemParchment(props1(), "japanese_villagers"));
+    public static final DeferredItem<Item> PARCHMENT_JAPANESE_BUILDINGS = registerItem("parchment_japanesebuildings", () -> new ItemParchment(props1(), "japanese_buildings"));
+    public static final DeferredItem<Item> PARCHMENT_JAPANESE_ITEMS = registerItem("parchment_japaneseitems", () -> new ItemParchment(props1(), "japanese_items"));
+    public static final DeferredItem<Item> PARCHMENT_JAPANESE_COMPLETE = registerItem("parchment_japanesefull", () -> new ItemParchment(props1(), "japanese_complete"));
+    public static final DeferredItem<Item> PARCHMENT_VILLAGE_SCROLL = registerItem("parchment_villagescroll", () -> new ItemParchment(props1(), "village_scroll"));
+    public static final DeferredItem<Item> PARCHMENT_SADHU = registerItem("parchment_sadhu", () -> new ItemParchment(props1(), "sadhu"));
 
     // ========== Block Items ==========
     static {

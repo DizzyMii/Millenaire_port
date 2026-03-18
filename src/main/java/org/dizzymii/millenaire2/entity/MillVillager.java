@@ -12,6 +12,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -24,6 +25,7 @@ import org.dizzymii.millenaire2.goal.GoalInformation;
 import org.dizzymii.millenaire2.item.InvItem;
 import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
+import org.dizzymii.millenaire2.village.FamilyData;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -49,6 +51,10 @@ public abstract class MillVillager extends PathfinderMob {
             SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> DATA_GOAL_KEY =
             SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> DATA_SPOUSE_NAME =
+            SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Integer> DATA_ANIM_STATE =
+            SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.INT);
 
     // --- Constants ---
     public static final int MALE = 1;
@@ -107,6 +113,7 @@ public abstract class MillVillager extends PathfinderMob {
     public boolean isRaider = false;
     private long villagerId = -1L;
     private int goalTickCounter = 0;
+    public final FamilyData familyData = new FamilyData();
 
     protected MillVillager(EntityType<? extends MillVillager> type, Level level) {
         super(type, level);
@@ -128,6 +135,8 @@ public abstract class MillVillager extends PathfinderMob {
         builder.define(DATA_GENDER, 0);
         builder.define(DATA_CULTURE, "");
         builder.define(DATA_GOAL_KEY, "");
+        builder.define(DATA_SPOUSE_NAME, "");
+        builder.define(DATA_ANIM_STATE, VillagerAnimState.IDLE.getId());
     }
 
     // --- Name accessors ---
@@ -139,6 +148,10 @@ public abstract class MillVillager extends PathfinderMob {
     public void setGender(int gender) { this.entityData.set(DATA_GENDER, gender); }
     public String getCultureKey() { return this.entityData.get(DATA_CULTURE); }
     public void setCultureKey(String key) { this.entityData.set(DATA_CULTURE, key); }
+    public String getSpouseName() { return this.entityData.get(DATA_SPOUSE_NAME); }
+    public void setSpouseName(String name) { this.entityData.set(DATA_SPOUSE_NAME, name); }
+    public VillagerAnimState getAnimState() { return VillagerAnimState.fromId(this.entityData.get(DATA_ANIM_STATE)); }
+    public void setAnimState(VillagerAnimState state) { this.entityData.set(DATA_ANIM_STATE, state.getId()); }
 
     public long getVillagerId() { return villagerId; }
     public void setVillagerId(long id) { this.villagerId = id; }
@@ -505,6 +518,7 @@ public abstract class MillVillager extends PathfinderMob {
             invList.add(itemTag);
         }
         tag.put("millInventory", invList);
+        tag.put("familyData", familyData.save());
     }
 
     @Override
@@ -546,6 +560,10 @@ public abstract class MillVillager extends PathfinderMob {
         if (tag.contains("villagerType")) {
             setVillagerTypeKey(tag.getString("villagerType"));
         }
+        if (tag.contains("familyData")) {
+            familyData.load(tag.getCompound("familyData"));
+            setSpouseName(familyData.getSpouseName());
+        }
     }
 
     // --- Building helpers ---
@@ -580,6 +598,62 @@ public abstract class MillVillager extends PathfinderMob {
 
     public void removeFromInv(InvItem item, int count) {
         addToInv(item, -count);
+    }
+
+    // --- Marriage helpers ---
+
+    /**
+     * Marries this villager to another. Updates both villagers' family data and synched spouse name.
+     */
+    public void marryTo(MillVillager partner) {
+        String thisFullName = getFirstName() + " " + getFamilyName();
+        String partnerFullName = partner.getFirstName() + " " + partner.getFamilyName();
+
+        this.familyData.marry(partner.getVillagerId(), partnerFullName);
+        partner.familyData.marry(this.getVillagerId(), thisFullName);
+
+        // Female takes male's family name (with maiden name preserved)
+        if (this.isFemale()) {
+            this.familyData.setMaidenName(this.getFamilyName());
+            this.setFamilyName(partner.getFamilyName());
+        } else if (partner.isFemale()) {
+            partner.familyData.setMaidenName(partner.getFamilyName());
+            partner.setFamilyName(this.getFamilyName());
+        }
+
+        this.setSpouseName(partnerFullName);
+        partner.setSpouseName(thisFullName);
+    }
+
+    public boolean isMarried() { return familyData.isMarried(); }
+    public boolean isChildVillager() { return familyData.isChild(); }
+
+    // --- Held item rendering ---
+
+    /**
+     * Syncs the custom heldItem/heldItemOffHand fields into vanilla equipment slots
+     * so that the built-in ItemInHandLayer renders them.
+     * Call this whenever heldItem or heldItemOffHand changes.
+     */
+    public void syncHeldItems() {
+        this.setItemSlot(EquipmentSlot.MAINHAND, heldItem);
+        this.setItemSlot(EquipmentSlot.OFFHAND, heldItemOffHand);
+    }
+
+    /**
+     * Sets the main hand item and syncs it to the equipment slot for rendering.
+     */
+    public void setHeldItem(ItemStack stack) {
+        this.heldItem = stack;
+        this.setItemSlot(EquipmentSlot.MAINHAND, stack);
+    }
+
+    /**
+     * Sets the off-hand item and syncs it to the equipment slot for rendering.
+     */
+    public void setHeldItemOffHand(ItemStack stack) {
+        this.heldItemOffHand = stack;
+        this.setItemSlot(EquipmentSlot.OFFHAND, stack);
     }
 
     // ========== Concrete villager subclasses ==========

@@ -1,6 +1,15 @@
 package org.dizzymii.millenaire2.item;
 
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
 public class ItemAmuletSkollHati extends Item {
     public ItemAmuletSkollHati(Properties props) {
@@ -8,22 +17,24 @@ public class ItemAmuletSkollHati extends Item {
     }
 
     @Override
-    public net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> use(
-            net.minecraft.world.level.Level level, net.minecraft.world.entity.player.Player player,
-            net.minecraft.world.InteractionHand hand) {
-        net.minecraft.world.item.ItemStack stack = player.getItemInHand(hand);
-        if (!level.isClientSide) {
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (!level.isClientSide() && level instanceof ServerLevel serverLevel) {
             for (int i = 0; i < 2; i++) {
-                net.minecraft.world.entity.animal.Wolf wolf = net.minecraft.world.entity.EntityType.WOLF.create(level);
+                Wolf wolf = EntityType.WOLF.create(serverLevel);
                 if (wolf != null) {
-                    wolf.moveTo(player.getX() + (i == 0 ? -1 : 1), player.getY(), player.getZ(), 0, 0);
+                    double offsetX = (level.random.nextDouble() - 0.5) * 4;
+                    double offsetZ = (level.random.nextDouble() - 0.5) * 4;
+                    wolf.moveTo(player.getX() + offsetX, player.getY(), player.getZ() + offsetZ, 0, 0);
                     wolf.tame(player);
-                    level.addFreshEntity(wolf);
+                    serverLevel.addFreshEntity(wolf);
                 }
             }
-            player.getCooldowns().addCooldown(this, 6000);
-            stack.hurtAndBreak(1, player, net.minecraft.world.entity.EquipmentSlot.MAINHAND);
+            player.sendSystemMessage(Component.literal(
+                    "§6[Millénaire] §rSkoll and Hati answer your call!"));
+            stack.hurtAndBreak(1, player, player.getEquipmentSlotForItem(stack));
+            player.getCooldowns().addCooldown(this, 2400);
         }
-        return net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }
 }
