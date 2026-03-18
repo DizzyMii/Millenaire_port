@@ -292,7 +292,7 @@ public abstract class MillVillager extends PathfinderMob {
         if (hour >= 8 && hour < 18) {
             // Priority: help with active construction in the village
             if (tryActivateGoal("construction", Goal.construction)) return;
-            if (tryActivateGoal("getresourcesforupgrade", Goal.goals.get("getresourcesforupgrade"))) return;
+            if (tryActivateGoal("getresourcesforbuild", Goal.getResourcesForBuild)) return;
 
             // Run through villager-type-specific goals
             if (vtype != null && !vtype.goals.isEmpty()) {

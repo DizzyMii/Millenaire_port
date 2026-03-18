@@ -13,10 +13,23 @@ public class GoalGetResourcesForBuild extends Goal {
     @Override
     public GoalInformation getDestination(MillVillager v) {
         Point th = v.townHallPoint;
-        if (th != null && v.constructionJobId >= 0) {
-            return new GoalInformation(th, 4);
+        if (th == null) return null;
+
+        // Only fetch resources if there is active construction in the village
+        org.dizzymii.millenaire2.village.Building thBuilding = v.getTownHallBuilding();
+        if (thBuilding == null) return null;
+        boolean anyConstruction = false;
+        if (thBuilding.mw != null) {
+            for (org.dizzymii.millenaire2.village.Building b : thBuilding.mw.allBuildings()) {
+                if (b.isUnderConstruction() && thBuilding.isSameVillage(b)) {
+                    anyConstruction = true;
+                    break;
+                }
+            }
         }
-        return null;
+        if (!anyConstruction) return null;
+
+        return new GoalInformation(th, 4);
     }
 
     @Override

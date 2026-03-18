@@ -138,6 +138,7 @@ public abstract class Goal {
         registerGoal("childbecomeadult", new GoalChildBecomeAdult());
 
         // Leisure
+        registerGoal("eatatinn", new GoalEatAtInn());
         registerGoal("gochat", new org.dizzymii.millenaire2.goal.leisure.GoalGoChat());
         registerGoal("gorest", new org.dizzymii.millenaire2.goal.leisure.GoalGoRest());
 
