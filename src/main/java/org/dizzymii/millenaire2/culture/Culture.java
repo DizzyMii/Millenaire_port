@@ -218,6 +218,17 @@ public class Culture {
         VirtualDir villagersDir = cultureDir.getChildDirectory("villagers");
         if (villagersDir == null || !villagersDir.exists()) return;
 
+        // Load .txt files directly in the villagers/ directory
+        for (File file : villagersDir.listFiles()) {
+            if (!file.getName().endsWith(".txt")) continue;
+            VillagerType vt = VillagerType.loadFromFile(file, this);
+            if (vt != null) {
+                villagerTypes.put(vt.key, vt);
+                listVillagerTypes.add(vt);
+            }
+        }
+
+        // Load .txt files in subdirectories
         for (VirtualDir subDir : villagersDir.listSubDirs()) {
             for (File file : subDir.listFiles()) {
                 if (!file.getName().endsWith(".txt")) continue;
