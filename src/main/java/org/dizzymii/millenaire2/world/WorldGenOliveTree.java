@@ -1,9 +1,12 @@
 package org.dizzymii.millenaire2.world;
 
 /**
- * Custom tree generator for olive trees.
+ * Olive tree generation is now handled by the data-driven configured feature system.
+ * See {@link MillTreeFeatures#OLIVE_TREE} and {@link MillTreeGrowers#OLIVE}.
+ * The configured feature JSON is at data/millenaire2/worldgen/configured_feature/olive_tree.json.
+ *
  * Ported from org.millenaire.common.world.WorldGenOliveTree (Forge 1.12.2).
  */
 public class WorldGenOliveTree {
-    // TODO: Implement olive tree generation using NeoForge 1.21.1 feature system
+    private WorldGenOliveTree() {}
 }

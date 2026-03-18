@@ -2,6 +2,8 @@ package org.dizzymii.millenaire2.block;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.IronBarsBlock;
+import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.StairBlock;
@@ -9,6 +11,7 @@ import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import org.dizzymii.millenaire2.Millenaire2;
+import org.dizzymii.millenaire2.world.MillTreeGrowers;
 
 /**
  * Central registry for all Millénaire blocks.
@@ -231,27 +234,32 @@ public class MillBlocks {
             () -> new MillCropBlock(BlockBehaviour.Properties.of().noCollission().randomTicks().instabreak().sound(SoundType.CROP)));
 
     // ========== Saplings & Leaves ==========
-    public static final DeferredBlock<Block> SAPLING_APPLE = Millenaire2.BLOCKS.registerSimpleBlock("sapling_appletree",
-            BlockBehaviour.Properties.of().noCollission().randomTicks().instabreak().sound(SoundType.GRASS));
-    public static final DeferredBlock<Block> SAPLING_OLIVE = Millenaire2.BLOCKS.registerSimpleBlock("sapling_olivetree",
-            BlockBehaviour.Properties.of().noCollission().randomTicks().instabreak().sound(SoundType.GRASS));
-    public static final DeferredBlock<Block> SAPLING_PISTACHIO = Millenaire2.BLOCKS.registerSimpleBlock("sapling_pistachio",
-            BlockBehaviour.Properties.of().noCollission().randomTicks().instabreak().sound(SoundType.GRASS));
-    public static final DeferredBlock<Block> SAPLING_CHERRY = Millenaire2.BLOCKS.registerSimpleBlock("sapling_cherry",
-            BlockBehaviour.Properties.of().noCollission().randomTicks().instabreak().sound(SoundType.GRASS));
-    public static final DeferredBlock<Block> SAPLING_SAKURA = Millenaire2.BLOCKS.registerSimpleBlock("sapling_sakura",
-            BlockBehaviour.Properties.of().noCollission().randomTicks().instabreak().sound(SoundType.GRASS));
+    public static final DeferredBlock<Block> SAPLING_APPLE = Millenaire2.BLOCKS.register("sapling_appletree",
+            () -> new SaplingBlock(MillTreeGrowers.APPLE,
+                    BlockBehaviour.Properties.of().noCollission().randomTicks().instabreak().sound(SoundType.GRASS)));
+    public static final DeferredBlock<Block> SAPLING_OLIVE = Millenaire2.BLOCKS.register("sapling_olivetree",
+            () -> new SaplingBlock(MillTreeGrowers.OLIVE,
+                    BlockBehaviour.Properties.of().noCollission().randomTicks().instabreak().sound(SoundType.GRASS)));
+    public static final DeferredBlock<Block> SAPLING_PISTACHIO = Millenaire2.BLOCKS.register("sapling_pistachio",
+            () -> new SaplingBlock(MillTreeGrowers.PISTACHIO,
+                    BlockBehaviour.Properties.of().noCollission().randomTicks().instabreak().sound(SoundType.GRASS)));
+    public static final DeferredBlock<Block> SAPLING_CHERRY = Millenaire2.BLOCKS.register("sapling_cherry",
+            () -> new SaplingBlock(MillTreeGrowers.CHERRY_MILL,
+                    BlockBehaviour.Properties.of().noCollission().randomTicks().instabreak().sound(SoundType.GRASS)));
+    public static final DeferredBlock<Block> SAPLING_SAKURA = Millenaire2.BLOCKS.register("sapling_sakura",
+            () -> new SaplingBlock(MillTreeGrowers.SAKURA,
+                    BlockBehaviour.Properties.of().noCollission().randomTicks().instabreak().sound(SoundType.GRASS)));
 
-    public static final DeferredBlock<Block> LEAVES_APPLE = Millenaire2.BLOCKS.registerSimpleBlock("leaves_appletree",
-            BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.GRASS).noOcclusion().randomTicks());
-    public static final DeferredBlock<Block> LEAVES_OLIVE = Millenaire2.BLOCKS.registerSimpleBlock("leaves_olivetree",
-            BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.GRASS).noOcclusion().randomTicks());
-    public static final DeferredBlock<Block> LEAVES_PISTACHIO = Millenaire2.BLOCKS.registerSimpleBlock("leaves_pistachio",
-            BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.GRASS).noOcclusion().randomTicks());
-    public static final DeferredBlock<Block> LEAVES_CHERRY = Millenaire2.BLOCKS.registerSimpleBlock("leaves_cherry",
-            BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.GRASS).noOcclusion().randomTicks());
-    public static final DeferredBlock<Block> LEAVES_SAKURA = Millenaire2.BLOCKS.registerSimpleBlock("leaves_sakura",
-            BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.GRASS).noOcclusion().randomTicks());
+    public static final DeferredBlock<Block> LEAVES_APPLE = Millenaire2.BLOCKS.register("leaves_appletree",
+            () -> new LeavesBlock(BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.GRASS).noOcclusion().randomTicks()));
+    public static final DeferredBlock<Block> LEAVES_OLIVE = Millenaire2.BLOCKS.register("leaves_olivetree",
+            () -> new LeavesBlock(BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.GRASS).noOcclusion().randomTicks()));
+    public static final DeferredBlock<Block> LEAVES_PISTACHIO = Millenaire2.BLOCKS.register("leaves_pistachio",
+            () -> new LeavesBlock(BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.GRASS).noOcclusion().randomTicks()));
+    public static final DeferredBlock<Block> LEAVES_CHERRY = Millenaire2.BLOCKS.register("leaves_cherry",
+            () -> new LeavesBlock(BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.GRASS).noOcclusion().randomTicks()));
+    public static final DeferredBlock<Block> LEAVES_SAKURA = Millenaire2.BLOCKS.register("leaves_sakura",
+            () -> new LeavesBlock(BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.GRASS).noOcclusion().randomTicks()));
 
     // ========== Special Blocks (stubbed as simple — BlockEntity wiring in Phase 4+) ==========
     public static final DeferredBlock<Block> LOCKED_CHEST = Millenaire2.BLOCKS.registerSimpleBlock("locked_chest",

@@ -1,9 +1,12 @@
 package org.dizzymii.millenaire2.world;
 
 /**
- * Custom tree generator for apple trees.
+ * Apple tree generation is now handled by the data-driven configured feature system.
+ * See {@link MillTreeFeatures#APPLE_TREE} and {@link MillTreeGrowers#APPLE}.
+ * The configured feature JSON is at data/millenaire2/worldgen/configured_feature/apple_tree.json.
+ *
  * Ported from org.millenaire.common.world.WorldGenAppleTree (Forge 1.12.2).
  */
 public class WorldGenAppleTree {
-    // TODO: Implement apple tree generation using NeoForge 1.21.1 feature system
+    private WorldGenAppleTree() {}
 }
