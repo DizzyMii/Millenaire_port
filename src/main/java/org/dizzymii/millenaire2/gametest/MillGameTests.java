@@ -572,4 +572,154 @@ public class MillGameTests {
 
         helper.succeed();
     }
+
+    // ==================== Integration: Building + Construction NBT Round-Trip ====================
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testBuildingWithConstructionNBTRoundTrip(GameTestHelper helper) {
+        Building b = new Building();
+        b.cultureKey = "norman";
+        b.planSetKey = "armoury_a";
+        b.villageTypeKey = "norman_village";
+        b.buildingLevel = 0;
+        b.isTownhall = true;
+        b.isActive = true;
+        b.setPos(new Point(100, 64, 200));
+        b.setName("Test Village");
+
+        // Attach an active construction
+        org.dizzymii.millenaire2.village.BuildingLocation loc =
+                new org.dizzymii.millenaire2.village.BuildingLocation();
+        loc.pos = new Point(100, 64, 200);
+
+        ConstructionIP cip = new ConstructionIP(loc);
+        java.util.List<org.dizzymii.millenaire2.buildingplan.BuildingBlock> blocks = new java.util.ArrayList<>();
+        org.dizzymii.millenaire2.buildingplan.BuildingBlock bb =
+                new org.dizzymii.millenaire2.buildingplan.BuildingBlock();
+        bb.blockState = net.minecraft.world.level.block.Blocks.COBBLESTONE.defaultBlockState();
+        bb.x = 0; bb.y = 0; bb.z = 0;
+        blocks.add(bb);
+
+        org.dizzymii.millenaire2.buildingplan.BuildingBlock bb2 =
+                new org.dizzymii.millenaire2.buildingplan.BuildingBlock();
+        bb2.blockState = net.minecraft.world.level.block.Blocks.OAK_PLANKS.defaultBlockState();
+        bb2.x = 1; bb2.y = 0; bb2.z = 0;
+        bb2.secondStep = true;
+        blocks.add(bb2);
+
+        cip.setBlocks(blocks);
+        b.currentConstruction = cip;
+
+        // Save and reload
+        CompoundTag tag = b.save();
+        Building loaded = Building.load(tag);
+
+        helper.assertFalse(loaded == null, "Building.load returned null");
+        helper.assertTrue("norman".equals(loaded.cultureKey), "cultureKey not persisted");
+        helper.assertTrue("armoury_a".equals(loaded.planSetKey), "planSetKey not persisted");
+        helper.assertTrue("norman_village".equals(loaded.villageTypeKey), "villageTypeKey not persisted");
+        helper.assertTrue(loaded.isTownhall, "isTownhall not persisted");
+
+        // The critical check: currentConstruction must survive round-trip
+        helper.assertTrue(loaded.isUnderConstruction(),
+                "Construction was LOST during NBT save/load — this is the root cause of structures not spawning");
+        helper.assertTrue(loaded.currentConstruction.nbBlocksTotal == 2,
+                "Construction block count lost, got " + loaded.currentConstruction.nbBlocksTotal);
+        helper.assertFalse(loaded.currentConstruction.isComplete(),
+                "Loaded construction should not be complete");
+
+        helper.succeed();
+    }
+
+    // ==================== Integration: generateNewVillage sets required fields ====================
+
+    @GameTest(template = "empty", timeoutTicks = 60)
+    public static void testGenerateNewVillageSetsRequiredFields(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        net.minecraft.core.BlockPos abs = helper.absolutePos(new net.minecraft.core.BlockPos(5, 2, 5));
+
+        // Place solid ground for terrain check
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                level.setBlock(abs.offset(dx, -1, dz),
+                        net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(), 3);
+            }
+        }
+
+        Culture norman = Culture.getCultureByName("norman");
+        helper.assertFalse(norman == null, "Norman culture missing");
+
+        org.dizzymii.millenaire2.world.MillWorldData worldData =
+                org.dizzymii.millenaire2.world.MillWorldData.get(level);
+        helper.assertFalse(worldData == null, "worldData is null");
+
+        int buildingsBefore = worldData.allBuildings().size();
+
+        boolean generated = org.dizzymii.millenaire2.world.WorldGenVillage.generateNewVillage(
+                level, abs, norman, worldData, level.random);
+
+        helper.assertTrue(generated, "generateNewVillage returned false");
+        helper.assertTrue(worldData.allBuildings().size() > buildingsBefore,
+                "No building was added to worldData");
+
+        // Find the generated building
+        Building townhall = null;
+        for (Building b : worldData.allBuildings()) {
+            if (b.isTownhall && "norman".equals(b.cultureKey)) {
+                townhall = b;
+                break;
+            }
+        }
+
+        helper.assertFalse(townhall == null, "No townhall found in worldData");
+        helper.assertFalse(townhall.planSetKey == null,
+                "planSetKey is null — village can never upgrade");
+        helper.assertFalse(townhall.villageTypeKey == null,
+                "villageTypeKey is null — village can never expand");
+        helper.assertTrue(townhall.buildingLevel == 0,
+                "buildingLevel should be 0 for initial plan");
+        helper.assertFalse(townhall.world == null,
+                "world is null — construction will never tick");
+
+        // The generated building should have active construction
+        helper.assertTrue(townhall.isUnderConstruction(),
+                "Townhall should have active construction from PNG plan");
+        helper.assertTrue(townhall.currentConstruction.nbBlocksTotal > 0,
+                "Construction has 0 blocks — PNG plan not resolved correctly");
+
+        helper.succeed();
+    }
+
+    // ==================== Integration: real PNG plan produces correct block count ====================
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testRealPlanBlockCount(GameTestHelper helper) {
+        Culture norman = Culture.getCultureByName("norman");
+        helper.assertFalse(norman == null, "Norman culture missing");
+
+        ServerLevel level = helper.getLevel();
+        net.minecraft.core.BlockPos abs = helper.absolutePos(net.minecraft.core.BlockPos.ZERO);
+        Point origin = new Point(abs.getX(), abs.getY(), abs.getZ());
+
+        int testedPlans = 0;
+        for (BuildingPlanSet bps : norman.planSets.values()) {
+            BuildingPlan plan = bps.getInitialPlan();
+            if (plan == null || !plan.hasImage()) continue;
+
+            ConstructionIP cip = ConstructionIP.fromBuildingPlan(plan, origin, level);
+            if (cip == null) continue;
+
+            // A real building should have at least 10 blocks
+            helper.assertTrue(cip.nbBlocksTotal >= 10,
+                    "Plan " + bps.key + " has only " + cip.nbBlocksTotal
+                    + " blocks — likely PointType colour mismatch");
+            testedPlans++;
+            if (testedPlans >= 3) break;
+        }
+
+        helper.assertTrue(testedPlans >= 1,
+                "No Norman plans produced blocks — blocklist.txt colours may not match PNGs");
+
+        helper.succeed();
+    }
 }

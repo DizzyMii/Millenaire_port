@@ -630,6 +630,11 @@ public class Building {
         }
         tag.put("relations", relList);
 
+        // Save active construction
+        if (currentConstruction != null && !currentConstruction.isComplete()) {
+            tag.put("construction", currentConstruction.save());
+        }
+
         return tag;
     }
 
@@ -691,6 +696,11 @@ public class Building {
                     b.relations.put(p, relTag.getInt("val"));
                 }
             }
+        }
+
+        // Load active construction
+        if (tag.contains("construction", Tag.TAG_COMPOUND)) {
+            b.currentConstruction = ConstructionIP.load(tag.getCompound("construction"));
         }
 
         return b;
