@@ -5,30 +5,22 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import org.dizzymii.millenaire2.buildingplan.BuildingBlock;
-import org.dizzymii.millenaire2.buildingplan.PngPlanLoader;
 import org.dizzymii.millenaire2.culture.BuildingPlan;
 import org.dizzymii.millenaire2.culture.BuildingPlanSet;
 import org.dizzymii.millenaire2.culture.Culture;
 import org.dizzymii.millenaire2.culture.VillageType;
 import org.dizzymii.millenaire2.culture.VillagerType;
 import org.dizzymii.millenaire2.entity.MillVillager;
-import org.dizzymii.millenaire2.util.MillCommonUtilities;
 import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
-import org.dizzymii.millenaire2.util.VirtualDir;
 import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.village.BuildingLocation;
 import org.dizzymii.millenaire2.village.ConstructionIP;
 import org.dizzymii.millenaire2.village.VillagerRecord;
 
 import javax.annotation.Nullable;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Handles village generation in the world — placing town halls, hamlets, lone buildings.
@@ -199,36 +191,6 @@ public class WorldGenVillage {
         }
         // Last resort: first plan set
         return culture.listPlanSets.isEmpty() ? null : culture.listPlanSets.get(0);
-    }
-
-    /**
-     * Load BuildingBlock list from a plan's PNG file via PngPlanLoader.
-     */
-    private static List<BuildingBlock> loadPlanBlocks(Culture culture, BuildingPlanSet planSet,
-                                                       BuildingPlan plan) {
-        // Locate the PNG file
-        File contentDir = MillCommonUtilities.getMillenaireContentDir();
-        File cultureDir = new File(contentDir, "cultures/" + culture.key);
-        VirtualDir buildingsDir = new VirtualDir(new File(cultureDir, "buildings"));
-
-        String fileName = plan.pngFileName;
-        if (fileName == null) {
-            if ("initial".equals(plan.upgradeKey)) {
-                fileName = planSet.key + ".png";
-            } else {
-                fileName = planSet.key + "_" + plan.upgradeKey + ".png";
-            }
-        }
-
-        File pngFile = buildingsDir.getChildFileRecursive(fileName);
-        if (pngFile == null) pngFile = buildingsDir.getChildFile(fileName);
-        if (pngFile == null || !pngFile.exists()) {
-            MillLog.warn("WorldGenVillage", "PNG plan file not found: " + fileName);
-            return new ArrayList<>();
-        }
-
-        Map<String, List<int[]>> specialPositions = new HashMap<>();
-        return PngPlanLoader.loadPlan(pngFile, plan.width, plan.altitudeOffset, specialPositions);
     }
 
     /**
