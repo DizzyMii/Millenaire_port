@@ -23,6 +23,7 @@ public class PathNavigateSimple implements IAStarPathedEntity {
 
     private static final int MAX_ITERATIONS = 5000;
     private static final int PATH_RECALC_TICKS = 40;
+    private static final int PATH_PENDING_TIMEOUT_TICKS = 100; // 5 seconds max wait for async path
 
     private static ExecutorService pathExecutor;
     private static AStarPathPlannerJPS planner;
@@ -32,6 +33,8 @@ public class PathNavigateSimple implements IAStarPathedEntity {
     private int pathIndex = 0;
     private int ticksSinceLastPath = 0;
     private boolean pathPending = false;
+    private int pendingTicks = 0;
+    @Nullable private BlockPos lastRequestedTarget = null;
 
     // Default config: can use doors, no diagonals, no drops, no swim, can clear leaves
     private AStarConfig config = new AStarConfig(true, false, false, false, true, 1, 1);
@@ -53,6 +56,8 @@ public class PathNavigateSimple implements IAStarPathedEntity {
      */
     public void navigateTo(BlockPos target) {
         if (pathPending) return;
+        lastRequestedTarget = target;
+        pendingTicks = 0;
 
         Level level = entity.level();
         BlockPos entityPos = entity.blockPosition();
@@ -76,6 +81,25 @@ public class PathNavigateSimple implements IAStarPathedEntity {
      */
     public void tick() {
         ticksSinceLastPath++;
+
+        // Timeout stale pending requests and fall back to vanilla nav
+        if (pathPending) {
+            pendingTicks++;
+            if (pendingTicks > PATH_PENDING_TIMEOUT_TICKS) {
+                org.dizzymii.millenaire2.util.MillLog.minor("PathNav",
+                        "Path request timed out for " + entity.getName().getString()
+                        + ", falling back to vanilla nav");
+                pathPending = false;
+                pendingTicks = 0;
+                if (lastRequestedTarget != null) {
+                    entity.getNavigation().moveTo(
+                            lastRequestedTarget.getX() + 0.5,
+                            lastRequestedTarget.getY(),
+                            lastRequestedTarget.getZ() + 0.5, 1.0);
+                }
+            }
+            return;
+        }
 
         if (currentPath == null || pathIndex >= currentPath.size()) return;
 
@@ -124,6 +148,18 @@ public class PathNavigateSimple implements IAStarPathedEntity {
         this.currentPath = null;
         this.pathIndex = 0;
         this.pathPending = false;
+        this.pendingTicks = 0;
+        // Fallback: use vanilla navigation for short distances
+        BlockPos fallbackTarget = lastRequestedTarget;
+        if (fallbackTarget != null) {
+            double dist = entity.blockPosition().distSqr(fallbackTarget);
+            if (dist < 256) { // within 16 blocks
+                entity.getNavigation().moveTo(
+                        fallbackTarget.getX() + 0.5,
+                        fallbackTarget.getY(),
+                        fallbackTarget.getZ() + 0.5, 1.0);
+            }
+        }
     }
 
     public static void shutdown() {
