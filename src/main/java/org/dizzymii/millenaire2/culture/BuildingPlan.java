@@ -88,6 +88,54 @@ public class BuildingPlan {
     @FieldDocumentation(explanation = "Name of the PNG plan file for this level.")
     public String pngFileName = null;
 
+    @ConfigField(fieldCategory = "upgrade", type = ParameterType.INTEGER, paramName = "startlevel", defaultValue = "0")
+    @FieldDocumentation(explanation = "Starting ground level offset for this upgrade.")
+    public int startLevel = 0;
+
+    @ConfigField(fieldCategory = "upgrade", type = ParameterType.STRING, paramName = "nativename")
+    @FieldDocumentation(explanation = "Native-language name of the building at this level.")
+    public String nativeName = null;
+
+    @ConfigField(fieldCategory = "upgrade", type = ParameterType.STRING, paramName = "male")
+    @FieldDocumentation(explanation = "Male villager type key for this level.")
+    public String male = null;
+
+    @ConfigField(fieldCategory = "upgrade", type = ParameterType.STRING, paramName = "female")
+    @FieldDocumentation(explanation = "Female villager type key for this level.")
+    public String female = null;
+
+    @ConfigField(fieldCategory = "upgrade", type = ParameterType.STRING_ADD, paramName = "signs")
+    @FieldDocumentation(explanation = "Sign text entries for this level.")
+    public List<String> signs = new ArrayList<>();
+
+    @ConfigField(fieldCategory = "upgrade", type = ParameterType.INTEGER, paramName = "pathlevel", defaultValue = "0")
+    @FieldDocumentation(explanation = "Path building level for this upgrade.")
+    public int pathLevel = 0;
+
+    @ConfigField(fieldCategory = "upgrade", type = ParameterType.BOOLEAN, paramName = "rebuildpath", defaultValue = "false")
+    @FieldDocumentation(explanation = "Whether to rebuild paths at this upgrade level.")
+    public boolean rebuildPath = false;
+
+    @ConfigField(fieldCategory = "upgrade", type = ParameterType.BOOLEAN, paramName = "nopathstobuilding", defaultValue = "false")
+    @FieldDocumentation(explanation = "Whether to suppress path generation to this building.")
+    public boolean noPathsToBuilding = false;
+
+    @ConfigField(fieldCategory = "upgrade", type = ParameterType.STRING_ADD, paramName = "villagetag")
+    @FieldDocumentation(explanation = "Tags added to the village when this level is reached.")
+    public List<String> villageTags = new ArrayList<>();
+
+    @ConfigField(fieldCategory = "upgrade", type = ParameterType.STRING_ADD, paramName = "cleartag")
+    @FieldDocumentation(explanation = "Tags removed from the village when this level is reached.")
+    public List<String> clearTags = new ArrayList<>();
+
+    @ConfigField(fieldCategory = "upgrade", type = ParameterType.STRING_ADD, paramName = "forbiddentaginvillage")
+    @FieldDocumentation(explanation = "Tags that prevent this upgrade from being built.")
+    public List<String> forbiddenTagsInVillage = new ArrayList<>();
+
+    @ConfigField(fieldCategory = "upgrade", type = ParameterType.INTEGER, paramName = "prioritymovein", defaultValue = "0")
+    @FieldDocumentation(explanation = "Priority for villager move-in to this building.")
+    public int priorityMoveIn = 0;
+
     // --- Runtime data ---
     public int nbFloors = 0;
     public int groundFloor = 0;
@@ -99,6 +147,8 @@ public class BuildingPlan {
     // Special positions found in the plan
     public final Map<String, List<int[]>> specialPositions = new HashMap<>();
 
+    public int planIndex = 0;
+
     public BuildingPlan(BuildingPlanSet parentSet, String upgradeKey) {
         this.parentSet = parentSet;
         this.upgradeKey = upgradeKey;
@@ -109,19 +159,19 @@ public class BuildingPlan {
      * The PNG encodes blocks as pixel colors. Each horizontal strip is one floor.
      */
     public void loadPlanImage(VirtualDir buildingsDir) {
+        // Use parentSet dimensions as fallback if plan-level are 0
+        if (width <= 0 && parentSet.width > 0) width = parentSet.width;
+        if (length <= 0 && parentSet.length > 0) length = parentSet.length;
+
         String fileName = pngFileName;
         if (fileName == null) {
-            // Default: parentSet key + "_" + upgradeKey + ".png"
-            if ("initial".equals(upgradeKey)) {
-                fileName = parentSet.key + ".png";
-            } else {
-                fileName = parentSet.key + "_" + upgradeKey + ".png";
-            }
+            // Original Millenaire convention: key + levelIndex + ".png"
+            // e.g. armoury_a0.png (initial), armoury_a1.png (upgrade1)
+            fileName = parentSet.key + planIndex + ".png";
         }
 
         File imageFile = buildingsDir.getChildFileRecursive(fileName);
         if (imageFile == null) {
-            // Try without recursive search
             imageFile = buildingsDir.getChildFile(fileName);
         }
 
