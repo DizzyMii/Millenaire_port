@@ -1,5 +1,8 @@
 package org.dizzymii.millenaire2.client;
 
+import net.minecraft.client.renderer.entity.BlazeRenderer;
+import net.minecraft.client.renderer.entity.GhastRenderer;
+import net.minecraft.client.renderer.entity.WitherSkeletonRenderer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -12,6 +15,7 @@ import org.dizzymii.millenaire2.client.render.MillVillagerModel;
 import org.dizzymii.millenaire2.client.render.FemaleAsymmetricalRenderer;
 import org.dizzymii.millenaire2.client.render.FemaleSymmetricalRenderer;
 import org.dizzymii.millenaire2.client.render.MillVillagerRenderer;
+import org.dizzymii.millenaire2.client.render.RenderWallDecoration;
 import org.dizzymii.millenaire2.entity.MillEntities;
 
 /**
@@ -37,5 +41,9 @@ public class ClientSetup {
         event.registerEntityRenderer(MillEntities.GENERIC_MALE.get(), MillVillagerRenderer::new);
         event.registerEntityRenderer(MillEntities.GENERIC_SYMM_FEMALE.get(), FemaleSymmetricalRenderer::new);
         event.registerEntityRenderer(MillEntities.GENERIC_ASYMM_FEMALE.get(), FemaleAsymmetricalRenderer::new);
+        event.registerEntityRenderer(MillEntities.WALL_DECORATION.get(), RenderWallDecoration::new);
+        event.registerEntityRenderer(MillEntities.TARGETED_BLAZE.get(), BlazeRenderer::new);
+        event.registerEntityRenderer(MillEntities.TARGETED_WITHER_SKELETON.get(), WitherSkeletonRenderer::new);
+        event.registerEntityRenderer(MillEntities.TARGETED_GHAST.get(), GhastRenderer::new);
     }
 }

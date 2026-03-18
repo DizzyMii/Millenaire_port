@@ -85,6 +85,9 @@ public class Millenaire2 {
         event.put(MillEntities.GENERIC_MALE.get(), MillVillager.createAttributes().build());
         event.put(MillEntities.GENERIC_SYMM_FEMALE.get(), MillVillager.createAttributes().build());
         event.put(MillEntities.GENERIC_ASYMM_FEMALE.get(), MillVillager.createAttributes().build());
+        event.put(MillEntities.TARGETED_BLAZE.get(), net.minecraft.world.entity.monster.Blaze.createAttributes().build());
+        event.put(MillEntities.TARGETED_WITHER_SKELETON.get(), net.minecraft.world.entity.monster.WitherSkeleton.createAttributes().build());
+        event.put(MillEntities.TARGETED_GHAST.get(), net.minecraft.world.entity.monster.Ghast.createAttributes().build());
     }
 
     @SubscribeEvent
