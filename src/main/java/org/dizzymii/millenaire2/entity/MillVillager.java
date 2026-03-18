@@ -254,6 +254,9 @@ public abstract class MillVillager extends PathfinderMob {
         // If we have a valid active goal, check if it's still valid
         if (currentGoal != null && goalKey != null) {
             try {
+                if (currentGoal.leasure && hasVillageConstruction()) {
+                    clearGoal();
+                }
                 if (!currentGoal.isStillValid(this)) {
                     clearGoal();
                 }
@@ -267,6 +270,19 @@ public abstract class MillVillager extends PathfinderMob {
         if (currentGoal == null) {
             selectNewGoal();
         }
+    }
+
+    private boolean hasVillageConstruction() {
+        org.dizzymii.millenaire2.village.Building townHall = getTownHallBuilding();
+        if (townHall == null) return false;
+        if (townHall.isUnderConstruction()) return true;
+        if (townHall.mw == null) return false;
+        for (org.dizzymii.millenaire2.village.Building b : townHall.mw.allBuildings()) {
+            if (townHall.isSameVillage(b) && b.isUnderConstruction()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void selectNewGoal() {

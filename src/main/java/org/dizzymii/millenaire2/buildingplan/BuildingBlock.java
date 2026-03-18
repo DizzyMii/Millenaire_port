@@ -45,12 +45,34 @@ public class BuildingBlock {
         return origin.offset(rx, y, rz);
     }
 
+    public BlockPos getBlockPos(BlockPos center, int orientation, int width, int length) {
+        int localX = x - (width / 2);
+        int localZ = z - (length / 2);
+        int rx, rz;
+        switch (orientation) {
+            case 1 -> { rx = localZ;  rz = -localX; }
+            case 2 -> { rx = -localX; rz = -localZ; }
+            case 3 -> { rx = -localZ; rz = localX; }
+            default -> { rx = localX; rz = localZ; }
+        }
+        return center.offset(rx, y, rz);
+    }
+
     /**
      * Place this block in the world at the correct rotated position.
      */
     public boolean place(Level level, BlockPos origin, int orientation) {
         if (blockState == null) return false;
         BlockPos pos = getBlockPos(origin, orientation);
+
+        BlockState rotated = rotateBlockState(blockState, orientation);
+        level.setBlock(pos, rotated, 3);
+        return true;
+    }
+
+    public boolean place(Level level, BlockPos center, int orientation, int width, int length) {
+        if (blockState == null) return false;
+        BlockPos pos = getBlockPos(center, orientation, width, length);
 
         BlockState rotated = rotateBlockState(blockState, orientation);
         level.setBlock(pos, rotated, 3);

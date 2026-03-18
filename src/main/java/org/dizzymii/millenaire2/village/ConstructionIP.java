@@ -70,11 +70,13 @@ public class ConstructionIP {
         if (location == null) return false;
         BlockPos origin = location.pos != null ? location.pos.toBlockPos() : null;
         if (origin == null) return false;
+        int width = location.width > 0 ? location.width : 1;
+        int length = location.length > 0 ? location.length : 1;
 
         // First pass
         if (!firstPassBlocks.isEmpty()) {
             BuildingBlock bb = firstPassBlocks.remove(0);
-            bb.place(level, origin, orientation);
+            bb.place(level, origin, orientation, width, length);
             nbBlocksDone++;
             return true;
         }
@@ -86,7 +88,7 @@ public class ConstructionIP {
         // Second pass
         if (!secondPassBlocks.isEmpty()) {
             BuildingBlock bb = secondPassBlocks.remove(0);
-            bb.place(level, origin, orientation);
+            bb.place(level, origin, orientation, width, length);
             nbBlocksDone++;
             return true;
         }
@@ -145,6 +147,8 @@ public class ConstructionIP {
 
         BuildingLocation loc = new BuildingLocation();
         loc.pos = origin;
+        loc.width = plan.width;
+        loc.length = plan.length;
         ConstructionIP cip = new ConstructionIP(loc);
         cip.setBlocks(allBlocks);
         return cip;

@@ -210,6 +210,7 @@ public class BuildingPlan {
         if (nbFloors <= 0) nbFloors = 1;
 
         blockData = new int[width][length][nbFloors];
+        specialPositions.clear();
 
         for (int floor = 0; floor < nbFloors; floor++) {
             for (int x = 0; x < width && (floor * width + x) < imgWidth; x++) {
@@ -217,6 +218,13 @@ public class BuildingPlan {
                     int pixelX = floor * width + x;
                     int rgb = planImage.getRGB(pixelX, z) & 0xFFFFFF;
                     blockData[x][z][floor] = rgb;
+
+                    org.dizzymii.millenaire2.buildingplan.PointType pt =
+                            org.dizzymii.millenaire2.buildingplan.PointType.colourPoints.get(rgb);
+                    if (pt != null && pt.getSpecialType() != null) {
+                        specialPositions.computeIfAbsent(pt.getSpecialType(), k -> new ArrayList<>())
+                                .add(new int[]{x, floor + altitudeOffset, z});
+                    }
                 }
             }
         }

@@ -194,6 +194,12 @@ public class Building {
                 if (location != null) cip.orientation = location.orientation;
                 currentConstruction = cip;
                 buildingLevel = nextLevel;
+                if (location != null) {
+                    location.level = nextLevel;
+                    location.width = nextPlan.width;
+                    location.length = nextPlan.length;
+                }
+                WorldGenVillage.applyPlanSpecialPositions(this, nextPlan);
                 if (mw != null) mw.setDirty();
                 MillLog.minor("Building", "Upgrade queued to level " + nextLevel + ": " + cip.nbBlocksTotal + " blocks for " + name);
                 return true;
@@ -247,7 +253,7 @@ public class Building {
         }
 
         // Spawn missing villagers if this is an active townhall or building
-        if (isActive && isTownhall && tickCounter % 200 == 0) {
+        if (isActive && tickCounter % 200 == 0) {
             checkAndSpawnVillagers();
         }
 
@@ -450,6 +456,8 @@ public class Building {
         if (cip != null) {
             cip.orientation = loc.orientation;
             newBuilding.currentConstruction = cip;
+            WorldGenVillage.createInitialVillagers(newBuilding, culture, initialPlan, bestSite, pos, serverLevel.random);
+            WorldGenVillage.applyPlanSpecialPositions(newBuilding, initialPlan);
             mw.addBuilding(newBuilding, bestSite);
             mw.setDirty();
             MillLog.minor("Building", "Village expansion: queued " + cip.nbBlocksTotal + " blocks for " + newPlanSetKey + " at " + bestSite);

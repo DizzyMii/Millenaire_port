@@ -147,9 +147,11 @@ public class WorldGenVillage {
         }
 
         // Create initial VillagerRecords from the plan's villager list
-        createInitialVillagers(townhall, culture, initialPlan, villagePos, random);
+        createInitialVillagers(townhall, culture, initialPlan, villagePos, villagePos, random);
+        applyPlanSpecialPositions(townhall, initialPlan);
 
         worldData.addBuilding(townhall, villagePos);
+        queueStartingBuildings(level, townhall, culture, villageType, worldData, random);
 
         MillLog.minor("WorldGenVillage", "Generated new " + culture.key + " " + villageType.key
                 + " village at " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ()
@@ -200,9 +202,10 @@ public class WorldGenVillage {
     /**
      * Create initial VillagerRecords for a new village from the plan's villager definitions.
      */
-    private static void createInitialVillagers(Building townhall, Culture culture,
-                                                BuildingPlan plan, Point villagePos,
-                                                RandomSource random) {
+    public static void createInitialVillagers(Building townhall, Culture culture,
+                                               BuildingPlan plan, Point housePos,
+                                               Point townHallPos,
+                                               RandomSource random) {
         List<String> villagerTypes = plan.villagers;
         if (villagerTypes.isEmpty()) {
             // Fallback: create a default leader villager
@@ -211,8 +214,8 @@ public class WorldGenVillage {
                     getRandomFirstName(culture, MillVillager.MALE, random),
                     getRandomFamilyName(culture, random),
                     MillVillager.MALE);
-            leader.setHousePos(villagePos);
-            leader.setTownHallPos(villagePos);
+            leader.setHousePos(housePos);
+            leader.setTownHallPos(townHallPos);
             townhall.addVillagerRecord(leader);
             return;
         }
@@ -227,10 +230,178 @@ public class WorldGenVillage {
                     getRandomFirstName(culture, gender, random),
                     getRandomFamilyName(culture, random),
                     gender);
-            vr.setHousePos(villagePos);
-            vr.setTownHallPos(villagePos);
+            vr.setHousePos(housePos);
+            vr.setTownHallPos(townHallPos);
             townhall.addVillagerRecord(vr);
         }
+    }
+
+    public static void applyPlanSpecialPositions(Building building, BuildingPlan plan) {
+        if (building.location == null || building.getPos() == null || plan == null) return;
+
+        Point center = building.getPos();
+        int orientation = building.location.orientation;
+        int width = plan.width;
+        int length = plan.length;
+
+        building.resManager.sleepingPositions.clear();
+        building.resManager.stalls.clear();
+
+        building.location.sleepingPos = resolveSpecialPoint(plan, center, orientation, width, length,
+                org.dizzymii.millenaire2.buildingplan.SpecialPointTypeList.bsleepingPos);
+        if (building.location.sleepingPos != null) {
+            building.resManager.sleepingPositions.add(building.location.sleepingPos);
+        }
+
+        building.location.sellingPos = resolveSpecialPoint(plan, center, orientation, width, length,
+                org.dizzymii.millenaire2.buildingplan.SpecialPointTypeList.bsellingPos);
+        if (building.location.sellingPos != null) {
+            building.resManager.stalls.add(building.location.sellingPos);
+        }
+
+        building.location.craftingPos = resolveSpecialPoint(plan, center, orientation, width, length,
+                org.dizzymii.millenaire2.buildingplan.SpecialPointTypeList.bcraftingPos);
+        building.location.defendingPos = resolveSpecialPoint(plan, center, orientation, width, length,
+                org.dizzymii.millenaire2.buildingplan.SpecialPointTypeList.bdefendingPos);
+        building.location.shelterPos = resolveSpecialPoint(plan, center, orientation, width, length,
+                org.dizzymii.millenaire2.buildingplan.SpecialPointTypeList.bshelterPos);
+
+        Point chestPos = resolveSpecialPoint(plan, center, orientation, width, length,
+                org.dizzymii.millenaire2.buildingplan.SpecialPointTypeList.bmainchestGuess);
+        if (chestPos == null) {
+            chestPos = resolveSpecialPoint(plan, center, orientation, width, length,
+                    org.dizzymii.millenaire2.buildingplan.SpecialPointTypeList.blockedchestGuess);
+        }
+        building.location.chestPos = chestPos;
+
+        java.util.List<int[]> stallMarkers = plan.specialPositions.get(
+                org.dizzymii.millenaire2.buildingplan.SpecialPointTypeList.bstall);
+        if (stallMarkers != null) {
+            for (int[] marker : stallMarkers) {
+                building.resManager.stalls.add(toWorldPoint(center, orientation, width, length, marker));
+            }
+        }
+    }
+
+    private static Point resolveSpecialPoint(BuildingPlan plan, Point center, int orientation,
+                                             int width, int length, String key) {
+        java.util.List<int[]> markers = plan.specialPositions.get(key);
+        if (markers == null || markers.isEmpty()) return null;
+        return toWorldPoint(center, orientation, width, length, markers.get(0));
+    }
+
+    private static Point toWorldPoint(Point center, int orientation, int width, int length, int[] marker) {
+        org.dizzymii.millenaire2.buildingplan.BuildingBlock bb = new org.dizzymii.millenaire2.buildingplan.BuildingBlock();
+        bb.x = marker[0];
+        bb.y = marker[1];
+        bb.z = marker[2];
+        return new Point(bb.getBlockPos(center.toBlockPos(), orientation, width, length));
+    }
+
+    private static void queueStartingBuildings(ServerLevel level, Building townhall, Culture culture,
+                                               VillageType villageType, MillWorldData worldData,
+                                               RandomSource random) {
+        if (townhall.getPos() == null) return;
+        for (String planSetKey : villageType.startBuildings) {
+            if (planSetKey == null || planSetKey.isBlank()) continue;
+            if (planSetKey.equals(villageType.centreBuilding)) continue;
+            queueVillageBuilding(level, townhall, culture, worldData, random, planSetKey);
+        }
+    }
+
+    private static void queueVillageBuilding(ServerLevel level, Building townhall, Culture culture,
+                                             MillWorldData worldData, RandomSource random,
+                                             String planSetKey) {
+        Point center = townhall.getPos();
+        if (center == null) return;
+
+        BuildingPlanSet planSet = culture.planSets.get(planSetKey);
+        if (planSet == null) return;
+        BuildingPlan initialPlan = planSet.getInitialPlan();
+        if (initialPlan == null || !initialPlan.hasImage()) return;
+
+        java.util.Set<Point> existingPositions = new java.util.HashSet<>();
+        for (Building b : worldData.allBuildings()) {
+            if (b.getPos() != null && townhall.isSameVillage(b)) {
+                existingPositions.add(b.getPos());
+            }
+        }
+
+        Point bestSite = findVillageBuildingSite(level, center, initialPlan.width, initialPlan.length, existingPositions);
+        if (bestSite == null) return;
+
+        BuildingLocation location = new BuildingLocation();
+        location.planKey = planSetKey;
+        location.cultureKey = culture.key;
+        location.pos = bestSite;
+        location.orientation = random.nextInt(4);
+        location.width = initialPlan.width;
+        location.length = initialPlan.length;
+        location.level = 0;
+
+        Building building = new Building();
+        building.isActive = true;
+        building.cultureKey = culture.key;
+        building.planSetKey = planSetKey;
+        building.villageTypeKey = townhall.villageTypeKey;
+        building.buildingLevel = 0;
+        building.location = location;
+        building.mw = worldData;
+        building.world = level;
+        building.setName(planSet.name != null ? planSet.name : planSetKey);
+        building.setPos(bestSite);
+        building.setTownHallPos(center);
+
+        prepareTerrain(level, bestSite, initialPlan.width, initialPlan.length);
+        ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, bestSite, level);
+        if (cip == null) return;
+        cip.orientation = location.orientation;
+        building.currentConstruction = cip;
+
+        createInitialVillagers(building, culture, initialPlan, bestSite, center, random);
+        applyPlanSpecialPositions(building, initialPlan);
+        worldData.addBuilding(building, bestSite);
+    }
+
+    private static Point findVillageBuildingSite(ServerLevel level, Point center, int bWidth, int bLength,
+                                                 java.util.Set<Point> existing) {
+        int minSpacing = Math.max(bWidth, bLength) + 4;
+        Point best = null;
+        double bestScore = -1;
+
+        for (int radius = 15; radius <= 80; radius += 5) {
+            for (int angle = 0; angle < 360; angle += 30) {
+                double rad = Math.toRadians(angle);
+                int cx = center.x + (int) (radius * Math.cos(rad));
+                int cz = center.z + (int) (radius * Math.sin(rad));
+
+                boolean tooClose = false;
+                for (Point ep : existing) {
+                    double dist = Math.sqrt(Math.pow(cx - ep.x, 2) + Math.pow(cz - ep.z, 2));
+                    if (dist < minSpacing) {
+                        tooClose = true;
+                        break;
+                    }
+                }
+                if (tooClose) continue;
+
+                int groundY = findGroundLevel(level, new BlockPos(cx, 0, cz));
+                if (groundY < 0) continue;
+
+                BlockPos groundPos = new BlockPos(cx, groundY, cz);
+                double flatness = evaluateTerrainFlat(level, groundPos, Math.max(bWidth, bLength) / 2 + 2);
+                if (flatness < 0.6) continue;
+
+                double distToCenter = Math.sqrt(Math.pow(cx - center.x, 2) + Math.pow(cz - center.z, 2));
+                double score = flatness * 100 - distToCenter * 0.5;
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = new Point(cx, groundY, cz);
+                }
+            }
+        }
+
+        return best;
     }
 
     /**
