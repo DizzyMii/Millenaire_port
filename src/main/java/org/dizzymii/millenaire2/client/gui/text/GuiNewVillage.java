@@ -71,7 +71,7 @@ public class GuiNewVillage extends GuiText {
         String culture = cultureKeys.get(selectedCulture);
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
         w.writeString(culture);
-        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_NEGATION_WAND, w);
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_NEWVILLAGE, w);
         onClose();
     }
 }

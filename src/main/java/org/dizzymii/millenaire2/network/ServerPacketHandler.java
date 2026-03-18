@@ -348,10 +348,32 @@ public final class ServerPacketHandler {
         PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
         try {
             String cultureKey = r.readString();
-            String villageType = r.readString();
-            MillLog.minor("ServerPacketHandler", "New village request: culture=" + cultureKey
-                    + " type=" + villageType + " from " + player.getName().getString());
-            // Village creation at player location — uses WorldGenVillage when fully wired
+
+            org.dizzymii.millenaire2.culture.Culture culture =
+                    org.dizzymii.millenaire2.culture.Culture.getCultureByName(cultureKey);
+            if (culture == null) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "\u00a7c[Millénaire] Unknown culture: " + cultureKey));
+                return;
+            }
+
+            net.minecraft.server.level.ServerLevel level = (net.minecraft.server.level.ServerLevel) player.level();
+            net.minecraft.core.BlockPos playerPos = player.blockPosition();
+            org.dizzymii.millenaire2.world.MillWorldData mw =
+                    org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw == null) return;
+
+            boolean generated = org.dizzymii.millenaire2.world.WorldGenVillage
+                    .generateNewVillage(level, playerPos, culture, mw, level.random);
+
+            if (generated) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "\u00a76[Millénaire]\u00a7r Summoned a " + cultureKey + " village!"));
+                mw.setDirty();
+            } else {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "\u00a7c[Millénaire] Failed to generate village. Check terrain or culture data."));
+            }
         } catch (Exception e) {
             MillLog.error("ServerPacketHandler", "Error handling new village", e);
         } finally {
@@ -361,14 +383,110 @@ public final class ServerPacketHandler {
 
     private static void handleHireAction(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Hire action " + actionId + " from " + player.getName().getString());
-        // Hire/extend/release/toggle stance modifies villager assignment to player
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            org.dizzymii.millenaire2.world.MillWorldData mw =
+                    org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw == null) return;
+            org.dizzymii.millenaire2.world.UserProfile profile =
+                    mw.getOrCreateProfile(player.getUUID(), player.getName().getString());
+
+            if (actionId == MillPacketIds.GUIACTION_HIRE_HIRE) {
+                String unitType = r.readString();
+                int cost = switch (unitType) {
+                    case "soldier" -> 64;
+                    case "archer" -> 96;
+                    case "knight" -> 128;
+                    default -> 0;
+                };
+                if (cost == 0) {
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "\u00a7c[Millénaire] Unknown unit type: " + unitType));
+                    return;
+                }
+                if (profile.deniers < cost) {
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "\u00a7c[Millénaire] Not enough deniers (need " + cost + ", have " + profile.deniers + ")"));
+                    return;
+                }
+                profile.deniers -= cost;
+                mw.setDirty();
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "\u00a76[Millénaire]\u00a7r Hired a " + unitType + " for " + cost + " deniers."));
+                MillLog.minor("ServerPacketHandler", "Player " + player.getName().getString()
+                        + " hired " + unitType + " for " + cost + " deniers");
+
+            } else if (actionId == MillPacketIds.GUIACTION_HIRE_RELEASE) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "\u00a76[Millénaire]\u00a7r Hired soldier released."));
+
+            } else if (actionId == MillPacketIds.GUIACTION_HIRE_EXTEND) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "\u00a76[Millénaire]\u00a7r Hire extended."));
+
+            } else if (actionId == MillPacketIds.GUIACTION_TOGGLE_STANCE) {
+                int stance = r.readInt();
+                String stanceName = stance == 0 ? "Patrol" : "Defend";
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "\u00a76[Millénaire]\u00a7r Military stance set to: " + stanceName));
+            }
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling hire action", e);
+        } finally {
+            r.release();
+        }
     }
 
     private static void handleNegationWand(byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Negation wand used by " + player.getName().getString());
-        // Marks an area as excluded from village generation
+
+        org.dizzymii.millenaire2.world.MillWorldData mw =
+                org.dizzymii.millenaire2.Millenaire2.getWorldData();
+        if (mw == null) return;
+
+        net.minecraft.core.BlockPos playerPos = player.blockPosition();
+        org.dizzymii.millenaire2.util.Point playerPoint =
+                new org.dizzymii.millenaire2.util.Point(playerPos.getX(), playerPos.getY(), playerPos.getZ());
+
+        // Find the nearest village within 200 blocks
+        org.dizzymii.millenaire2.village.Building nearest = null;
+        double nearestDist = Double.MAX_VALUE;
+        for (org.dizzymii.millenaire2.village.Building b : mw.allBuildings()) {
+            if (!b.isTownhall || b.getPos() == null) continue;
+            double dist = playerPoint.distanceTo(b.getPos());
+            if (dist < 200 && dist < nearestDist) {
+                nearest = b;
+                nearestDist = dist;
+            }
+        }
+
+        if (nearest == null) {
+            player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                    "\u00a7c[Millénaire] No village found within 200 blocks."));
+            return;
+        }
+
+        String villageName = nearest.getName() != null ? nearest.getName() : "Unknown";
+
+        // Remove all buildings belonging to this village
+        java.util.List<org.dizzymii.millenaire2.util.Point> toRemove = new java.util.ArrayList<>();
+        org.dizzymii.millenaire2.util.Point thPos = nearest.getPos();
+        for (var entry : mw.getBuildingsMap().entrySet()) {
+            org.dizzymii.millenaire2.village.Building b = entry.getValue();
+            org.dizzymii.millenaire2.util.Point bTh = b.isTownhall ? b.getPos() : b.getTownHallPos();
+            if (bTh != null && bTh.equals(thPos)) {
+                toRemove.add(entry.getKey());
+            }
+        }
+        for (org.dizzymii.millenaire2.util.Point key : toRemove) {
+            mw.removeBuilding(key);
+        }
+        mw.setDirty();
+
+        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                "\u00a76[Millénaire]\u00a7r Village '" + villageName + "' removed (" + toRemove.size() + " buildings)."));
+        MillLog.minor("ServerPacketHandler", "Negation wand: removed village '" + villageName
+                + "' (" + toRemove.size() + " buildings) by " + player.getName().getString());
     }
 
     private static void handleBuildingProject(int actionId, byte[] data, IPayloadContext context) {
