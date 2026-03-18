@@ -274,67 +274,59 @@ public abstract class MillVillager extends PathfinderMob {
         int hour = (int) (dayTime / 1000 + 6) % 24;
         boolean isNight = !this.level().isDay();
 
-        // Phase 1: Night (sleep at home)
+        // TOP PRIORITY: If there is active construction, work on it regardless of time
+        // (Original Millenaire: villagers build as soon as construction is queued)
+        if (!isNight) {
+            if (tryActivateGoal("construction", Goal.construction)) return;
+            if (tryActivateGoal("getresourcesforbuild", Goal.getResourcesForBuild)) return;
+        }
+
+        // Night: sleep at home
         if (isNight) {
             if (tryActivateGoal("sleep", Goal.sleep)) return;
-            // Can't sleep — go home and idle
             if (tryGoHome()) return;
             return;
         }
 
-        // Phase 2: Early morning (6-8) — eat/idle at home
-        if (hour >= 6 && hour < 8) {
-            if (tryActivateGoal("eatatinn", Goal.goals.get("eatatinn"))) return;
-            if (tryGoHome()) return;
-        }
+        // Daytime: run villager-type-specific goals (farming, lumbering, fishing, etc.)
+        if (vtype != null && !vtype.goals.isEmpty()) {
+            for (String gKey : vtype.goals) {
+                Goal g = Goal.goals.get(gKey);
+                if (g == null) continue;
+                if (!g.canBeDoneInDayTime()) continue;
 
-        // Phase 3: Work hours (8-18) — prioritize construction, then type goals
-        if (hour >= 8 && hour < 18) {
-            // Priority: help with active construction in the village
-            if (tryActivateGoal("construction", Goal.construction)) return;
-            if (tryActivateGoal("getresourcesforbuild", Goal.getResourcesForBuild)) return;
+                if (g.minimumHour >= 0 && hour < g.minimumHour) continue;
+                if (g.maximumHour >= 0 && hour > g.maximumHour) continue;
 
-            // Run through villager-type-specific goals
-            if (vtype != null && !vtype.goals.isEmpty()) {
-                for (String gKey : vtype.goals) {
-                    Goal g = Goal.goals.get(gKey);
-                    if (g == null) continue;
-                    if (!g.canBeDoneInDayTime()) continue;
+                Long lastTime = lastGoalTime.get(g);
+                if (lastTime != null && (this.level().getGameTime() - lastTime) < Goal.STANDARD_DELAY / 50) {
+                    continue;
+                }
 
-                    if (g.minimumHour >= 0 && hour < g.minimumHour) continue;
-                    if (g.maximumHour >= 0 && hour > g.maximumHour) continue;
-
-                    Long lastTime = lastGoalTime.get(g);
-                    if (lastTime != null && (this.level().getGameTime() - lastTime) < Goal.STANDARD_DELAY / 50) {
-                        continue;
+                try {
+                    GoalInformation info = g.getDestination(this);
+                    if (info != null && info.hasTarget()) {
+                        setActiveGoal(gKey, g, info);
+                        return;
                     }
-
-                    try {
-                        GoalInformation info = g.getDestination(this);
-                        if (info != null && info.hasTarget()) {
-                            setActiveGoal(gKey, g, info);
-                            return;
-                        }
-                    } catch (Exception e) {
-                        MillLog.error(this, "Error getting destination for goal: " + gKey, e);
-                    }
+                } catch (Exception e) {
+                    MillLog.error(this, "Error getting destination for goal: " + gKey, e);
                 }
             }
         }
 
-        // Phase 4: Evening (18-20) — socialise, eat, go home
+        // Evening (18-20): socialise, eat
         if (hour >= 18 && hour < 20) {
             if (tryActivateGoal("gosocialise", Goal.gosocialise)) return;
             if (tryActivateGoal("eatatinn", Goal.goals.get("eatatinn"))) return;
-            if (tryGoHome()) return;
         }
 
-        // Phase 5: Late evening (20+) — go home to sleep
+        // Late evening (20+): go home
         if (hour >= 20) {
             if (tryGoHome()) return;
         }
 
-        // Fallback: socialise or wander
+        // Fallback: socialise or wander near home
         if (tryActivateGoal("gosocialise", Goal.gosocialise)) return;
 
         Point wanderTarget = housePoint != null ? housePoint : townHallPoint;
