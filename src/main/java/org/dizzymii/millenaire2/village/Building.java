@@ -604,7 +604,7 @@ public class Building {
     /**
      * Check if another building belongs to the same village (same townhall pos).
      */
-    boolean isSameVillage(Building other) {
+    public boolean isSameVillage(Building other) {
         if (other == null) return false;
         Point myTh = isTownhall ? pos : getTownHallPos();
         Point otherTh = other.isTownhall ? other.getPos() : other.getTownHallPos();

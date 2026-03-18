@@ -57,7 +57,7 @@ public class GoalConstructionStepByStep extends Goal {
 
     /**
      * Find a building under construction that this villager should work on.
-     * Prioritises the villager's home building, then the town hall.
+     * Prioritises: home building > town hall > any village building under construction.
      */
     private Building findConstructionSite(MillVillager villager) {
         Building home = villager.getHomeBuilding();
@@ -65,6 +65,15 @@ public class GoalConstructionStepByStep extends Goal {
 
         Building th = villager.getTownHallBuilding();
         if (th != null && th.isUnderConstruction()) return th;
+
+        // Search all village buildings for active construction
+        if (th != null && th.mw != null) {
+            for (Building b : th.mw.allBuildings()) {
+                if (b.isUnderConstruction() && th.isSameVillage(b)) {
+                    return b;
+                }
+            }
+        }
 
         return null;
     }
