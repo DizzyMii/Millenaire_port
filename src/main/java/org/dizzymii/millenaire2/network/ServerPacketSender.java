@@ -160,6 +160,35 @@ public final class ServerPacketSender {
         PacketDistributor.sendToPlayer(target, payload);
     }
 
+    // ========== Trade data ==========
+
+    /**
+     * Send trade goods list and player deniers to a player opening the trade GUI.
+     */
+    public static void sendTradeData(ServerPlayer target, int villagerEntityId,
+                                      java.util.List<org.dizzymii.millenaire2.item.TradeGood> goods,
+                                      int deniers, int reputation, String villagerName) {
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeInt(villagerEntityId);
+        w.writeString(villagerName);
+        w.writeInt(deniers);
+        w.writeInt(reputation);
+        w.writeInt(goods.size());
+        for (org.dizzymii.millenaire2.item.TradeGood good : goods) {
+            w.writeString(good.item.isEmpty() ? "" : net.minecraft.core.registries.BuiltInRegistries.ITEM
+                    .getKey(good.item.getItem()).toString());
+            w.writeInt(good.item.getCount());
+            w.writeInt(good.buyPrice);
+            w.writeInt(good.sellPrice);
+            w.writeInt(good.getAdjustedBuyPrice(reputation));
+            w.writeInt(good.getAdjustedSellPrice(reputation));
+        }
+
+        MillGenericS2CPayload payload = new MillGenericS2CPayload(
+                MillPacketIds.PACKET_SHOP, 0, w.toByteArray());
+        PacketDistributor.sendToPlayer(target, payload);
+    }
+
     // ========== Internal helpers ==========
 
     private static void writePoint(PacketDataHelper.Writer w, @Nullable Point p) {

@@ -64,6 +64,22 @@ public final class ServerPacketHandler {
             // Send full villager sync to the interacting player
             ServerPacketSender.sendVillagerSync(player, villager);
 
+            // Resolve building trade goods and player profile
+            org.dizzymii.millenaire2.village.Building building = villager.getHomeBuilding();
+            if (building == null) building = villager.getTownHallBuilding();
+
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw != null && building != null) {
+                org.dizzymii.millenaire2.world.UserProfile profile =
+                        mw.getOrCreateProfile(player.getUUID(), player.getName().getString());
+                org.dizzymii.millenaire2.util.Point vPos =
+                        building.getTownHallPos() != null ? building.getTownHallPos() : building.getPos();
+                int rep = vPos != null ? profile.getVillageReputation(vPos) : 0;
+                String vName = villager.getFirstName() + " " + villager.getFamilyName();
+                ServerPacketSender.sendTradeData(player, villager.getId(),
+                        building.getTradeGoods(), profile.deniers, rep, vName);
+            }
+
             // Open trade GUI for the villager
             ServerPacketSender.sendOpenGui(player, MillPacketIds.GUI_TRADE, villager.getId(), villager.townHallPoint);
             MillLog.minor("ServerPacketHandler", "Player " + player.getName().getString()
@@ -165,6 +181,14 @@ public final class ServerPacketHandler {
             case MillPacketIds.GUIACTION_HIRE_RELEASE:
             case MillPacketIds.GUIACTION_TOGGLE_STANCE:
                 handleHireAction(actionId, data, context);
+                break;
+            case MillPacketIds.GUIACTION_TRADE_BUY:
+            case MillPacketIds.GUIACTION_TRADE_SELL:
+                handleTradeAction(actionId, data, context);
+                break;
+            case MillPacketIds.GUIACTION_PUJAS_CHANGE_ENCHANTMENT:
+            case MillPacketIds.GUIACTION_TRADE_TOGGLE_DONATION:
+                handleChiefAction(actionId, data, context);
                 break;
             case MillPacketIds.GUIACTION_NEGATION_WAND:
                 handleNegationWand(data, context);
@@ -304,5 +328,147 @@ public final class ServerPacketHandler {
         if (!(context.player() instanceof ServerPlayer player)) return;
         MillLog.minor("ServerPacketHandler", "Import table action " + actionId + " from " + player.getName().getString());
         // Import table: import building plan, change settings, create building from plan
+    }
+
+    // ========== Trade ==========
+
+    /**
+     * Handle a trade buy or sell action from the client.
+     * Packet data: int entityId, int tradeGoodIndex
+     */
+    private static void handleTradeAction(int actionId, byte[] data, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) return;
+
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            int entityId = r.readInt();
+            int goodIndex = r.readInt();
+
+            Entity entity = player.level().getEntity(entityId);
+            if (!(entity instanceof MillVillager villager)) {
+                MillLog.warn("ServerPacketHandler", "Trade: villager entity " + entityId + " not found");
+                return;
+            }
+
+            // Resolve the building with trade goods
+            org.dizzymii.millenaire2.village.Building building = villager.getHomeBuilding();
+            if (building == null) building = villager.getTownHallBuilding();
+            if (building == null) {
+                MillLog.warn("ServerPacketHandler", "Trade: no building for villager " + villager.getFirstName());
+                return;
+            }
+
+            java.util.List<org.dizzymii.millenaire2.item.TradeGood> goods = building.getTradeGoods();
+            if (goodIndex < 0 || goodIndex >= goods.size()) {
+                MillLog.warn("ServerPacketHandler", "Trade: invalid good index " + goodIndex);
+                return;
+            }
+
+            org.dizzymii.millenaire2.item.TradeGood good = goods.get(goodIndex);
+
+            // Get player profile for deniers and reputation
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw == null) return;
+            org.dizzymii.millenaire2.world.UserProfile profile =
+                    mw.getOrCreateProfile(player.getUUID(), player.getName().getString());
+
+            org.dizzymii.millenaire2.util.Point villagePos =
+                    building.getTownHallPos() != null ? building.getTownHallPos() : building.getPos();
+            int reputation = villagePos != null ? profile.getVillageReputation(villagePos) : 0;
+
+            if (actionId == MillPacketIds.GUIACTION_TRADE_BUY) {
+                executeBuy(player, profile, good, reputation, villagePos, mw);
+            } else {
+                executeSell(player, profile, good, reputation, villagePos, mw);
+            }
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling trade action", e);
+        } finally {
+            r.release();
+        }
+    }
+
+    private static void executeBuy(ServerPlayer player,
+                                    org.dizzymii.millenaire2.world.UserProfile profile,
+                                    org.dizzymii.millenaire2.item.TradeGood good,
+                                    int reputation,
+                                    @javax.annotation.Nullable org.dizzymii.millenaire2.util.Point villagePos,
+                                    org.dizzymii.millenaire2.world.MillWorldData mw) {
+        int price = good.getAdjustedBuyPrice(reputation);
+        if (price <= 0 || good.item.isEmpty()) return;
+
+        if (profile.deniers < price) {
+            player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                    "§c[Millénaire]§r Not enough deniers! Need " + price + ", have " + profile.deniers));
+            return;
+        }
+
+        // Give item to player
+        if (!player.getInventory().add(good.item.copy())) {
+            player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                    "§c[Millénaire]§r Inventory full!"));
+            return;
+        }
+
+        profile.deniers -= price;
+        // Reputation gain from buying
+        if (villagePos != null) {
+            profile.adjustVillageReputation(villagePos, 1);
+        }
+        mw.setDirty();
+
+        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                "§6[Millénaire]§r Bought " + good.item.getHoverName().getString()
+                        + " for " + price + " deniers"));
+        MillLog.minor("ServerPacketHandler", "Trade buy: " + player.getName().getString()
+                + " bought " + good.item.getHoverName().getString() + " for " + price + "d");
+    }
+
+    private static void executeSell(ServerPlayer player,
+                                     org.dizzymii.millenaire2.world.UserProfile profile,
+                                     org.dizzymii.millenaire2.item.TradeGood good,
+                                     int reputation,
+                                     @javax.annotation.Nullable org.dizzymii.millenaire2.util.Point villagePos,
+                                     org.dizzymii.millenaire2.world.MillWorldData mw) {
+        int price = good.getAdjustedSellPrice(reputation);
+        if (price <= 0 || good.item.isEmpty()) return;
+
+        // Check player has the item
+        int slot = findItemSlot(player, good.item);
+        if (slot < 0) {
+            player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                    "§c[Millénaire]§r You don't have that item!"));
+            return;
+        }
+
+        // Remove one item from player inventory
+        net.minecraft.world.item.ItemStack slotStack = player.getInventory().getItem(slot);
+        slotStack.shrink(1);
+        if (slotStack.isEmpty()) {
+            player.getInventory().setItem(slot, net.minecraft.world.item.ItemStack.EMPTY);
+        }
+
+        profile.deniers += price;
+        // Reputation gain from selling
+        if (villagePos != null) {
+            profile.adjustVillageReputation(villagePos, 1);
+        }
+        mw.setDirty();
+
+        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                "§6[Millénaire]§r Sold " + good.item.getHoverName().getString()
+                        + " for " + price + " deniers"));
+        MillLog.minor("ServerPacketHandler", "Trade sell: " + player.getName().getString()
+                + " sold " + good.item.getHoverName().getString() + " for " + price + "d");
+    }
+
+    private static int findItemSlot(ServerPlayer player, net.minecraft.world.item.ItemStack target) {
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            net.minecraft.world.item.ItemStack stack = player.getInventory().getItem(i);
+            if (net.minecraft.world.item.ItemStack.isSameItemSameComponents(stack, target) && !stack.isEmpty()) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

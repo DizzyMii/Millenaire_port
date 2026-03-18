@@ -21,6 +21,13 @@ public final class ClientPacketHandler {
     // Client-side cache of village list entries (for GUI display)
     public static final List<VillageListClientEntry> villageListCache = new ArrayList<>();
 
+    // Client-side cache of trade data (populated by PACKET_SHOP before GUI opens)
+    public static final List<TradeGoodClientEntry> tradeGoodsCache = new ArrayList<>();
+    public static int cachedDeniers = 0;
+    public static int cachedReputation = 0;
+    public static String cachedVillagerName = "";
+    public static int cachedVillagerEntityId = -1;
+
     private ClientPacketHandler() {}
 
     public static void handleGenericS2C(MillGenericS2CPayload payload) {
@@ -42,6 +49,9 @@ public final class ClientPacketHandler {
                 break;
             case MillPacketIds.PACKET_VILLAGELIST:
                 handleVillageList(payload.data());
+                break;
+            case MillPacketIds.PACKET_SHOP:
+                handleShopData(payload.data());
                 break;
             case MillPacketIds.PACKET_OPENGUI:
                 handleOpenGui(payload.data());
@@ -298,6 +308,34 @@ public final class ClientPacketHandler {
         }
     }
 
+    // ========== Shop / trade data ==========
+
+    private static void handleShopData(byte[] data) {
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            cachedVillagerEntityId = r.readInt();
+            cachedVillagerName = r.readString();
+            cachedDeniers = r.readInt();
+            cachedReputation = r.readInt();
+            int count = r.readInt();
+            tradeGoodsCache.clear();
+            for (int i = 0; i < count; i++) {
+                String itemId = r.readString();
+                int itemCount = r.readInt();
+                int buyPrice = r.readInt();
+                int sellPrice = r.readInt();
+                int adjBuy = r.readInt();
+                int adjSell = r.readInt();
+                tradeGoodsCache.add(new TradeGoodClientEntry(i, itemId, itemCount, buyPrice, sellPrice, adjBuy, adjSell));
+            }
+            MillLog.minor("ClientPacketHandler", "Received trade data: " + count + " goods, " + cachedDeniers + " deniers");
+        } catch (Exception e) {
+            MillLog.error("ClientPacketHandler", "Error handling shop data", e);
+        } finally {
+            r.release();
+        }
+    }
+
     // ========== Helpers ==========
 
     @Nullable
@@ -312,6 +350,27 @@ public final class ClientPacketHandler {
     }
 
     // ========== Client data classes ==========
+
+    public static class TradeGoodClientEntry {
+        public final int index;
+        public final String itemId;
+        public final int itemCount;
+        public final int buyPrice;
+        public final int sellPrice;
+        public final int adjustedBuy;
+        public final int adjustedSell;
+
+        public TradeGoodClientEntry(int index, String itemId, int itemCount,
+                                     int buyPrice, int sellPrice, int adjBuy, int adjSell) {
+            this.index = index;
+            this.itemId = itemId;
+            this.itemCount = itemCount;
+            this.buyPrice = buyPrice;
+            this.sellPrice = sellPrice;
+            this.adjustedBuy = adjBuy;
+            this.adjustedSell = adjSell;
+        }
+    }
 
     public static class VillageListClientEntry {
         @Nullable public final Point pos;

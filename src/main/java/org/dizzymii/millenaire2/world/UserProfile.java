@@ -55,6 +55,7 @@ public class UserProfile {
     @Nullable public UUID uuid;
     @Nullable public String playerName;
     public boolean donationActivated = false;
+    public int deniers = 0;
 
     // Quest instances tracked per-player; populated when quest system is implemented (Phase 7)
     public final java.util.List<org.dizzymii.millenaire2.quest.QuestInstance> questInstances = new java.util.ArrayList<>();
@@ -112,11 +113,16 @@ public class UserProfile {
 
     // ========== NBT persistence ==========
 
+    public Map<Point, Integer> getVillageReputations() { return villageReputations; }
+    public Map<String, Integer> getCultureReputations() { return cultureReputations; }
+    public Map<String, Integer> getCultureLanguages() { return cultureLanguages; }
+
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
         if (uuid != null) tag.putUUID("uuid", uuid);
         if (playerName != null) tag.putString("playerName", playerName);
         tag.putBoolean("donation", donationActivated);
+        tag.putInt("deniers", deniers);
 
         // Village reputations
         ListTag repList = new ListTag();
@@ -173,6 +179,7 @@ public class UserProfile {
         if (tag.hasUUID("uuid")) p.uuid = tag.getUUID("uuid");
         if (tag.contains("playerName")) p.playerName = tag.getString("playerName");
         p.donationActivated = tag.getBoolean("donation");
+        p.deniers = tag.getInt("deniers");
 
         // Village reputations
         if (tag.contains("villageRep", Tag.TAG_LIST)) {

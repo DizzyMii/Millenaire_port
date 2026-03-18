@@ -10,14 +10,17 @@ import org.dizzymii.millenaire2.culture.Culture;
 import org.dizzymii.millenaire2.culture.VillagerType;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.item.TradeGood;
 import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.world.MillWorldData;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -131,6 +134,12 @@ public class Building {
     public boolean isUnderConstruction() {
         return currentConstruction != null;
     }
+
+    // ========== Trade goods ==========
+
+    public final List<TradeGood> tradeGoods = new ArrayList<>();
+
+    public List<TradeGood> getTradeGoods() { return tradeGoods; }
 
     // ========== Tick ==========
 
