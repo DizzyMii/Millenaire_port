@@ -11,7 +11,7 @@ import org.dizzymii.millenaire2.entity.MillVillager;
 public class FemaleSymmRenderer extends HumanoidMobRenderer<MillVillager.GenericSymmFemale, FemaleSymmetricalModel> {
 
     private static final ResourceLocation DEFAULT_TEXTURE =
-            ResourceLocation.withDefaultNamespace("textures/entity/steve.png");
+            ResourceLocation.withDefaultNamespace("textures/entity/player/wide/steve.png");
 
     public FemaleSymmRenderer(EntityRendererProvider.Context context) {
         super(context, new FemaleSymmetricalModel(context.bakeLayer(FemaleSymmetricalModel.LAYER_LOCATION)), 0.5F);

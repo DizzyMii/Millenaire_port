@@ -128,9 +128,6 @@ public class WorldGenVillage {
         location.length = initialPlan.length;
         location.level = 0;
 
-        // Load blocks from the PNG plan
-        List<BuildingBlock> blocks = loadPlanBlocks(culture, planSet, initialPlan);
-
         // Create a new Building as the townhall
         Building townhall = new Building();
         townhall.isTownhall = true;
@@ -142,13 +139,15 @@ public class WorldGenVillage {
         townhall.location = location;
         townhall.mw = worldData;
 
-        // Set up construction if we have blocks
-        if (!blocks.isEmpty()) {
-            ConstructionIP cip = new ConstructionIP(location);
+        // Use the already-loaded plan image data via ConstructionIP.fromBuildingPlan
+        // (avoids re-reading PNGs from disk which may fail if paths differ)
+        ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, villagePos, level);
+        if (cip != null) {
             cip.orientation = location.orientation;
-            cip.setBlocks(blocks);
             townhall.currentConstruction = cip;
-            MillLog.minor("WorldGenVillage", "Construction queued: " + blocks.size() + " blocks for " + planSet.key);
+            MillLog.minor("WorldGenVillage", "Construction queued: " + cip.nbBlocksTotal + " blocks for " + planSet.key);
+        } else {
+            MillLog.warn("WorldGenVillage", "No constructable blocks from plan: " + planSet.key);
         }
 
         // Create initial VillagerRecords from the plan's villager list
@@ -243,8 +242,8 @@ public class WorldGenVillage {
             // Fallback: create a default leader villager
             VillagerRecord leader = VillagerRecord.create(
                     culture.key, "leader",
-                    getRandomName(culture, "male_first", random),
-                    getRandomName(culture, "family", random),
+                    getRandomFirstName(culture, MillVillager.MALE, random),
+                    getRandomFamilyName(culture, random),
                     MillVillager.MALE);
             leader.setHousePos(villagePos);
             leader.setTownHallPos(villagePos);
@@ -257,11 +256,10 @@ public class WorldGenVillage {
             int gender = MillVillager.MALE;
             if (vtype != null && "female".equalsIgnoreCase(vtype.gender)) gender = MillVillager.FEMALE;
 
-            String nameListKey = gender == MillVillager.FEMALE ? "female_first" : "male_first";
             VillagerRecord vr = VillagerRecord.create(
                     culture.key, vtKey,
-                    getRandomName(culture, nameListKey, random),
-                    getRandomName(culture, "family", random),
+                    getRandomFirstName(culture, gender, random),
+                    getRandomFamilyName(culture, random),
                     gender);
             vr.setHousePos(villagePos);
             vr.setTownHallPos(villagePos);
@@ -270,23 +268,46 @@ public class WorldGenVillage {
     }
 
     /**
-     * Get a random name from a culture's name list.
+     * Get a random first name from a culture's name lists.
+     * Tries multiple common name list key patterns used across cultures.
      */
-    private static String getRandomName(Culture culture, String listKey, RandomSource random) {
-        List<String> names = culture.nameLists.get(listKey);
-        if (names != null && !names.isEmpty()) {
-            return names.get(random.nextInt(names.size()));
+    private static String getRandomFirstName(Culture culture, int gender, RandomSource random) {
+        String[] keys = gender == MillVillager.FEMALE
+                ? new String[]{"women_names", "female_first", "low_caste_women_names", "high_caste_women_names"}
+                : new String[]{"men_names", "male_first"};
+        for (String k : keys) {
+            List<String> names = culture.nameLists.get(k);
+            if (names != null && !names.isEmpty()) return names.get(random.nextInt(names.size()));
+        }
+        // Last resort: try any name list containing "name"
+        for (var entry : culture.nameLists.entrySet()) {
+            if (entry.getKey().contains("name") && !entry.getValue().isEmpty()) {
+                return entry.getValue().get(random.nextInt(entry.getValue().size()));
+            }
         }
         return "Villager";
+    }
+
+    /**
+     * Get a random family name from a culture's name lists.
+     */
+    private static String getRandomFamilyName(Culture culture, RandomSource random) {
+        String[] keys = {"family_names", "low_caste_family_names", "high_caste_family_names", "noble_family_names"};
+        for (String k : keys) {
+            List<String> names = culture.nameLists.get(k);
+            if (names != null && !names.isEmpty()) return names.get(random.nextInt(names.size()));
+        }
+        return "";
     }
 
     /**
      * Generate a village name from the culture's name lists.
      */
     private static String generateVillageName(Culture culture, RandomSource random) {
-        List<String> villageNames = culture.nameLists.get("village");
-        if (villageNames != null && !villageNames.isEmpty()) {
-            return villageNames.get(random.nextInt(villageNames.size()));
+        String[] keys = {"villages", "village"};
+        for (String k : keys) {
+            List<String> names = culture.nameLists.get(k);
+            if (names != null && !names.isEmpty()) return names.get(random.nextInt(names.size()));
         }
         return culture.key + "_village_" + random.nextInt(10000);
     }

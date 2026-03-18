@@ -152,6 +152,66 @@ public class VillageType {
     @FieldDocumentation(explanation = "Whether this village type carries out raids.")
     public boolean carriesRaid = false;
 
+    @ConfigField(type = ParameterType.STRING)
+    @FieldDocumentation(explanation = "Icon texture path for this village type.")
+    public String icon = null;
+
+    @ConfigField(type = ParameterType.STRING)
+    @FieldDocumentation(explanation = "Name qualifier when village is on a hill.")
+    public String hillqualifier = null;
+
+    @ConfigField(type = ParameterType.STRING)
+    @FieldDocumentation(explanation = "Name qualifier when village is on a mountain.")
+    public String mountainqualifier = null;
+
+    @ConfigField(type = ParameterType.STRING)
+    @FieldDocumentation(explanation = "Name qualifier when village is in a desert.")
+    public String desertqualifier = null;
+
+    @ConfigField(type = ParameterType.STRING)
+    @FieldDocumentation(explanation = "Name qualifier when village is in a forest.")
+    public String forestqualifier = null;
+
+    @ConfigField(type = ParameterType.STRING)
+    @FieldDocumentation(explanation = "Name qualifier when village is near lava.")
+    public String lavaqualifier = null;
+
+    @ConfigField(type = ParameterType.STRING)
+    @FieldDocumentation(explanation = "Name qualifier when village is near a lake.")
+    public String lakequalifier = null;
+
+    @ConfigField(type = ParameterType.STRING)
+    @FieldDocumentation(explanation = "Name qualifier when village is near an ocean.")
+    public String oceanqualifier = null;
+
+    @ConfigField(type = ParameterType.STRING_ADD, paramName = "pathmaterial")
+    @FieldDocumentation(explanation = "Path materials used in village paths.")
+    public List<String> pathMaterials = new ArrayList<>();
+
+    @ConfigField(type = ParameterType.INTEGER, paramName = "maxsimultaneouswallconstructions", defaultValue = "1")
+    @FieldDocumentation(explanation = "Max number of wall segments built at once.")
+    public int maxSimultaneousWallConstructions = 1;
+
+    @ConfigField(type = ParameterType.STRING)
+    @FieldDocumentation(explanation = "Inner wall type key.")
+    public String innerwalltype = null;
+
+    @ConfigField(type = ParameterType.INTEGER, defaultValue = "0")
+    @FieldDocumentation(explanation = "Radius of inner wall.")
+    public int innerwallradius = 0;
+
+    @ConfigField(type = ParameterType.STRING)
+    @FieldDocumentation(explanation = "Outer wall type key.")
+    public String outerwalltype = null;
+
+    @ConfigField(type = ParameterType.STRING_ADD, paramName = "sellingprice")
+    @FieldDocumentation(explanation = "Items and prices the village sells (item=price format).")
+    public List<String> sellingPrices = new ArrayList<>();
+
+    @ConfigField(type = ParameterType.STRING_ADD, paramName = "buyingprice")
+    @FieldDocumentation(explanation = "Items and prices the village buys (item=price format).")
+    public List<String> buyingPrices = new ArrayList<>();
+
     public VillageType(Culture culture, String key) {
         this.culture = culture;
         this.key = key;

@@ -123,6 +123,22 @@ public class BuildingPlanSet {
     @FieldDocumentation(explanation = "Sub-buildings constructed at village start.")
     public List<String> startingSubBuildings = new ArrayList<>();
 
+    @ConfigField(type = ParameterType.STRING_ADD, paramName = "startinggood")
+    @FieldDocumentation(explanation = "Starting goods provided when building is first constructed.")
+    public List<String> startingGoods = new ArrayList<>();
+
+    @ConfigField(type = ParameterType.BOOLEAN, paramName = "isgift", defaultValue = "false")
+    @FieldDocumentation(explanation = "Whether this building is a gift to the player.")
+    public boolean isGift = false;
+
+    @ConfigField(type = ParameterType.INTEGER, paramName = "reputation", defaultValue = "0")
+    @FieldDocumentation(explanation = "Reputation required to purchase this building.")
+    public int reputation = 0;
+
+    @ConfigField(type = ParameterType.INTEGER, paramName = "price", defaultValue = "0")
+    @FieldDocumentation(explanation = "Price in deniers to purchase this building.")
+    public int price = 0;
+
     // Upgrade plan references (populated during loading)
     public final List<BuildingPlan> plans = new ArrayList<>();
     public final Map<String, BuildingPlan> plansByKey = new HashMap<>();
