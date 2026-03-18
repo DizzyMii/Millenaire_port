@@ -8,8 +8,8 @@ Millénaire is a Minecraft mod that adds NPC villages inspired by real-world his
 
 The mod had been stuck on an outdated, archaic version for many years, unable to evolve with the game's updates. It played a significant role in shaping my early Minecraft experiences, serving as a cornerstone of my gameplay. Driven by nostalgia and a desire to revitalize this cherished part of my gaming history, I aimed to breathe new life into it and adapt it for modern times.
 ## Supporters
----
-# Usernames
+
+### Usernames
 Prechecked
 
 
