@@ -145,7 +145,24 @@ public class Building {
 
     public final List<TradeGood> tradeGoods = new ArrayList<>();
 
-    public List<TradeGood> getTradeGoods() { return tradeGoods; }
+    /**
+     * Get trade goods for this building. If the static list is empty,
+     * resolve from the data-driven TradeGoodLoader based on villager types present.
+     */
+    public List<TradeGood> getTradeGoods() {
+        if (!tradeGoods.isEmpty()) return tradeGoods;
+
+        // Resolve from data-driven trade goods based on villager types in this building
+        java.util.Set<String> vtypes = new java.util.HashSet<>();
+        for (VillagerRecord vr : getVillagerRecords()) {
+            if (vr.type != null) vtypes.add(vr.type);
+        }
+        List<TradeGood> resolved = new ArrayList<>();
+        for (String vt : vtypes) {
+            resolved.addAll(org.dizzymii.millenaire2.item.TradeGoodLoader.getTradeGoods(vt));
+        }
+        return resolved.isEmpty() ? tradeGoods : resolved;
+    }
 
     // ========== Upgrade ==========
 

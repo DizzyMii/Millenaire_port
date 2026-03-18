@@ -108,6 +108,7 @@ public class Millenaire2 {
         org.dizzymii.millenaire2.buildingplan.PointType.loadFromServer(event.getServer());
         org.dizzymii.millenaire2.culture.Culture.loadCultures();
         org.dizzymii.millenaire2.world.BiomeCultureMapper.loadFromServer(event.getServer());
+        org.dizzymii.millenaire2.item.TradeGoodLoader.loadFromServer(event.getServer());
         // Initialize world data from the overworld
         net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
         worldData = MillWorldData.get(overworld);
