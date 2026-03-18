@@ -70,8 +70,92 @@ public abstract class SpecialPointTypeList {
     public static final String bfreepaintedbrick = "freepaintedbrick";
     public static final String bfreegrass_block = "freegrass_block";
 
+    // --- Quarry sources ---
+    public static final String bstonesource = "stonesource";
+    public static final String bsandsource = "sandsource";
+    public static final String bsandstonesource = "sandstonesource";
+    public static final String bclaysource = "claysource";
+    public static final String bgravelsource = "gravelsource";
+    public static final String bgranitesource = "granitesource";
+    public static final String bdioritesource = "dioritesource";
+    public static final String bandesitesource = "andesitesource";
+    public static final String bsnowsource = "snowsource";
+    public static final String bicesource = "icesource";
+    public static final String bredsandstonesource = "redsandstonesource";
+    public static final String bquartzsource = "quartzsource";
+
+    // --- Animal spawn spots ---
+    public static final String bcowspawn = "cowspawn";
+    public static final String bpigspawn = "pigspawn";
+    public static final String bsheepspawn = "sheepspawn";
+    public static final String bchickenspawn = "chickenspawn";
+    public static final String bsquidspawn = "squidspawn";
+    public static final String bwolfspawn = "wolfspawn";
+    public static final String bpolarbearspawn = "polarbearspawn";
+
+    // --- Tree spawn spots ---
+    public static final String boakspawn = "oakspawn";
+    public static final String bpinespawn = "pinespawn";
+    public static final String bbirchspawn = "birchspawn";
+    public static final String bjunglespawn = "junglespawn";
+    public static final String bacaciaspawn = "acaciaspawn";
+    public static final String bdarkoakspawn = "darkoakspawn";
+    public static final String bappletreespawn = "appletreespawn";
+    public static final String bolivetreespawn = "olivetreespawn";
+    public static final String bpistachiotreespawn = "pistachiotreespawn";
+    public static final String bcherrytreespawn = "cherrytreespawn";
+    public static final String bsakuratreespawn = "sakuratreespawn";
+
+    // --- Mob spawners ---
+    public static final String bspawnerskeleton = "spawnerskeleton";
+    public static final String bspawnerzombie = "spawnerzombie";
+    public static final String bspawnerspider = "spawnerspider";
+    public static final String bspawnercavespider = "spawnercavespider";
+    public static final String bspawnercreeper = "spawnercreeper";
+    public static final String bspawnerblaze = "spawnerblaze";
+
+    // --- Decorative specials ---
+    public static final String btapestry = "tapestry";
+    public static final String bindianstatue = "indianstatue";
+    public static final String bbyzantineiconsmall = "byzantineiconsmall";
+    public static final String bbyzantineiconmedium = "byzantineiconmedium";
+    public static final String bbyzantineiconlarge = "byzantineiconlarge";
+    public static final String bmayanstatue = "mayanstatue";
+    public static final String bwallcarpetsmall = "wallcarpetsmall";
+    public static final String bwallcarpetmedium = "wallcarpetmedium";
+    public static final String bwallcarpetlarge = "wallcarpetlarge";
+    public static final String bhidehanging = "hidehanging";
+
     // --- Misc ---
     public static final String bstall = "stall";
+    public static final String bbrickspot = "brickspot";
+    public static final String bplainSignGuess = "plainSignGuess";
+    public static final String bdispenserunknownpowder = "dispenserunknownpowder";
+    public static final String bbrewingstand = "brewingstand";
+    public static final String bhealingspot = "healingspot";
+    public static final String bfishingspot = "fishingspot";
+
+    // --- Banners ---
+    public static final String bvillageBannerWallGuess = "villageBannerWallGuess";
+    public static final String bvillageBannerWallTop = "villageBannerWallTop";
+    public static final String bvillageBannerWallBottom = "villageBannerWallBottom";
+    public static final String bvillageBannerWallLeft = "villageBannerWallLeft";
+    public static final String bvillageBannerWallRight = "villageBannerWallRight";
+    public static final String bvillageBannerStandingGuess = "villageBannerStandingGuess";
+    public static final String bvillageBannerStandingTop = "villageBannerStandingTop";
+    public static final String bvillageBannerStandingBottom = "villageBannerStandingBottom";
+    public static final String bvillageBannerStandingLeft = "villageBannerStandingLeft";
+    public static final String bvillageBannerStandingRight = "villageBannerStandingRight";
+    public static final String bcultureBannerWallGuess = "cultureBannerWallGuess";
+    public static final String bcultureBannerWallTop = "cultureBannerWallTop";
+    public static final String bcultureBannerWallBottom = "cultureBannerWallBottom";
+    public static final String bcultureBannerWallLeft = "cultureBannerWallLeft";
+    public static final String bcultureBannerWallRight = "cultureBannerWallRight";
+    public static final String bcultureBannerStandingGuess = "cultureBannerStandingGuess";
+    public static final String bcultureBannerStandingTop = "cultureBannerStandingTop";
+    public static final String bcultureBannerStandingBottom = "cultureBannerStandingBottom";
+    public static final String bcultureBannerStandingLeft = "cultureBannerStandingLeft";
+    public static final String bcultureBannerStandingRight = "cultureBannerStandingRight";
 
     public static boolean isSpecialPointTypeKnow(String type) {
         for (Field f : SpecialPointTypeList.class.getDeclaredFields()) {

@@ -163,12 +163,20 @@ public class PointType {
     }
 
     /**
-     * Load colour mappings from data-driven JSON, falling back to hardcoded defaults.
-     * JSON location: data/millenaire2/pointtypes/colour_map.json
-     * Users and datapacks can override or extend this file.
+     * Load colour mappings, trying sources in order:
+     * 1. blocklist.txt from the Millenaire content directory (authoritative legacy source)
+     * 2. data-driven JSON datapack (override / extension point)
+     * 3. hardcoded registerDefaults() (last resort)
      */
     public static void loadFromServer(@Nullable MinecraftServer server) {
         colourPoints.clear();
+
+        // --- 1. Try blocklist.txt (legacy content file, authoritative colours) ---
+        if (BlocklistLoader.load()) {
+            return;
+        }
+
+        // --- 2. Try JSON datapack ---
         boolean loaded = false;
         if (server != null) {
             try {
@@ -225,6 +233,8 @@ public class PointType {
                 MillLog.error(null, "PointType: failed to load JSON colour map, using defaults", e);
             }
         }
+
+        // --- 3. Hardcoded fallback ---
         if (!loaded) {
             registerDefaults();
         }
