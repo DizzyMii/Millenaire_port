@@ -1,7 +1,13 @@
 package org.dizzymii.millenaire2.buildingplan;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -10,7 +16,12 @@ import org.dizzymii.millenaire2.item.InvItem;
 import org.dizzymii.millenaire2.util.MillLog;
 
 import javax.annotation.Nullable;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Represents a colour-coded point in a building plan PNG.
@@ -152,8 +163,77 @@ public class PointType {
     }
 
     /**
+     * Load colour mappings from data-driven JSON, falling back to hardcoded defaults.
+     * JSON location: data/millenaire2/pointtypes/colour_map.json
+     * Users and datapacks can override or extend this file.
+     */
+    public static void loadFromServer(@Nullable MinecraftServer server) {
+        colourPoints.clear();
+        boolean loaded = false;
+        if (server != null) {
+            try {
+                ResourceManager rm = server.getResourceManager();
+                ResourceLocation loc = ResourceLocation.fromNamespaceAndPath("millenaire2", "pointtypes/colour_map.json");
+                Optional<Resource> opt = rm.getResource(loc);
+                if (opt.isPresent()) {
+                    try (InputStream is = opt.get().open();
+                         InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+                        JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+                        int count = 0;
+
+                        if (root.has("blocks")) {
+                            JsonObject blocks = root.getAsJsonObject("blocks");
+                            for (Map.Entry<String, JsonElement> entry : blocks.entrySet()) {
+                                try {
+                                    int colour = Integer.parseInt(entry.getKey().trim(), 16);
+                                    JsonObject val = entry.getValue().getAsJsonObject();
+                                    String blockId = val.get("block").getAsString();
+                                    boolean second = val.has("secondStep") && val.get("secondStep").getAsBoolean();
+                                    ResourceLocation rl = ResourceLocation.parse(blockId);
+                                    Block block = BuiltInRegistries.BLOCK.get(rl);
+                                    if (block != Blocks.AIR || "minecraft:air".equals(blockId)) {
+                                        registerBlock(colour, blockId, block, second);
+                                        count++;
+                                    } else {
+                                        MillLog.warn(null, "PointType JSON: unknown block: " + blockId);
+                                    }
+                                } catch (Exception e) {
+                                    MillLog.warn(null, "PointType JSON: bad block entry: " + entry.getKey());
+                                }
+                            }
+                        }
+
+                        if (root.has("special")) {
+                            JsonObject specials = root.getAsJsonObject("special");
+                            for (Map.Entry<String, JsonElement> entry : specials.entrySet()) {
+                                try {
+                                    int colour = Integer.parseInt(entry.getKey().trim(), 16);
+                                    String type = entry.getValue().getAsString();
+                                    registerSpecial(colour, type);
+                                    count++;
+                                } catch (Exception e) {
+                                    MillLog.warn(null, "PointType JSON: bad special entry: " + entry.getKey());
+                                }
+                            }
+                        }
+
+                        MillLog.minor(null, "PointType: loaded " + count + " colour mappings from JSON datapack");
+                        loaded = true;
+                    }
+                }
+            } catch (Exception e) {
+                MillLog.error(null, "PointType: failed to load JSON colour map, using defaults", e);
+            }
+        }
+        if (!loaded) {
+            registerDefaults();
+        }
+    }
+
+    /**
      * Register default colour-to-block mappings used by all cultures.
      * These are the standard Millenaire plan colours.
+     * Used as fallback when no JSON datapack is available.
      *
      * IMPORTANT: Every colour (int key) must be unique. If two entries share
      * a colour the second silently overwrites the first. All conflicts from

@@ -97,12 +97,15 @@ public class Millenaire2 {
         event.put(MillEntities.GENERIC_MALE.get(), MillVillager.createAttributes().build());
         event.put(MillEntities.GENERIC_SYMM_FEMALE.get(), MillVillager.createAttributes().build());
         event.put(MillEntities.GENERIC_ASYMM_FEMALE.get(), MillVillager.createAttributes().build());
+        event.put(MillEntities.TARGETED_BLAZE.get(), net.minecraft.world.entity.monster.Blaze.createAttributes().build());
+        event.put(MillEntities.TARGETED_WITHER_SKELETON.get(), net.minecraft.world.entity.monster.WitherSkeleton.createAttributes().build());
+        event.put(MillEntities.TARGETED_GHAST.get(), net.minecraft.world.entity.monster.Ghast.createAttributes().build());
     }
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("{} server starting", MODNAME);
-        org.dizzymii.millenaire2.buildingplan.PointType.registerDefaults();
+        org.dizzymii.millenaire2.buildingplan.PointType.loadFromServer(event.getServer());
         org.dizzymii.millenaire2.culture.Culture.loadCultures();
         // Initialize world data from the overworld
         net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
