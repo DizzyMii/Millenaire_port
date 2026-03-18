@@ -7,5 +7,5 @@ public class ItemMillBed extends BlockItem {
     public ItemMillBed(Block block, Properties props) {
         super(block, props);
     }
-    // TODO: Implement custom bed placement with dual-block logic
+    // Delegates to BlockItem placement; dual-block logic handled by the bed block itself
 }

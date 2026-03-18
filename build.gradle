@@ -18,6 +18,10 @@ base {
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
 neoForge {
     // Specify the version of NeoForge to use.
     version = project.neo_version
@@ -156,6 +160,12 @@ publishing {
             url "file://${project.projectDir}/repo"
         }
     }
+}
+
+// Run GameTests automatically as part of the build lifecycle.
+// 'check' is executed by 'build', so this ensures tests run on every build.
+tasks.named('check') {
+    dependsOn 'runGameTestServer'
 }
 
 // IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.

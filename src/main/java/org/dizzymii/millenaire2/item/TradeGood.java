@@ -17,5 +17,20 @@ public class TradeGood {
         this.buyPrice = buyPrice;
         this.sellPrice = sellPrice;
     }
-    // TODO: Implement trade good matching, reputation-based pricing
+
+    public boolean matches(net.minecraft.world.item.ItemStack other) {
+        return !item.isEmpty() && net.minecraft.world.item.ItemStack.isSameItemSameComponents(item, other);
+    }
+
+    public int getAdjustedBuyPrice(int reputation) {
+        // Discount up to 20% for max reputation (1000)
+        double discount = Math.min(reputation, 1000) / 5000.0;
+        return Math.max(1, (int) (buyPrice * (1.0 - discount)));
+    }
+
+    public int getAdjustedSellPrice(int reputation) {
+        // Bonus up to 20% for max reputation (1000)
+        double bonus = Math.min(reputation, 1000) / 5000.0;
+        return (int) (sellPrice * (1.0 + bonus));
+    }
 }

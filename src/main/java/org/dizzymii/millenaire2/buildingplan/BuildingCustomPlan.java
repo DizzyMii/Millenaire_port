@@ -2,7 +2,10 @@ package org.dizzymii.millenaire2.buildingplan;
 
 import net.minecraft.resources.ResourceLocation;
 import org.dizzymii.millenaire2.culture.Culture;
+import org.dizzymii.millenaire2.util.MillLog;
+import org.dizzymii.millenaire2.util.VirtualDir;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,8 +51,12 @@ public class BuildingCustomPlan implements IBuildingPlan {
 
     @Override
     public String getNameTranslated() {
-        // TODO: Look up translated name from LanguageUtilities
-        return gameNameKey != null ? gameNameKey : nativeName;
+        // Translated name lookup via LanguageUtilities; falls back to native name
+        if (gameNameKey != null) {
+            String translated = org.dizzymii.millenaire2.util.LanguageUtilities.string(gameNameKey);
+            if (!translated.isEmpty() && !translated.equals(gameNameKey)) return translated;
+        }
+        return nativeName;
     }
 
     @Override
@@ -58,5 +65,38 @@ public class BuildingCustomPlan implements IBuildingPlan {
     @Override
     public List<String> getVisitors() { return visitors; }
 
-    // TODO: loadCustomBuildings(VirtualDir, Culture), loadFromFile(File), resource maps
+    /**
+     * Load all custom building plans from a culture's "buildings" directory.
+     * Each .txt file defines one custom building.
+     */
+    public static List<BuildingCustomPlan> loadCustomBuildings(VirtualDir buildingsDir, Culture culture) {
+        List<BuildingCustomPlan> plans = new ArrayList<>();
+        if (buildingsDir == null || !buildingsDir.exists()) return plans;
+
+        List<File> txtFiles = buildingsDir.listFiles(new BuildingFileFiler(".txt"));
+        for (File file : txtFiles) {
+            BuildingCustomPlan plan = loadFromFile(file, culture);
+            if (plan != null) {
+                plans.add(plan);
+            }
+        }
+        MillLog.minor(null, "Loaded " + plans.size() + " custom buildings for " + culture.key);
+        return plans;
+    }
+
+    /**
+     * Load a single custom building plan from a .txt metadata file.
+     */
+    public static BuildingCustomPlan loadFromFile(File file, Culture culture) {
+        try {
+            String key = file.getName().replace(".txt", "").toLowerCase();
+            BuildingCustomPlan plan = new BuildingCustomPlan(culture, key);
+            Map<String, String> meta = BuildingMetadataLoader.loadMetadata(file);
+            BuildingMetadataLoader.applyMetadata(plan, meta);
+            return plan;
+        } catch (Exception e) {
+            MillLog.error(null, "Failed to load custom building: " + file.getName(), e);
+            return null;
+        }
+    }
 }

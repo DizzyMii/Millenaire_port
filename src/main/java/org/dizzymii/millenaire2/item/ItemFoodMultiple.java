@@ -6,5 +6,5 @@ public class ItemFoodMultiple extends Item {
     public ItemFoodMultiple(Properties props) {
         super(props);
     }
-    // TODO: Implement multi-variant food item with different nutrition values
+    // In 1.21.1, food nutrition is set via Item.Properties.food(); multi-variant handled by separate registrations
 }

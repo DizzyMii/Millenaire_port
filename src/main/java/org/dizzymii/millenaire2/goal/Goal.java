@@ -64,8 +64,84 @@ public abstract class Goal {
 
     public static void initGoals() {
         goals = new HashMap<>();
-        // TODO: Instantiate all goal subclasses and register them in the map
-        //       Also call GoalGeneric.loadGenericGoals() and assign keys/tags
+
+        // Core goals
+        sleep = new GoalSleep();
+        registerGoal("sleep", sleep);
+
+        hide = new GoalHide();
+        registerGoal("hide", hide);
+
+        defendVillage = new GoalDefendVillage();
+        registerGoal("defendvillage", defendVillage);
+
+        beSeller = new GoalBeSeller();
+        registerGoal("beseller", beSeller);
+
+        construction = new GoalConstructionStepByStep();
+        registerGoal("construction", construction);
+
+        deliverGoodsHousehold = new GoalDeliverGoodsHousehold();
+        registerGoal("delivergoodshousehold", deliverGoodsHousehold);
+
+        getResourcesForBuild = new GoalGetResourcesForBuild();
+        registerGoal("getresourcesforbuild", getResourcesForBuild);
+
+        gettool = new GoalGetTool();
+        registerGoal("gettool", gettool);
+
+        gosocialise = new org.dizzymii.millenaire2.goal.leisure.GoalGoSocialise();
+        registerGoal("gosocialise", gosocialise);
+
+        // Agriculture & gathering
+        registerGoal("gathergoods", new GoalGatherGoods());
+        registerGoal("bringbackresourceshome", new GoalBringBackResourcesHome());
+        registerGoal("getgoodsforhousehold", new GoalGetGoodsForHousehold());
+        registerGoal("deliverresourcesshop", new GoalDeliverResourcesShop());
+        registerGoal("getresourcesforshops", new GoalGetResourcesForShops());
+        registerGoal("lumbermanchoptrees", new GoalLumbermanChopTrees());
+        registerGoal("lumbermanplantsaplings", new GoalLumbermanPlantSaplings());
+        registerGoal("fish", new GoalFish());
+        registerGoal("breedanimals", new GoalBreedAnimals());
+
+        // Culture-specific
+        registerGoal("indiandrybrick", new GoalIndianDryBrick());
+        registerGoal("indiangatherbrick", new GoalIndianGatherBrick());
+        registerGoal("indianharvestsugarcane", new GoalIndianHarvestSugarCane());
+        registerGoal("indianplantsugarcane", new GoalIndianPlantSugarCane());
+        registerGoal("harvestcacao", new GoalHarvestCacao());
+        registerGoal("harvestwarts", new GoalHarvestWarts());
+        registerGoal("byzantinegathersilk", new GoalByzantineGatherSilk());
+        registerGoal("byzantinegathersnails", new GoalByzantineGatherSnails());
+        registerGoal("fishinuit", new GoalFishInuit());
+
+        // Combat & military
+        registerGoal("huntmonster", new GoalHuntMonster());
+        Goal rv = new GoalRaidVillage();
+        raidVillage = rv;
+        registerGoal("raidvillage", rv);
+
+        // Building & path
+        registerGoal("buildpath", new GoalBuildPath());
+        registerGoal("clearoldpath", new GoalClearOldPath());
+
+        // Trade & merchant
+        registerGoal("foreignmerchantkeepstall", new GoalForeignMerchantKeepStall());
+        registerGoal("merchantvisitbuilding", new GoalMerchantVisitBuilding());
+        registerGoal("merchantvisitinn", new GoalMerchantVisitInn());
+
+        // Brewing & crafting
+        registerGoal("brewpotions", new GoalBrewPotions());
+        registerGoal("bepujaperformer", new GoalBePujaPerformer());
+
+        // Child
+        registerGoal("childbecomeadult", new GoalChildBecomeAdult());
+
+        // Leisure
+        registerGoal("gochat", new org.dizzymii.millenaire2.goal.leisure.GoalGoChat());
+        registerGoal("gorest", new org.dizzymii.millenaire2.goal.leisure.GoalGoRest());
+
+        org.dizzymii.millenaire2.goal.generic.GoalGeneric.loadGenericGoals();
     }
 
     // --- Abstract methods ---
@@ -84,8 +160,7 @@ public abstract class Goal {
     }
 
     public Point getCurrentGoalTarget(MillVillager villager) {
-        // TODO: return villager.getGoalDestPoint() once MillVillager exposes it
-        return null;
+        return villager.getPathDestPoint();
     }
 
     public int range(MillVillager villager) { return ACTIVATION_RANGE; }
@@ -96,7 +171,14 @@ public abstract class Goal {
     public boolean isFightingGoal() { return false; }
     public boolean isInterruptedByRaid() { return true; }
     public boolean triggerNextGoalOnFinish(MillVillager villager) { return false; }
+    public boolean isStillValid(MillVillager villager) throws Exception { return true; }
 
     @Override
     public String toString() { return key != null ? key : super.toString(); }
+
+    // --- Helper to register a goal ---
+    protected static void registerGoal(String key, Goal goal) {
+        goal.key = key;
+        goals.put(key, goal);
+    }
 }

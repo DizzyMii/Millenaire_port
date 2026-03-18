@@ -253,15 +253,20 @@ public class MillBlocks {
     public static final DeferredBlock<Block> LEAVES_SAKURA = Millenaire2.BLOCKS.registerSimpleBlock("leaves_sakura",
             BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.GRASS).noOcclusion().randomTicks());
 
-    // ========== Special Blocks (stubbed as simple — BlockEntity wiring in Phase 4+) ==========
-    public static final DeferredBlock<Block> LOCKED_CHEST = Millenaire2.BLOCKS.registerSimpleBlock("locked_chest",
-            BlockBehaviour.Properties.of().strength(2.5f).sound(SoundType.WOOD));
-    public static final DeferredBlock<Block> FIRE_PIT = Millenaire2.BLOCKS.registerSimpleBlock("fire_pit",
-            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.STONE).lightLevel(state -> 15));
-    public static final DeferredBlock<Block> PANEL = Millenaire2.BLOCKS.registerSimpleBlock("panel",
-            BlockBehaviour.Properties.of().strength(2.5f).sound(SoundType.WOOD));
-    public static final DeferredBlock<Block> IMPORT_TABLE = Millenaire2.BLOCKS.registerSimpleBlock("import_table",
-            BlockBehaviour.Properties.of().strength(2.5f).sound(SoundType.WOOD));
+    // ========== Fruit Leaves ==========
+    public static final DeferredBlock<BlockFruitLeaves> FRUIT_LEAVES = Millenaire2.BLOCKS.register("fruit_leaves",
+            () -> new BlockFruitLeaves(BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.GRASS).noOcclusion().randomTicks()));
+
+    // ========== Special Blocks (with BlockEntity wiring) ==========
+    public static final DeferredBlock<BlockLockedChest> LOCKED_CHEST = Millenaire2.BLOCKS.register("locked_chest",
+            () -> new BlockLockedChest(BlockBehaviour.Properties.of().strength(2.5f).sound(SoundType.WOOD)));
+    public static final DeferredBlock<BlockFirePit> FIRE_PIT = Millenaire2.BLOCKS.register("fire_pit",
+            () -> new BlockFirePit(BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.STONE)
+                    .lightLevel(state -> state.getValue(BlockFirePit.LIT) ? 15 : 0)));
+    public static final DeferredBlock<BlockPanel> PANEL = Millenaire2.BLOCKS.register("panel",
+            () -> new BlockPanel(BlockBehaviour.Properties.of().strength(2.5f).sound(SoundType.WOOD)));
+    public static final DeferredBlock<BlockImportTable> IMPORT_TABLE = Millenaire2.BLOCKS.register("import_table",
+            () -> new BlockImportTable(BlockBehaviour.Properties.of().strength(2.5f).sound(SoundType.WOOD)));
     public static final DeferredBlock<Block> BED_STRAW = Millenaire2.BLOCKS.registerSimpleBlock("bed_straw",
             BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.WOOL));
     public static final DeferredBlock<Block> BED_CHARPOY = Millenaire2.BLOCKS.registerSimpleBlock("bed_charpoy",

@@ -23,5 +23,39 @@ public class TextLine {
         this.colour = colour;
     }
 
-    // TODO: Implement formatting helpers, click handlers
+    public TextLine(String text, int colour, boolean bold, boolean italic) {
+        this.text = text;
+        this.colour = colour;
+        this.bold = bold;
+        this.italic = italic;
+    }
+
+    @javax.annotation.Nullable
+    private Runnable clickAction;
+
+    public TextLine withBold() { this.bold = true; return this; }
+    public TextLine withItalic() { this.italic = true; return this; }
+    public TextLine withUnderline() { this.underline = true; return this; }
+    public TextLine withColor(int color) { this.colour = color; return this; }
+
+    public TextLine withClickAction(Runnable action) {
+        this.clickAction = action;
+        return this;
+    }
+
+    public boolean hasClickAction() { return clickAction != null; }
+
+    public void executeClick() {
+        if (clickAction != null) clickAction.run();
+    }
+
+    public String getFormattedText() {
+        StringBuilder sb = new StringBuilder();
+        if (bold) sb.append("\u00A7l");
+        if (italic) sb.append("\u00A7o");
+        if (underline) sb.append("\u00A7n");
+        sb.append(text);
+        if (bold || italic || underline) sb.append("\u00A7r");
+        return sb.toString();
+    }
 }

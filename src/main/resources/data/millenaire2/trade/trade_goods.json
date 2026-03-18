@@ -1,0 +1,145 @@
+{
+  "_comment": "Data-driven trade goods per villager type. Users can add/modify entries. Prices are in deniers. 'buys' = items the villager buys FROM the player. 'sells' = items the villager sells TO the player.",
+  "villager_trades": {
+    "farmer": {
+      "sells": [
+        { "item": "minecraft:wheat", "count": 1, "price": 2 },
+        { "item": "minecraft:bread", "count": 1, "price": 4 },
+        { "item": "minecraft:apple", "count": 1, "price": 3 },
+        { "item": "minecraft:carrot", "count": 1, "price": 2 },
+        { "item": "minecraft:potato", "count": 1, "price": 2 },
+        { "item": "minecraft:pumpkin", "count": 1, "price": 5 },
+        { "item": "minecraft:melon_slice", "count": 1, "price": 2 }
+      ],
+      "buys": [
+        { "item": "minecraft:bone_meal", "count": 1, "price": 1 },
+        { "item": "minecraft:iron_hoe", "count": 1, "price": 12 }
+      ]
+    },
+    "lumberjack": {
+      "sells": [
+        { "item": "minecraft:oak_log", "count": 1, "price": 2 },
+        { "item": "minecraft:spruce_log", "count": 1, "price": 2 },
+        { "item": "minecraft:birch_log", "count": 1, "price": 2 },
+        { "item": "minecraft:oak_planks", "count": 4, "price": 3 },
+        { "item": "minecraft:stick", "count": 8, "price": 1 }
+      ],
+      "buys": [
+        { "item": "minecraft:iron_axe", "count": 1, "price": 16 }
+      ]
+    },
+    "blacksmith": {
+      "sells": [
+        { "item": "minecraft:iron_sword", "count": 1, "price": 32 },
+        { "item": "minecraft:iron_pickaxe", "count": 1, "price": 24 },
+        { "item": "minecraft:iron_axe", "count": 1, "price": 24 },
+        { "item": "minecraft:iron_shovel", "count": 1, "price": 16 },
+        { "item": "minecraft:iron_helmet", "count": 1, "price": 40 },
+        { "item": "minecraft:iron_chestplate", "count": 1, "price": 64 },
+        { "item": "minecraft:iron_leggings", "count": 1, "price": 56 },
+        { "item": "minecraft:iron_boots", "count": 1, "price": 32 },
+        { "item": "minecraft:shield", "count": 1, "price": 20 }
+      ],
+      "buys": [
+        { "item": "minecraft:iron_ingot", "count": 1, "price": 6 },
+        { "item": "minecraft:coal", "count": 1, "price": 2 },
+        { "item": "minecraft:gold_ingot", "count": 1, "price": 16 }
+      ]
+    },
+    "miner": {
+      "sells": [
+        { "item": "minecraft:cobblestone", "count": 16, "price": 2 },
+        { "item": "minecraft:stone", "count": 16, "price": 3 },
+        { "item": "minecraft:iron_ingot", "count": 1, "price": 8 },
+        { "item": "minecraft:coal", "count": 4, "price": 3 },
+        { "item": "minecraft:gold_ingot", "count": 1, "price": 20 },
+        { "item": "minecraft:redstone", "count": 4, "price": 6 },
+        { "item": "minecraft:lapis_lazuli", "count": 4, "price": 8 }
+      ],
+      "buys": [
+        { "item": "minecraft:iron_pickaxe", "count": 1, "price": 16 },
+        { "item": "minecraft:torch", "count": 8, "price": 2 }
+      ]
+    },
+    "baker": {
+      "sells": [
+        { "item": "minecraft:bread", "count": 1, "price": 3 },
+        { "item": "minecraft:cake", "count": 1, "price": 16 },
+        { "item": "minecraft:cookie", "count": 4, "price": 4 },
+        { "item": "minecraft:pumpkin_pie", "count": 1, "price": 8 }
+      ],
+      "buys": [
+        { "item": "minecraft:wheat", "count": 4, "price": 3 },
+        { "item": "minecraft:sugar", "count": 4, "price": 2 },
+        { "item": "minecraft:egg", "count": 4, "price": 2 }
+      ]
+    },
+    "merchant": {
+      "sells": [
+        { "item": "minecraft:emerald", "count": 1, "price": 64 },
+        { "item": "minecraft:diamond", "count": 1, "price": 128 },
+        { "item": "minecraft:ender_pearl", "count": 1, "price": 48 },
+        { "item": "minecraft:golden_apple", "count": 1, "price": 96 },
+        { "item": "minecraft:saddle", "count": 1, "price": 32 },
+        { "item": "minecraft:name_tag", "count": 1, "price": 24 }
+      ],
+      "buys": [
+        { "item": "minecraft:diamond", "count": 1, "price": 96 },
+        { "item": "minecraft:emerald", "count": 1, "price": 48 },
+        { "item": "minecraft:gold_ingot", "count": 1, "price": 12 }
+      ]
+    },
+    "weaver": {
+      "sells": [
+        { "item": "minecraft:white_wool", "count": 1, "price": 3 },
+        { "item": "minecraft:string", "count": 4, "price": 4 },
+        { "item": "minecraft:white_carpet", "count": 2, "price": 3 },
+        { "item": "minecraft:white_bed", "count": 1, "price": 12 },
+        { "item": "minecraft:lead", "count": 1, "price": 8 }
+      ],
+      "buys": [
+        { "item": "minecraft:string", "count": 4, "price": 2 },
+        { "item": "minecraft:white_wool", "count": 4, "price": 4 }
+      ]
+    },
+    "fisherman": {
+      "sells": [
+        { "item": "minecraft:cod", "count": 1, "price": 3 },
+        { "item": "minecraft:salmon", "count": 1, "price": 4 },
+        { "item": "minecraft:cooked_cod", "count": 1, "price": 5 },
+        { "item": "minecraft:cooked_salmon", "count": 1, "price": 6 },
+        { "item": "minecraft:tropical_fish", "count": 1, "price": 8 }
+      ],
+      "buys": [
+        { "item": "minecraft:fishing_rod", "count": 1, "price": 8 }
+      ]
+    },
+    "brewer": {
+      "sells": [
+        { "item": "minecraft:glass_bottle", "count": 4, "price": 2 },
+        { "item": "minecraft:glowstone_dust", "count": 2, "price": 6 },
+        { "item": "minecraft:blaze_powder", "count": 1, "price": 12 },
+        { "item": "minecraft:nether_wart", "count": 2, "price": 8 },
+        { "item": "minecraft:spider_eye", "count": 1, "price": 4 },
+        { "item": "minecraft:fermented_spider_eye", "count": 1, "price": 8 }
+      ],
+      "buys": [
+        { "item": "minecraft:nether_wart", "count": 4, "price": 4 },
+        { "item": "minecraft:glass_bottle", "count": 8, "price": 2 }
+      ]
+    },
+    "leader": {
+      "sells": [
+        { "item": "millenaire2:denier", "count": 1, "price": 0 }
+      ],
+      "buys": []
+    }
+  },
+  "default_trades": {
+    "sells": [
+      { "item": "minecraft:wheat", "count": 1, "price": 2 },
+      { "item": "minecraft:bread", "count": 1, "price": 4 }
+    ],
+    "buys": []
+  }
+}

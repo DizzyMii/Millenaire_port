@@ -7,5 +7,12 @@ public class ItemMillenaireSword extends SwordItem {
     public ItemMillenaireSword(Tier tier, Properties props) {
         super(tier, props);
     }
-    // TODO: Implement special sword abilities (obsidian sword fire, etc.)
+
+    @Override
+    public boolean hurtEnemy(net.minecraft.world.item.ItemStack stack, net.minecraft.world.entity.LivingEntity target,
+                             net.minecraft.world.entity.LivingEntity attacker) {
+        // Obsidian sword sets target on fire
+        target.setRemainingFireTicks(100);
+        return super.hurtEnemy(stack, target, attacker);
+    }
 }

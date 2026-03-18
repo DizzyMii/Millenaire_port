@@ -90,9 +90,6 @@ public class MillEntities {
                             MillBlocks.IMPORT_TABLE.get()
                     ).build(null));
 
-    // TODO: Entity types for MillVillager subclasses (GenericVillager, etc.) in a later phase
-    // TODO: EntityWallDecoration, EntityTargetedBlaze, etc.
-
     /**
      * Called from Millenaire2 constructor to force class loading.
      */

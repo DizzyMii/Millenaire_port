@@ -57,6 +57,8 @@ public final class MillPacketIds {
     public static final int GUIACTION_UPDATE_CUSTOM_BUILDING_PROJECT = 52;
     public static final int GUIACTION_PUJAS_CHANGE_ENCHANTMENT = 60;
     public static final int GUIACTION_TRADE_TOGGLE_DONATION = 61;
+    public static final int GUIACTION_TRADE_BUY = 62;
+    public static final int GUIACTION_TRADE_SELL = 63;
     public static final int GUIACTION_CONTROLLEDBUILDING_TOGGLEALLOWED = 70;
     public static final int GUIACTION_CONTROLLEDBUILDING_FORGET = 71;
     public static final int GUIACTION_MILLCHESTACTIVATE = 81;

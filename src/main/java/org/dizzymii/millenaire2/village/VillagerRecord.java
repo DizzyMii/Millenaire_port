@@ -1,5 +1,9 @@
 package org.dizzymii.millenaire2.village;
 
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import org.dizzymii.millenaire2.util.Point;
 
@@ -7,6 +11,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Persistent record of a villager's data (survives entity unload).
@@ -68,7 +73,132 @@ public class VillagerRecord implements Cloneable {
     public long getOriginalId() { return originalId; }
     public void setOriginalId(long id) { this.originalId = id; }
 
-    // TODO: NBT read/write, full factory method, equipment resolution
+    public boolean hasQuestTag(String tag) {
+        return questTags.contains(tag);
+    }
+
+    public void addQuestTag(String tag) {
+        if (!questTags.contains(tag)) questTags.add(tag);
+    }
+
+    public void removeQuestTag(String tag) {
+        questTags.remove(tag);
+    }
+
+    // ========== NBT persistence ==========
+
+    public CompoundTag save() {
+        CompoundTag tag = new CompoundTag();
+        tag.putLong("id", villagerId);
+        tag.putInt("gender", gender);
+        tag.putInt("nb", nb);
+        tag.putInt("size", size);
+        tag.putFloat("scale", scale);
+        tag.putBoolean("rightHanded", rightHanded);
+        tag.putBoolean("killed", killed);
+        tag.putBoolean("raidingVillage", raidingVillage);
+        tag.putBoolean("awayraiding", awayraiding);
+        tag.putBoolean("awayhired", awayhired);
+        tag.putBoolean("flawedRecord", flawedRecord);
+        tag.putLong("raiderSpawn", raiderSpawn);
+        tag.putLong("originalId", originalId);
+
+        if (cultureKey != null) tag.putString("culture", cultureKey);
+        if (type != null) tag.putString("type", type);
+        if (firstName != null) tag.putString("firstName", firstName);
+        if (familyName != null) tag.putString("familyName", familyName);
+        if (texture != null) tag.putString("texture", texture.toString());
+
+        tag.putString("fathersName", fathersName);
+        tag.putString("mothersName", mothersName);
+        tag.putString("spousesName", spousesName);
+        tag.putString("maidenName", maidenName);
+
+        if (housePos != null) housePos.writeToNBT(tag, "house");
+        if (townHallPos != null) townHallPos.writeToNBT(tag, "th");
+        if (originalVillagePos != null) originalVillagePos.writeToNBT(tag, "origVillage");
+
+        // Save inventory
+        CompoundTag invTag = new CompoundTag();
+        for (Map.Entry<String, Integer> entry : inventory.entrySet()) {
+            invTag.putInt(entry.getKey(), entry.getValue());
+        }
+        tag.put("inventory", invTag);
+
+        // Save quest tags
+        ListTag questList = new ListTag();
+        for (String qt : questTags) {
+            questList.add(StringTag.valueOf(qt));
+        }
+        tag.put("questTags", questList);
+
+        return tag;
+    }
+
+    public static VillagerRecord load(CompoundTag tag) {
+        VillagerRecord vr = new VillagerRecord();
+        vr.villagerId = tag.getLong("id");
+        vr.gender = tag.getInt("gender");
+        vr.nb = tag.getInt("nb");
+        vr.size = tag.getInt("size");
+        vr.scale = tag.getFloat("scale");
+        vr.rightHanded = tag.getBoolean("rightHanded");
+        vr.killed = tag.getBoolean("killed");
+        vr.raidingVillage = tag.getBoolean("raidingVillage");
+        vr.awayraiding = tag.getBoolean("awayraiding");
+        vr.awayhired = tag.getBoolean("awayhired");
+        vr.flawedRecord = tag.getBoolean("flawedRecord");
+        vr.raiderSpawn = tag.getLong("raiderSpawn");
+        vr.originalId = tag.getLong("originalId");
+
+        if (tag.contains("culture")) vr.cultureKey = tag.getString("culture");
+        if (tag.contains("type")) vr.type = tag.getString("type");
+        if (tag.contains("firstName")) vr.firstName = tag.getString("firstName");
+        if (tag.contains("familyName")) vr.familyName = tag.getString("familyName");
+        if (tag.contains("texture")) vr.texture = ResourceLocation.parse(tag.getString("texture"));
+
+        vr.fathersName = tag.getString("fathersName");
+        vr.mothersName = tag.getString("mothersName");
+        vr.spousesName = tag.getString("spousesName");
+        vr.maidenName = tag.getString("maidenName");
+
+        vr.housePos = Point.readFromNBT(tag, "house");
+        vr.townHallPos = Point.readFromNBT(tag, "th");
+        vr.originalVillagePos = Point.readFromNBT(tag, "origVillage");
+
+        // Load inventory
+        if (tag.contains("inventory", Tag.TAG_COMPOUND)) {
+            CompoundTag invTag = tag.getCompound("inventory");
+            for (String key : invTag.getAllKeys()) {
+                vr.inventory.put(key, invTag.getInt(key));
+            }
+        }
+
+        // Load quest tags
+        if (tag.contains("questTags", Tag.TAG_LIST)) {
+            ListTag questList = tag.getList("questTags", Tag.TAG_STRING);
+            for (int i = 0; i < questList.size(); i++) {
+                vr.questTags.add(questList.getString(i));
+            }
+        }
+
+        return vr;
+    }
+
+    /**
+     * Create a new VillagerRecord with a random ID and given attributes.
+     */
+    public static VillagerRecord create(String cultureKey, String type, String firstName, String familyName, int gender) {
+        VillagerRecord vr = new VillagerRecord();
+        vr.villagerId = System.nanoTime() ^ (long)(Math.random() * Long.MAX_VALUE);
+        vr.cultureKey = cultureKey;
+        vr.type = type;
+        vr.firstName = firstName;
+        vr.familyName = familyName;
+        vr.gender = gender;
+        vr.rightHanded = Math.random() < RIGHT_HANDED_CHANCE;
+        return vr;
+    }
 
     @Override
     public VillagerRecord clone() {

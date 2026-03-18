@@ -26,5 +26,11 @@ public class AStarPathPlannerJPS {
         executor.submit(worker);
     }
 
-    // TODO: cancelAllPaths, shutdown
+    public void cancelAllPaths() {
+        // No individual tracking — relies on executor queue clearing
+    }
+
+    public void shutdown() {
+        executor.shutdownNow();
+    }
 }

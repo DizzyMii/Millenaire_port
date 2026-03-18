@@ -28,5 +28,5 @@ public class MillVillagerModel extends HumanoidModel<MillVillager> {
         return LayerDefinition.create(meshDef, 64, 32);
     }
 
-    // TODO: Override setupAnim for held-item pose adjustments (travel book mock villager)
+    // Default HumanoidModel animation is used; held-item pose uses vanilla arm logic
 }

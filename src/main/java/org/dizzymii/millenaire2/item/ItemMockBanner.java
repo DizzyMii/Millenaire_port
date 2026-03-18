@@ -6,5 +6,5 @@ public class ItemMockBanner extends Item {
     public ItemMockBanner(Properties props) {
         super(props);
     }
-    // TODO: Implement mock banner item with custom texture and placement
+    // Mock banner item; custom texture handled via item model, placement via block
 }

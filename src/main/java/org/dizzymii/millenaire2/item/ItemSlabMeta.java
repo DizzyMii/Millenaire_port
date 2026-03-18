@@ -7,5 +7,5 @@ public class ItemSlabMeta extends BlockItem {
     public ItemSlabMeta(Block block, Properties props) {
         super(block, props);
     }
-    // TODO: Implement metadata-based slab item variant
+    // In 1.21.1, slab variants use blockstates instead of metadata; default BlockItem behavior suffices
 }

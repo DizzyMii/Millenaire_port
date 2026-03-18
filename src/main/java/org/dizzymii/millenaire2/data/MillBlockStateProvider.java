@@ -7,10 +7,12 @@ import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.WallBlock;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
+import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import org.dizzymii.millenaire2.Millenaire2;
+import org.dizzymii.millenaire2.block.BlockFirePit;
 import org.dizzymii.millenaire2.block.MillBlocks;
 
 public class MillBlockStateProvider extends BlockStateProvider {
@@ -107,11 +109,11 @@ public class MillBlockStateProvider extends BlockStateProvider {
         simpleBlockWithItem(MillBlocks.PATH_OCHRE_TILES);
         simpleBlockWithItem(MillBlocks.PATH_SNOW);
 
-        // Special / functional
-        simpleBlockWithItem(MillBlocks.LOCKED_CHEST);
-        simpleBlockWithItem(MillBlocks.FIRE_PIT);
-        simpleBlockWithItem(MillBlocks.PANEL);
-        simpleBlockWithItem(MillBlocks.IMPORT_TABLE);
+        // Special / functional (horizontal facing blocks)
+        horizontalBlockWithItem(MillBlocks.LOCKED_CHEST);
+        firePitBlock(MillBlocks.FIRE_PIT);
+        horizontalBlockWithItem(MillBlocks.PANEL);
+        horizontalBlockWithItem(MillBlocks.IMPORT_TABLE);
         simpleBlockWithItem(MillBlocks.BED_STRAW);
         simpleBlockWithItem(MillBlocks.BED_CHARPOY);
 
@@ -192,11 +194,12 @@ public class MillBlockStateProvider extends BlockStateProvider {
         simpleBlockWithItem(MillBlocks.LEAVES_PISTACHIO);
         simpleBlockWithItem(MillBlocks.LEAVES_CHERRY);
         simpleBlockWithItem(MillBlocks.LEAVES_SAKURA);
+        simpleBlockWithItem(MillBlocks.FRUIT_LEAVES);
     }
 
     // ===== Helpers =====
 
-    private void simpleBlockWithItem(DeferredBlock<Block> block) {
+    private void simpleBlockWithItem(DeferredBlock<? extends Block> block) {
         simpleBlockWithItem(block.get(), cubeAll(block.get()));
     }
 
@@ -230,5 +233,22 @@ public class MillBlockStateProvider extends BlockStateProvider {
     private void crossBlock(DeferredBlock<Block> block) {
         simpleBlock(block.get(), models().cross(block.getId().getPath(),
                 blockTexture(block.get())).renderType("cutout"));
+    }
+
+    private void horizontalBlockWithItem(DeferredBlock<? extends Block> block) {
+        ModelFile model = cubeAll(block.get());
+        horizontalBlock(block.get(), model);
+        simpleBlockItem(block.get(), model);
+    }
+
+    private void firePitBlock(DeferredBlock<BlockFirePit> block) {
+        ModelFile offModel = cubeAll(block.get());
+        ModelFile onModel = models().cubeAll(block.getId().getPath() + "_lit", blockTexture(block.get()));
+        getVariantBuilder(block.get()).forAllStates(state -> {
+            int yRot = ((int) state.getValue(BlockFirePit.FACING).toYRot() + 180) % 360;
+            ModelFile m = state.getValue(BlockFirePit.LIT) ? onModel : offModel;
+            return ConfiguredModel.builder().modelFile(m).rotationY(yRot).build();
+        });
+        simpleBlockItem(block.get(), offModel);
     }
 }

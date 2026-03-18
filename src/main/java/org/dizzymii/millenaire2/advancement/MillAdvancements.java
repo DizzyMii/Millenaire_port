@@ -65,6 +65,92 @@ public class MillAdvancements {
     public static final Map<String, GenericAdvancement> VILLAGE_LEADER_ADVANCEMENTS = new HashMap<>();
     public static final List<GenericAdvancement> MILL_ADVANCEMENTS = new ArrayList<>();
 
-    // TODO: static initializer to populate REP/COMPLETE/VILLAGE_LEADER maps per culture
-    // TODO: registerTriggers() for NeoForge CriteriaTriggers registration
+    static {
+        // Register all individual advancements
+        MILL_ADVANCEMENTS.add(FIRST_CONTACT);
+        MILL_ADVANCEMENTS.add(CRESUS);
+        MILL_ADVANCEMENTS.add(SUMMONING_WAND);
+        MILL_ADVANCEMENTS.add(AMATEUR_ARCHITECT);
+        MILL_ADVANCEMENTS.add(MEDIEVAL_METROPOLIS);
+        MILL_ADVANCEMENTS.add(THE_QUEST);
+        MILL_ADVANCEMENTS.add(MAITRE_A_PENSER);
+        MILL_ADVANCEMENTS.add(EXPLORER);
+        MILL_ADVANCEMENTS.add(MARCO_POLO);
+        MILL_ADVANCEMENTS.add(MAGELLAN);
+        MILL_ADVANCEMENTS.add(SELF_DEFENSE);
+        MILL_ADVANCEMENTS.add(PANTHEON);
+        MILL_ADVANCEMENTS.add(DARK_SIDE);
+        MILL_ADVANCEMENTS.add(SCIPIO);
+        MILL_ADVANCEMENTS.add(ATTILA);
+        MILL_ADVANCEMENTS.add(VIKING);
+        MILL_ADVANCEMENTS.add(CHEERS);
+        MILL_ADVANCEMENTS.add(HIRED);
+        MILL_ADVANCEMENTS.add(MASTER_FARMER);
+        MILL_ADVANCEMENTS.add(GREAT_HUNTER);
+        MILL_ADVANCEMENTS.add(A_FRIEND_INDEED);
+        MILL_ADVANCEMENTS.add(RAINBOW);
+        MILL_ADVANCEMENTS.add(ISTANBUL);
+        MILL_ADVANCEMENTS.add(NOTTODAY);
+        MILL_ADVANCEMENTS.add(MP_WEAPON);
+        MILL_ADVANCEMENTS.add(MP_HIREDGOON);
+        MILL_ADVANCEMENTS.add(MP_FRIENDLYVILLAGE);
+        MILL_ADVANCEMENTS.add(MP_NEIGHBOURTRADE);
+        MILL_ADVANCEMENTS.add(MP_RAIDONPLAYER);
+        MILL_ADVANCEMENTS.add(WQ_INDIAN);
+        MILL_ADVANCEMENTS.add(WQ_NORMAN);
+        MILL_ADVANCEMENTS.add(WQ_MAYAN);
+        MILL_ADVANCEMENTS.add(PUJA);
+        MILL_ADVANCEMENTS.add(SACRIFICE);
+        MILL_ADVANCEMENTS.add(MARVEL_NORMAN);
+
+        // Per-culture advancement maps
+        for (String culture : ADVANCEMENT_CULTURES) {
+            GenericAdvancement rep = new GenericAdvancement(culture + "_reputation");
+            GenericAdvancement complete = new GenericAdvancement(culture + "_complete");
+            GenericAdvancement leader = new GenericAdvancement(culture + "_villageleader");
+
+            REP_ADVANCEMENTS.put(culture, rep);
+            COMPLETE_ADVANCEMENTS.put(culture, complete);
+            VILLAGE_LEADER_ADVANCEMENTS.put(culture, leader);
+
+            MILL_ADVANCEMENTS.add(rep);
+            MILL_ADVANCEMENTS.add(complete);
+            MILL_ADVANCEMENTS.add(leader);
+        }
+    }
+
+    /**
+     * Grants a culture-specific reputation advancement to the player.
+     */
+    public static void grantRepAdvancement(net.minecraft.server.level.ServerPlayer player, String cultureKey) {
+        GenericAdvancement adv = REP_ADVANCEMENTS.get(cultureKey);
+        if (adv != null) adv.grant(player);
+    }
+
+    /**
+     * Grants a culture-specific completion advancement to the player.
+     */
+    public static void grantCompleteAdvancement(net.minecraft.server.level.ServerPlayer player, String cultureKey) {
+        GenericAdvancement adv = COMPLETE_ADVANCEMENTS.get(cultureKey);
+        if (adv != null) adv.grant(player);
+    }
+
+    /**
+     * Grants a culture-specific village leader advancement to the player.
+     */
+    public static void grantVillageLeaderAdvancement(net.minecraft.server.level.ServerPlayer player, String cultureKey) {
+        GenericAdvancement adv = VILLAGE_LEADER_ADVANCEMENTS.get(cultureKey);
+        if (adv != null) adv.grant(player);
+    }
+
+    /**
+     * Returns a map of advancement key -> earned status for the given player.
+     */
+    public static Map<String, Boolean> getPlayerAdvancementStatus(net.minecraft.server.level.ServerPlayer player) {
+        Map<String, Boolean> status = new HashMap<>();
+        for (GenericAdvancement adv : MILL_ADVANCEMENTS) {
+            status.put(adv.getKey(), adv.isEarned(player));
+        }
+        return status;
+    }
 }

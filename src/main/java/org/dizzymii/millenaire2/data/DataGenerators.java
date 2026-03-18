@@ -5,6 +5,7 @@ import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.common.data.AdvancementProvider;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 import org.dizzymii.millenaire2.Millenaire2;
@@ -42,5 +43,10 @@ public class DataGenerators {
 
         // Recipes
         generator.addProvider(event.includeServer(), new MillRecipeProvider(output, lookupProvider));
+
+        // Advancements
+        generator.addProvider(event.includeServer(), new AdvancementProvider(
+                output, lookupProvider, existingFileHelper,
+                java.util.List.of(new MillAdvancementProvider())));
     }
 }

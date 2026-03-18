@@ -10,5 +10,19 @@ public class DocumentedElement {
     public Object defaultValue = null;
 
     public DocumentedElement() {}
-    // TODO: Implement documentation generation and value validation
+
+    public DocumentedElement(String key, String description, Object defaultValue) {
+        this.key = key;
+        this.description = description;
+        this.defaultValue = defaultValue;
+    }
+
+    public boolean validate(Object value) {
+        if (defaultValue == null) return true;
+        return defaultValue.getClass().isInstance(value);
+    }
+
+    public String toDocString() {
+        return "# " + description + "\n" + key + "=" + (defaultValue != null ? defaultValue.toString() : "");
+    }
 }

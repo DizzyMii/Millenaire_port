@@ -6,5 +6,6 @@ package org.dizzymii.millenaire2.item;
  */
 public interface IMetaBlockName {
     String getSpecialName(int meta);
-    // TODO: Adapt for 1.21.1 blockstate-based system (metadata removed)
+    // In 1.21.1 metadata is removed; this interface is retained for compatibility.
+    // Callers should migrate to blockstate properties for variant naming.
 }

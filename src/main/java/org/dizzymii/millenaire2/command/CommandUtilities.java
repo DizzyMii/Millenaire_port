@@ -18,7 +18,11 @@ public final class CommandUtilities {
     public static List<Building> getMatchingVillages(MillWorldData worldData, String param) {
         param = normalizeString(param);
         List<Building> villages = new ArrayList<>();
-        // TODO: iterate worldData.villagesList when VillagesList is implemented
+        for (Building b : worldData.allBuildings()) {
+            if (b.getName() != null && normalizeString(b.getName()).contains(param)) {
+                villages.add(b);
+            }
+        }
         return villages;
     }
 

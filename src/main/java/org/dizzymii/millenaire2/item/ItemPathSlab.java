@@ -7,5 +7,5 @@ public class ItemPathSlab extends BlockItem {
     public ItemPathSlab(Block block, Properties props) {
         super(block, props);
     }
-    // TODO: Implement path slab placement logic
+    // Path slab placement handled by the associated path block; default BlockItem behavior suffices
 }

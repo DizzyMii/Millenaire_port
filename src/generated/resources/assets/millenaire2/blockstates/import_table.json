@@ -1,7 +1,19 @@
 {
   "variants": {
-    "": {
+    "facing=east": {
+      "model": "millenaire2:block/import_table",
+      "y": 90
+    },
+    "facing=north": {
       "model": "millenaire2:block/import_table"
+    },
+    "facing=south": {
+      "model": "millenaire2:block/import_table",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "millenaire2:block/import_table",
+      "y": 270
     }
   }
 }

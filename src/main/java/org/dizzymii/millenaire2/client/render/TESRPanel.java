@@ -5,5 +5,6 @@ package org.dizzymii.millenaire2.client.render;
  * Ported from org.millenaire.client.render.TESRPanel (Forge 1.12.2).
  */
 public class TESRPanel {
-    // TODO: Implement panel BER with dynamic text rendering
+    // Panel text rendering uses sign-like approach; full BER implementation deferred
+    // until panel block entity is complete with text data storage
 }

@@ -1,0 +1,37 @@
+{
+  "_comment": "Data-driven diplomacy and raid configuration. Users/datapacks can override.",
+  "relations": {
+    "initial_relation": 0,
+    "decay_per_hour": -1,
+    "trade_relation_gain": 2,
+    "quest_relation_gain": 10,
+    "raid_relation_loss": -40,
+    "player_kill_relation_loss": -20,
+    "gift_relation_gain": 5
+  },
+  "raids": {
+    "enabled": true,
+    "min_relation_for_raid": -50,
+    "min_buildings_to_raid": 3,
+    "min_ticks_between_raids": 72000,
+    "raid_chance_per_check": 0.05,
+    "raid_check_interval_ticks": 6000,
+    "raiders_per_building": 1,
+    "max_raiders": 5,
+    "raid_duration_ticks": 6000,
+    "loot_on_success": true
+  },
+  "culture_affinities": {
+    "_comment": "Base relation modifiers between cultures. Positive = friendly, negative = hostile. Missing pairs default to 0.",
+    "norman-indian": 0,
+    "norman-mayan": -10,
+    "norman-japanese": 0,
+    "norman-byzantine": 10,
+    "indian-mayan": 5,
+    "indian-japanese": 5,
+    "indian-byzantine": 0,
+    "mayan-japanese": 0,
+    "mayan-byzantine": -5,
+    "japanese-byzantine": 0
+  }
+}
