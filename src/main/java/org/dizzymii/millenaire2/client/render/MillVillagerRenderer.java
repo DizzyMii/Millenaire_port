@@ -30,13 +30,30 @@ public class MillVillagerRenderer extends HumanoidMobRenderer<MillVillager, Mill
         return VillagerTextureHelper.resolveTexture(entity, DEFAULT_TEXTURE);
     }
 
+    private static final long SPEECH_DISPLAY_TICKS = 100; // 5 seconds
+
     @Override
     protected void renderNameTag(MillVillager entity, Component displayName,
                                  PoseStack poseStack, MultiBufferSource buffer, int packedLight, float partialTick) {
-        // Only render name tag if player is close enough
-        if (this.shouldShowName(entity)) {
-            super.renderNameTag(entity, entity.getDisplayName(), poseStack, buffer, packedLight, partialTick);
+        if (!this.shouldShowName(entity)) return;
+
+        // Render speech bubble above the name if active
+        if (entity.speech_key != null && entity.level() != null) {
+            long elapsed = entity.level().getGameTime() - entity.speech_started;
+            if (elapsed >= 0 && elapsed < SPEECH_DISPLAY_TICKS) {
+                String speechText = org.dizzymii.millenaire2.util.VillageUtilities
+                        .getVillagerSentence("", entity.speech_key);
+                poseStack.pushPose();
+                poseStack.translate(0, 0.25, 0);
+                super.renderNameTag(entity, Component.literal("\u00a7e" + speechText),
+                        poseStack, buffer, packedLight, partialTick);
+                poseStack.popPose();
+            } else {
+                entity.speech_key = null;
+            }
         }
+
+        super.renderNameTag(entity, entity.getDisplayName(), poseStack, buffer, packedLight, partialTick);
     }
 
     @Override
