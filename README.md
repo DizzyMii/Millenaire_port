@@ -7,7 +7,11 @@ A community-driven (Currently only me :D Contributions are welcome) port of the 
 Millénaire is a Minecraft mod that adds NPC villages inspired by real-world historical cultures — Norman, Indian, Mayan, Japanese, Byzantine, Inuit, Seljuk, and more. Villagers build, trade, farm, and expand their settlements over time, creating a living world around the player.
 
 The mod had been stuck on an outdated, archaic version for many years, unable to evolve with the game's updates. It played a significant role in shaping my early Minecraft experiences, serving as a cornerstone of my gameplay. Driven by nostalgia and a desire to revitalize this cherished part of my gaming history, I aimed to breathe new life into it and adapt it for modern times.
+## Supporters
+---
+Prechecked
 
+---
 If you want to support me and keep this preservation rolling, consider supporting me on Ko-Fi!
 https://ko-fi.com/dizzymii
 
