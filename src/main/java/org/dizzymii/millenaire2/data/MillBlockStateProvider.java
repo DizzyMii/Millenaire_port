@@ -223,8 +223,9 @@ public class MillBlockStateProvider extends BlockStateProvider {
                 blockTexture(paneBlock.get()),
                 modLoc("block/" + paneBlock.getId().getPath() + "_top"),
                 "cutout");
-        simpleBlockItem(paneBlock.get(), new ModelFile.UncheckedModelFile(
-                modLoc("block/" + paneBlock.getId().getPath())));
+        itemModels().singleTexture(paneBlock.getId().getPath(),
+                mcLoc("item/generated"), "layer0",
+                modLoc("block/" + paneBlock.getId().getPath()));
     }
 
     private void crossBlock(DeferredBlock<Block> block) {
