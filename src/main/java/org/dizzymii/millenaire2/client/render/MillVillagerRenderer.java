@@ -6,7 +6,6 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import org.dizzymii.millenaire2.Millenaire2;
 import org.dizzymii.millenaire2.entity.MillVillager;
 
 /**
@@ -18,7 +17,7 @@ import org.dizzymii.millenaire2.entity.MillVillager;
 public class MillVillagerRenderer extends HumanoidMobRenderer<MillVillager, MillVillagerModel> {
 
     private static final ResourceLocation DEFAULT_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Millenaire2.MODID, "textures/entity/villager_default.png");
+            ResourceLocation.withDefaultNamespace("textures/entity/steve.png");
 
     public MillVillagerRenderer(EntityRendererProvider.Context context) {
         super(context, new MillVillagerModel(context.bakeLayer(MillVillagerModel.LAYER_LOCATION)), 0.5F);

@@ -3,14 +3,14 @@
   "biome_mappings": {
     "minecraft:plains": [
       { "culture": "norman", "weight": 10 },
-      { "culture": "byzantine", "weight": 3 }
+      { "culture": "byzantines", "weight": 3 }
     ],
     "minecraft:sunflower_plains": [
       { "culture": "norman", "weight": 10 }
     ],
     "minecraft:forest": [
       { "culture": "norman", "weight": 8 },
-      { "culture": "byzantine", "weight": 4 }
+      { "culture": "byzantines", "weight": 4 }
     ],
     "minecraft:flower_forest": [
       { "culture": "norman", "weight": 8 },
@@ -18,20 +18,20 @@
     ],
     "minecraft:birch_forest": [
       { "culture": "norman", "weight": 6 },
-      { "culture": "slavic", "weight": 6 }
+      { "culture": "seljuk", "weight": 6 }
     ],
     "minecraft:dark_forest": [
-      { "culture": "slavic", "weight": 10 }
+      { "culture": "seljuk", "weight": 10 }
     ],
     "minecraft:taiga": [
-      { "culture": "slavic", "weight": 8 },
-      { "culture": "inuit", "weight": 5 }
+      { "culture": "seljuk", "weight": 8 },
+      { "culture": "inuits", "weight": 5 }
     ],
     "minecraft:snowy_taiga": [
-      { "culture": "inuit", "weight": 10 }
+      { "culture": "inuits", "weight": 10 }
     ],
     "minecraft:snowy_plains": [
-      { "culture": "inuit", "weight": 10 }
+      { "culture": "inuits", "weight": 10 }
     ],
     "minecraft:savanna": [
       { "culture": "mayan", "weight": 8 },
@@ -42,7 +42,7 @@
     ],
     "minecraft:desert": [
       { "culture": "indian", "weight": 8 },
-      { "culture": "byzantine", "weight": 5 }
+      { "culture": "byzantines", "weight": 5 }
     ],
     "minecraft:jungle": [
       { "culture": "mayan", "weight": 10 },
@@ -56,17 +56,17 @@
     ],
     "minecraft:meadow": [
       { "culture": "norman", "weight": 6 },
-      { "culture": "byzantine", "weight": 6 }
+      { "culture": "byzantines", "weight": 6 }
     ],
     "minecraft:swamp": [
-      { "culture": "slavic", "weight": 8 }
+      { "culture": "seljuk", "weight": 8 }
     ],
     "minecraft:mangrove_swamp": [
       { "culture": "mayan", "weight": 8 }
     ],
     "minecraft:windswept_hills": [
       { "culture": "norman", "weight": 5 },
-      { "culture": "slavic", "weight": 5 }
+      { "culture": "seljuk", "weight": 5 }
     ]
   },
   "default_cultures": [
@@ -74,8 +74,8 @@
     { "culture": "japanese", "weight": 3 },
     { "culture": "indian", "weight": 3 },
     { "culture": "mayan", "weight": 3 },
-    { "culture": "byzantine", "weight": 3 },
-    { "culture": "slavic", "weight": 3 },
-    { "culture": "inuit", "weight": 2 }
+    { "culture": "byzantines", "weight": 3 },
+    { "culture": "seljuk", "weight": 3 },
+    { "culture": "inuits", "weight": 2 }
   ]
 }

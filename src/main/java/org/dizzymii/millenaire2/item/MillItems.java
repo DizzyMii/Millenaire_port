@@ -41,7 +41,7 @@ public class MillItems {
     public static final DeferredItem<Item> DENIER_OR = registerItem("denieror", () -> new Item(props()));
 
     // ========== Wands ==========
-    public static final DeferredItem<Item> SUMMONING_WAND = registerItem("summoningwand", () -> new Item(props1()));
+    public static final DeferredItem<Item> SUMMONING_WAND = registerItem("summoningwand", () -> new ItemSummoningWand(props1()));
     public static final DeferredItem<Item> NEGATION_WAND = registerItem("negationwand", () -> new Item(props1()));
 
     // ========== Purse ==========
