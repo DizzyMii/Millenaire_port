@@ -263,6 +263,17 @@ public class Building {
         if (isActive && tickCounter % 200 == 0) {
             tickResourceProduction();
         }
+
+        // Diplomacy: raid check on townhalls (configurable interval)
+        if (isActive && isTownhall && mw != null
+                && tickCounter % DiplomacyManager.raidCheckIntervalTicks == 0) {
+            DiplomacyManager.checkRaidTrigger(this, mw);
+        }
+
+        // Diplomacy: relation decay every ~60 minutes (72000 ticks)
+        if (isActive && isTownhall && tickCounter % 72000 == 0) {
+            DiplomacyManager.tickRelationDecay(this);
+        }
     }
 
     // ========== Village expansion ==========
@@ -370,7 +381,7 @@ public class Building {
     /**
      * Check if another building belongs to the same village (same townhall pos).
      */
-    private boolean isSameVillage(Building other) {
+    boolean isSameVillage(Building other) {
         if (other == null) return false;
         Point myTh = isTownhall ? pos : getTownHallPos();
         Point otherTh = other.isTownhall ? other.getPos() : other.getTownHallPos();
