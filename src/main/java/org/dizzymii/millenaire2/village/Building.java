@@ -6,7 +6,10 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
+import org.dizzymii.millenaire2.culture.BuildingPlan;
+import org.dizzymii.millenaire2.culture.BuildingPlanSet;
 import org.dizzymii.millenaire2.culture.Culture;
+import org.dizzymii.millenaire2.culture.VillageType;
 import org.dizzymii.millenaire2.culture.VillagerType;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
@@ -51,6 +54,9 @@ public class Building {
 
     // ========== Key fields ==========
     @Nullable public String cultureKey;
+    @Nullable public String planSetKey;
+    @Nullable public String villageTypeKey;
+    public int buildingLevel = 0;
     public boolean isActive = false;
     public boolean isAreaLoaded = false;
     public boolean chestLocked = false;
@@ -141,6 +147,54 @@ public class Building {
 
     public List<TradeGood> getTradeGoods() { return tradeGoods; }
 
+    // ========== Upgrade ==========
+
+    /**
+     * Attempt to upgrade this building to the next level.
+     * Resolves the BuildingPlanSet from the culture and starts construction for the next level.
+     * @return true if upgrade was started
+     */
+    public boolean tryUpgrade() {
+        if (isUnderConstruction()) return false;
+        if (cultureKey == null || planSetKey == null) return false;
+
+        Culture culture = Culture.getCultureByName(cultureKey);
+        if (culture == null) return false;
+
+        BuildingPlanSet planSet = culture.planSets.get(planSetKey);
+        if (planSet == null) return false;
+
+        int nextLevel = buildingLevel + 1;
+        BuildingPlan nextPlan = planSet.getPlan(nextLevel);
+        if (nextPlan == null) return false;
+
+        // Start construction from the plan
+        if (pos != null && nextPlan.hasImage() && world instanceof ServerLevel serverLevel) {
+            ConstructionIP cip = ConstructionIP.fromBuildingPlan(nextPlan, pos, serverLevel);
+            if (cip != null) {
+                currentConstruction = cip;
+                buildingLevel = nextLevel;
+                if (mw != null) mw.setDirty();
+                MillLog.minor("Building", "Started upgrade to level " + nextLevel + " for: " + name);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if this building has more upgrade levels available.
+     */
+    public boolean canUpgrade() {
+        if (isUnderConstruction()) return false;
+        if (cultureKey == null || planSetKey == null) return false;
+        Culture culture = Culture.getCultureByName(cultureKey);
+        if (culture == null) return false;
+        BuildingPlanSet planSet = culture.planSets.get(planSetKey);
+        if (planSet == null) return false;
+        return planSet.getPlan(buildingLevel + 1) != null;
+    }
+
     // ========== Tick ==========
 
     private int tickCounter = 0;
@@ -180,6 +234,149 @@ public class Building {
         // Spawn missing villagers if this is an active townhall or building
         if (isActive && isTownhall && tickCounter % 200 == 0) {
             checkAndSpawnVillagers();
+        }
+
+        // Village expansion: check for upgrades every ~60 seconds (1200 ticks)
+        if (isActive && isTownhall && !isUnderConstruction() && tickCounter % 1200 == 0) {
+            checkVillageExpansion();
+        }
+
+        // Resource production every ~10 seconds (200 ticks)
+        if (isActive && tickCounter % 200 == 0) {
+            tickResourceProduction();
+        }
+    }
+
+    // ========== Village expansion ==========
+
+    /**
+     * Townhall checks all buildings in the village for possible upgrades,
+     * then checks if new buildings from the VillageType should be constructed.
+     */
+    private void checkVillageExpansion() {
+        if (mw == null || cultureKey == null) return;
+        Culture culture = Culture.getCultureByName(cultureKey);
+        if (culture == null) return;
+
+        // 1. Try to upgrade existing buildings that are idle
+        for (Building b : mw.getBuildingsMap().values()) {
+            if (b == this) continue;
+            if (!isSameVillage(b)) continue;
+            if (b.isUnderConstruction()) continue;
+            if (b.canUpgrade()) {
+                if (b.tryUpgrade()) {
+                    MillLog.minor("Building", "Village expansion: upgrading " + b.getName());
+                    return; // One upgrade per cycle
+                }
+            }
+        }
+
+        // 2. Try to build new buildings from village type definition
+        if (villageTypeKey == null) return;
+        VillageType vtype = culture.villageTypes.get(villageTypeKey);
+        if (vtype == null) vtype = culture.loneBuildingTypes.get(villageTypeKey);
+        if (vtype == null) return;
+
+        // Collect what plan sets are already built in this village
+        java.util.Set<String> builtPlanSets = new java.util.HashSet<>();
+        for (Building b : mw.getBuildingsMap().values()) {
+            if (!isSameVillage(b)) continue;
+            if (b.planSetKey != null) builtPlanSets.add(b.planSetKey);
+        }
+
+        // Check core buildings first, then secondary
+        String needed = findNeededBuilding(vtype.coreBuildings, builtPlanSets, culture);
+        if (needed == null) {
+            needed = findNeededBuilding(vtype.secondaryBuildings, builtPlanSets, culture);
+        }
+
+        if (needed != null) {
+            startNewBuilding(needed, culture);
+        }
+    }
+
+    @Nullable
+    private String findNeededBuilding(List<String> candidates, java.util.Set<String> alreadyBuilt, Culture culture) {
+        for (String planSetKey : candidates) {
+            if (alreadyBuilt.contains(planSetKey)) continue;
+            BuildingPlanSet planSet = culture.planSets.get(planSetKey);
+            if (planSet != null && planSet.getInitialPlan() != null) {
+                return planSetKey;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Start construction of a new building near the townhall.
+     */
+    private void startNewBuilding(String newPlanSetKey, Culture culture) {
+        if (pos == null || !(world instanceof ServerLevel serverLevel)) return;
+        BuildingPlanSet planSet = culture.planSets.get(newPlanSetKey);
+        if (planSet == null) return;
+        BuildingPlan initialPlan = planSet.getInitialPlan();
+        if (initialPlan == null || !initialPlan.hasImage()) return;
+
+        // Find a position near the townhall (offset by existing building count)
+        int buildingCount = 0;
+        for (Building b : mw.getBuildingsMap().values()) {
+            if (isSameVillage(b)) buildingCount++;
+        }
+        int offsetX = ((buildingCount % 4) - 1) * 20;
+        int offsetZ = ((buildingCount / 4) + 1) * 20;
+        Point newPos = new Point(pos.x + offsetX, pos.y, pos.z + offsetZ);
+
+        // Create the building
+        Building newBuilding = new Building();
+        newBuilding.cultureKey = cultureKey;
+        newBuilding.planSetKey = newPlanSetKey;
+        newBuilding.villageTypeKey = villageTypeKey;
+        newBuilding.buildingLevel = 0;
+        newBuilding.isActive = true;
+        newBuilding.setPos(newPos);
+        newBuilding.setTownHallPos(pos);
+        newBuilding.setName(planSet.name != null ? planSet.name : newPlanSetKey);
+        newBuilding.mw = mw;
+        newBuilding.world = world;
+
+        // Start construction
+        ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, newPos, serverLevel);
+        if (cip != null) {
+            newBuilding.currentConstruction = cip;
+            mw.addBuilding(newBuilding, newPos);
+            mw.setDirty();
+            MillLog.minor("Building", "Village expansion: new building " + newPlanSetKey + " at " + newPos);
+        }
+    }
+
+    /**
+     * Check if another building belongs to the same village (same townhall pos).
+     */
+    private boolean isSameVillage(Building other) {
+        if (other == null) return false;
+        Point myTh = isTownhall ? pos : getTownHallPos();
+        Point otherTh = other.isTownhall ? other.getPos() : other.getTownHallPos();
+        if (myTh == null || otherTh == null) return false;
+        return myTh.equals(otherTh);
+    }
+
+    // ========== Resource production ==========
+
+    /**
+     * Produce resources based on building type. Culture-specific production rates
+     * will be driven by BuildingPlan tags; for now use basic defaults.
+     */
+    private void tickResourceProduction() {
+        // Only buildings with villagers produce resources
+        if (vrecords.isEmpty()) return;
+
+        // Basic production: 1 unit of a generic resource per cycle
+        // Full production logic will read from culture config when resource definitions are loaded
+        if (isTownhall) {
+            org.dizzymii.millenaire2.item.InvItem wheat = org.dizzymii.millenaire2.item.InvItem.get("wheat");
+            if (wheat != null) {
+                resManager.storeGoods(wheat, 1);
+            }
         }
     }
 
@@ -266,6 +463,9 @@ public class Building {
         tag.putBoolean("hasAutoSpawn", hasAutoSpawn);
         tag.putBoolean("underAttack", underAttack);
         if (cultureKey != null) tag.putString("culture", cultureKey);
+        if (planSetKey != null) tag.putString("planSetKey", planSetKey);
+        if (villageTypeKey != null) tag.putString("villageTypeKey", villageTypeKey);
+        tag.putInt("buildingLevel", buildingLevel);
         if (name != null) tag.putString("name", name);
         tag.putString("qualifier", qualifier);
 
@@ -322,6 +522,9 @@ public class Building {
         b.hasAutoSpawn = tag.getBoolean("hasAutoSpawn");
         b.underAttack = tag.getBoolean("underAttack");
         if (tag.contains("culture")) b.cultureKey = tag.getString("culture");
+        if (tag.contains("planSetKey")) b.planSetKey = tag.getString("planSetKey");
+        if (tag.contains("villageTypeKey")) b.villageTypeKey = tag.getString("villageTypeKey");
+        b.buildingLevel = tag.getInt("buildingLevel");
         if (tag.contains("name")) b.name = tag.getString("name");
         b.qualifier = tag.getString("qualifier");
 

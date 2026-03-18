@@ -106,6 +106,49 @@ public class ConstructionIP {
         return placed;
     }
 
+    // ========== Factory from BuildingPlan ==========
+
+    /**
+     * Create a ConstructionIP from a BuildingPlan at the given origin position.
+     * Uses the plan's parsed color data to generate BuildingBlocks via PointType lookup.
+     */
+    @Nullable
+    public static ConstructionIP fromBuildingPlan(
+            org.dizzymii.millenaire2.culture.BuildingPlan plan,
+            org.dizzymii.millenaire2.util.Point origin,
+            ServerLevel level) {
+        if (plan == null || !plan.hasImage() || origin == null) return null;
+
+        List<BuildingBlock> allBlocks = new ArrayList<>();
+        int w = plan.width;
+        int l = plan.length;
+        int floors = plan.nbFloors;
+
+        for (int floor = 0; floor < floors; floor++) {
+            int y = floor + plan.altitudeOffset;
+            for (int x = 0; x < w; x++) {
+                for (int z = 0; z < l; z++) {
+                    int rgb = plan.getBlockColor(x, z, floor);
+                    if (rgb < 0 || rgb == 0xFFFFFF) continue;
+
+                    org.dizzymii.millenaire2.buildingplan.PointType pt =
+                            org.dizzymii.millenaire2.buildingplan.PointType.colourPoints.get(rgb);
+                    if (pt == null || pt.getBlock() == null) continue;
+
+                    allBlocks.add(new BuildingBlock(pt, x, y, z));
+                }
+            }
+        }
+
+        if (allBlocks.isEmpty()) return null;
+
+        BuildingLocation loc = new BuildingLocation();
+        loc.pos = origin;
+        ConstructionIP cip = new ConstructionIP(loc);
+        cip.setBlocks(allBlocks);
+        return cip;
+    }
+
     // ========== NBT persistence ==========
 
     public CompoundTag save() {
