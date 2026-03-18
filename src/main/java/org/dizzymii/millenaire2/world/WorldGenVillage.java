@@ -82,9 +82,9 @@ public class WorldGenVillage {
         double usable = evaluateTerrainFlat(level, groundPos, 16);
         if (usable < MINIMUM_USABLE_BLOCK_PERC) return false;
 
-        // Pick a random culture
-        if (Culture.LIST_CULTURES.isEmpty()) return false;
-        Culture culture = Culture.LIST_CULTURES.get(random.nextInt(Culture.LIST_CULTURES.size()));
+        // Pick a culture based on biome mapping (data-driven)
+        Culture culture = BiomeCultureMapper.selectCulture(level, groundPos, random);
+        if (culture == null) return false;
 
         return generateNewVillage(level, groundPos, culture, worldData, random);
     }
