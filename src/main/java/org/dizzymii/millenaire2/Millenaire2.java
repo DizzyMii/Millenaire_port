@@ -111,6 +111,8 @@ public class Millenaire2 {
         org.dizzymii.millenaire2.item.TradeGoodLoader.loadFromServer(event.getServer());
         org.dizzymii.millenaire2.village.VillageEconomyLoader.loadFromServer(event.getServer());
         org.dizzymii.millenaire2.village.DiplomacyManager.loadFromServer(event.getServer());
+        java.io.File questDir = new java.io.File(org.dizzymii.millenaire2.util.MillCommonUtilities.getMillenaireContentDir(), "quests");
+        org.dizzymii.millenaire2.quest.Quest.loadAllQuests(questDir);
         // Initialize world data from the overworld
         net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
         worldData = MillWorldData.get(overworld);

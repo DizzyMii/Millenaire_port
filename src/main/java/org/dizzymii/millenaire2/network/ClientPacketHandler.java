@@ -28,6 +28,10 @@ public final class ClientPacketHandler {
     public static String cachedVillagerName = "";
     public static int cachedVillagerEntityId = -1;
 
+    // Client-side cache of quest data (populated by PACKET_QUESTINSTANCE)
+    @Nullable public static QuestClientEntry cachedQuest = null;
+    public static int cachedQuestVillagerEntityId = -1;
+
     private ClientPacketHandler() {}
 
     public static void handleGenericS2C(MillGenericS2CPayload payload) {
@@ -297,10 +301,22 @@ public final class ClientPacketHandler {
     private static void handleQuestInstance(byte[] data) {
         PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
         try {
-            String questId = r.readString();
-            int stepIndex = r.hasRemaining() ? r.readInt() : 0;
-            MillLog.minor("ClientPacketHandler", "Quest instance sync: " + questId + " step=" + stepIndex);
-            // Quest GUI will display current quest state from this data
+            String questKey = r.readString();
+            int stepIndex = r.readInt();
+            int totalSteps = r.readInt();
+            String stepDescription = r.readString();
+            String stepLabel = r.readString();
+            int rewardMoney = r.readInt();
+            int rewardRep = r.readInt();
+            int villagerEntityId = r.readInt();
+            boolean isOffer = r.readBoolean();
+
+            cachedQuest = new QuestClientEntry(questKey, stepIndex, totalSteps,
+                    stepDescription, stepLabel, rewardMoney, rewardRep, isOffer);
+            cachedQuestVillagerEntityId = villagerEntityId;
+
+            MillLog.minor("ClientPacketHandler", "Quest sync: " + questKey
+                    + " step=" + stepIndex + "/" + totalSteps + " offer=" + isOffer);
         } catch (Exception e) {
             MillLog.error("ClientPacketHandler", "Error handling quest instance", e);
         } finally {
@@ -369,6 +385,30 @@ public final class ClientPacketHandler {
             this.sellPrice = sellPrice;
             this.adjustedBuy = adjBuy;
             this.adjustedSell = adjSell;
+        }
+    }
+
+    public static class QuestClientEntry {
+        public final String questKey;
+        public final int stepIndex;
+        public final int totalSteps;
+        public final String stepDescription;
+        public final String stepLabel;
+        public final int rewardMoney;
+        public final int rewardReputation;
+        public final boolean isOffer;
+
+        public QuestClientEntry(String questKey, int stepIndex, int totalSteps,
+                                 String stepDescription, String stepLabel,
+                                 int rewardMoney, int rewardReputation, boolean isOffer) {
+            this.questKey = questKey;
+            this.stepIndex = stepIndex;
+            this.totalSteps = totalSteps;
+            this.stepDescription = stepDescription;
+            this.stepLabel = stepLabel;
+            this.rewardMoney = rewardMoney;
+            this.rewardReputation = rewardReputation;
+            this.isOffer = isOffer;
         }
     }
 

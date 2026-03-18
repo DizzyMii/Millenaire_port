@@ -279,9 +279,68 @@ public final class ServerPacketHandler {
 
     private static void handleQuestAction(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Quest action " + actionId + " from " + player.getName().getString());
-        // Quest completion/refusal modifies the player's QuestInstance
-        // Deferred to when Quest system is fully wired
+
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            String questKey = r.readString();
+            int villagerEntityId = r.readInt();
+
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            org.dizzymii.millenaire2.world.UserProfile profile = mw.getProfile(player.getUUID());
+
+            if (actionId == MillPacketIds.GUIACTION_QUEST_COMPLETESTEP) {
+                // Find the active quest instance for this player
+                org.dizzymii.millenaire2.quest.QuestInstance active = null;
+                for (org.dizzymii.millenaire2.quest.QuestInstance qi : profile.questInstances) {
+                    if (qi.quest != null && questKey.equals(qi.quest.key)) {
+                        active = qi;
+                        break;
+                    }
+                }
+
+                if (active == null) {
+                    // No active instance — this is a new quest acceptance (step 0)
+                    org.dizzymii.millenaire2.quest.Quest quest = org.dizzymii.millenaire2.quest.Quest.quests.get(questKey);
+                    if (quest == null) {
+                        MillLog.warn("ServerPacketHandler", "Quest not found: " + questKey);
+                        return;
+                    }
+                    // Create new quest instance
+                    java.util.HashMap<String, org.dizzymii.millenaire2.quest.QuestInstanceVillager> vils = new java.util.HashMap<>();
+                    active = new org.dizzymii.millenaire2.quest.QuestInstance(mw, quest, profile, vils, System.currentTimeMillis());
+                    profile.questInstances.add(active);
+                    MillLog.minor("ServerPacketHandler", "Quest '" + questKey + "' accepted by " + player.getName().getString());
+                }
+
+                boolean finished = active.completeStep();
+                if (finished) {
+                    // Award money
+                    org.dizzymii.millenaire2.quest.QuestStep lastStep = active.quest != null && active.currentStep > 0
+                            ? active.quest.steps.get(active.currentStep - 1) : null;
+                    if (lastStep != null && lastStep.rewardMoney > 0) {
+                        profile.deniers += lastStep.rewardMoney;
+                    }
+                    profile.questInstances.remove(active);
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "\u00a76[Mill\u00e9naire]\u00a7r Quest '" + questKey + "' completed!"));
+                } else {
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "\u00a76[Mill\u00e9naire]\u00a7r Quest step completed."));
+                }
+                mw.setDirty();
+
+            } else if (actionId == MillPacketIds.GUIACTION_QUEST_REFUSE) {
+                // Remove quest instance if it exists
+                profile.questInstances.removeIf(qi -> qi.quest != null && questKey.equals(qi.quest.key));
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "\u00a76[Mill\u00e9naire]\u00a7r Quest declined."));
+                mw.setDirty();
+            }
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling quest action", e);
+        } finally {
+            r.release();
+        }
     }
 
     private static void handleNewVillage(byte[] data, IPayloadContext context) {
