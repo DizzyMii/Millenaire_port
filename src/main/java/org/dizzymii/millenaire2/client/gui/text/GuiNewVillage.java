@@ -2,6 +2,9 @@ package org.dizzymii.millenaire2.client.gui.text;
 
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
+import org.dizzymii.millenaire2.network.ClientPacketSender;
+import org.dizzymii.millenaire2.network.MillPacketIds;
+import org.dizzymii.millenaire2.network.PacketDataHelper;
 
 /**
  * New village creation screen — used with the Wand of Summoning to pick
@@ -35,7 +38,10 @@ public class GuiNewVillage extends GuiText {
     }
 
     private void summonVillage() {
-        // Send summon village packet to server with selected culture
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeString("norman"); // default culture; full impl would use selected culture
+        w.writeString("village");
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_NEWVILLAGE, w.toByteArray());
         onClose();
     }
 }

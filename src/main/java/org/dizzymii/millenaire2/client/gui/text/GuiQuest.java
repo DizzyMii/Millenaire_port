@@ -2,6 +2,9 @@ package org.dizzymii.millenaire2.client.gui.text;
 
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
+import org.dizzymii.millenaire2.network.ClientPacketSender;
+import org.dizzymii.millenaire2.network.MillPacketIds;
+import org.dizzymii.millenaire2.network.PacketDataHelper;
 import org.dizzymii.millenaire2.quest.QuestInstance;
 
 import javax.annotation.Nullable;
@@ -51,7 +54,9 @@ public class GuiQuest extends GuiText {
     }
 
     private void acceptQuest() {
-        // Send accept packet to server
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeLong(questInstance != null ? questInstance.uniqueid : -1);
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_QUEST_COMPLETESTEP, w.toByteArray());
         onClose();
     }
 }

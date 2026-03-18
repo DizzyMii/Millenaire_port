@@ -2,6 +2,9 @@ package org.dizzymii.millenaire2.client.gui.text;
 
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
+import org.dizzymii.millenaire2.network.ClientPacketSender;
+import org.dizzymii.millenaire2.network.MillPacketIds;
+import org.dizzymii.millenaire2.network.PacketDataHelper;
 import org.dizzymii.millenaire2.village.Building;
 
 import javax.annotation.Nullable;
@@ -45,10 +48,14 @@ public class GuiControlledMilitary extends GuiText {
     }
 
     private void sendPatrol() {
-        // Send patrol command packet to server
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeInt(-1); // entity ID from context
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_MILITARY_RAID, w.toByteArray());
     }
 
     private void setDefend() {
-        // Send defend command packet to server
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeInt(-1); // entity ID from context
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_MILITARY_CANCEL_RAID, w.toByteArray());
     }
 }

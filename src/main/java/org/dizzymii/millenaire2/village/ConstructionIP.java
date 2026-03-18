@@ -3,6 +3,7 @@ package org.dizzymii.millenaire2.village;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import org.dizzymii.millenaire2.buildingplan.BuildingBlock;
@@ -162,25 +163,17 @@ public class ConstructionIP {
             location.save(tag, "loc");
         }
 
-        // Save remaining first-pass block positions
+        // Save remaining first-pass blocks with block state
         ListTag firstList = new ListTag();
         for (BuildingBlock bb : firstPassBlocks) {
-            CompoundTag bt = new CompoundTag();
-            bt.putInt("x", bb.x);
-            bt.putInt("y", bb.y);
-            bt.putInt("z", bb.z);
-            firstList.add(bt);
+            firstList.add(saveBuildingBlock(bb));
         }
         tag.put("firstPass", firstList);
 
-        // Save remaining second-pass block positions
+        // Save remaining second-pass blocks with block state
         ListTag secondList = new ListTag();
         for (BuildingBlock bb : secondPassBlocks) {
-            CompoundTag bt = new CompoundTag();
-            bt.putInt("x", bb.x);
-            bt.putInt("y", bb.y);
-            bt.putInt("z", bb.z);
-            secondList.add(bt);
+            secondList.add(saveBuildingBlock(bb));
         }
         tag.put("secondPass", secondList);
 
@@ -196,34 +189,48 @@ public class ConstructionIP {
 
         cip.location = BuildingLocation.read(tag, "loc");
 
-        // Note: block data (blockState) cannot be fully restored from just x/y/z.
-        // A full implementation would re-derive block data from the plan.
-        // For now we track positions so progress is preserved.
         if (tag.contains("firstPass", Tag.TAG_LIST)) {
             ListTag firstList = tag.getList("firstPass", Tag.TAG_COMPOUND);
             for (int i = 0; i < firstList.size(); i++) {
-                CompoundTag bt = firstList.getCompound(i);
-                BuildingBlock bb = new BuildingBlock();
-                bb.x = bt.getInt("x");
-                bb.y = bt.getInt("y");
-                bb.z = bt.getInt("z");
-                cip.firstPassBlocks.add(bb);
+                cip.firstPassBlocks.add(loadBuildingBlock(firstList.getCompound(i), false));
             }
         }
 
         if (tag.contains("secondPass", Tag.TAG_LIST)) {
             ListTag secondList = tag.getList("secondPass", Tag.TAG_COMPOUND);
             for (int i = 0; i < secondList.size(); i++) {
-                CompoundTag bt = secondList.getCompound(i);
-                BuildingBlock bb = new BuildingBlock();
-                bb.x = bt.getInt("x");
-                bb.y = bt.getInt("y");
-                bb.z = bt.getInt("z");
-                bb.secondStep = true;
-                cip.secondPassBlocks.add(bb);
+                cip.secondPassBlocks.add(loadBuildingBlock(secondList.getCompound(i), true));
             }
         }
 
         return cip;
+    }
+
+    // ========== Block NBT helpers ==========
+
+    private static CompoundTag saveBuildingBlock(BuildingBlock bb) {
+        CompoundTag bt = new CompoundTag();
+        bt.putInt("x", bb.x);
+        bt.putInt("y", bb.y);
+        bt.putInt("z", bb.z);
+        bt.putBoolean("second", bb.secondStep);
+        if (bb.blockState != null) {
+            bt.put("state", NbtUtils.writeBlockState(bb.blockState));
+        }
+        return bt;
+    }
+
+    private static BuildingBlock loadBuildingBlock(CompoundTag bt, boolean defaultSecond) {
+        BuildingBlock bb = new BuildingBlock();
+        bb.x = bt.getInt("x");
+        bb.y = bt.getInt("y");
+        bb.z = bt.getInt("z");
+        bb.secondStep = bt.contains("second") ? bt.getBoolean("second") : defaultSecond;
+        if (bt.contains("state", Tag.TAG_COMPOUND)) {
+            bb.blockState = NbtUtils.readBlockState(
+                    net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),
+                    bt.getCompound("state"));
+        }
+        return bb;
     }
 }
