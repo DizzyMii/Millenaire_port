@@ -37,6 +37,8 @@ public abstract class MillVillager extends PathfinderMob {
             SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<String> DATA_SPOUSE_NAME =
             SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Integer> DATA_ANIM_STATE =
+            SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.INT);
 
     // --- Constants ---
     public static final int MALE = 1;
@@ -113,6 +115,7 @@ public abstract class MillVillager extends PathfinderMob {
         builder.define(DATA_FAMILY_NAME, "");
         builder.define(DATA_GENDER, 0);
         builder.define(DATA_SPOUSE_NAME, "");
+        builder.define(DATA_ANIM_STATE, VillagerAnimState.IDLE.getId());
     }
 
     // --- Name accessors ---
@@ -124,6 +127,8 @@ public abstract class MillVillager extends PathfinderMob {
     public void setGender(int gender) { this.entityData.set(DATA_GENDER, gender); }
     public String getSpouseName() { return this.entityData.get(DATA_SPOUSE_NAME); }
     public void setSpouseName(String name) { this.entityData.set(DATA_SPOUSE_NAME, name); }
+    public VillagerAnimState getAnimState() { return VillagerAnimState.fromId(this.entityData.get(DATA_ANIM_STATE)); }
+    public void setAnimState(VillagerAnimState state) { this.entityData.set(DATA_ANIM_STATE, state.getId()); }
 
     public long getVillagerId() { return villagerId; }
     public void setVillagerId(long id) { this.villagerId = id; }
