@@ -69,15 +69,15 @@ public class BlockMillSapling extends Block implements BonemealableBlock {
     }
 
     private void growTree(ServerLevel level, BlockPos pos, RandomSource random) {
-        level.removeBlock(pos, false);
-        boolean success = switch (treeType) {
-            case APPLE -> new org.dizzymii.millenaire2.world.WorldGenAppleTree().generate(level, random, pos);
-            case OLIVE -> new org.dizzymii.millenaire2.world.WorldGenOliveTree().generate(level, random, pos);
-            case PISTACHIO -> new org.dizzymii.millenaire2.world.WorldGenPistachio().generate(level, random, pos);
-            case CHERRY -> new org.dizzymii.millenaire2.world.WorldGenCherry().generate(level, random, pos);
-            case SAKURA -> new org.dizzymii.millenaire2.world.WorldGenSakura().generate(level, random, pos);
+        net.minecraft.world.level.block.grower.TreeGrower grower = switch (treeType) {
+            case APPLE -> org.dizzymii.millenaire2.world.MillTreeGrowers.APPLE;
+            case OLIVE -> org.dizzymii.millenaire2.world.MillTreeGrowers.OLIVE;
+            case PISTACHIO -> org.dizzymii.millenaire2.world.MillTreeGrowers.PISTACHIO;
+            case CHERRY -> org.dizzymii.millenaire2.world.MillTreeGrowers.CHERRY_MILL;
+            case SAKURA -> org.dizzymii.millenaire2.world.MillTreeGrowers.SAKURA;
         };
-        if (!success) {
+        BlockState currentState = level.getBlockState(pos);
+        if (!grower.growTree(level, level.getChunkSource().getGenerator(), pos, currentState, random)) {
             level.setBlock(pos, this.defaultBlockState().setValue(STAGE, 1), 4);
         }
     }

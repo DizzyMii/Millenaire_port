@@ -26,7 +26,7 @@ public class ClientSetup {
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
-        // TODO: Register keybindings, overlay renderers, etc.
+        // Client-side setup complete — renderers and layer definitions registered via events below.
     }
 
     @SubscribeEvent

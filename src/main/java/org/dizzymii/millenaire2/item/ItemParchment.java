@@ -1,15 +1,8 @@
 package org.dizzymii.millenaire2.item;
 
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 
 public class ItemParchment extends Item {
-
     private final String cultureKey;
 
     public ItemParchment(Properties props, String cultureKey) {
@@ -17,18 +10,23 @@ public class ItemParchment extends Item {
         this.cultureKey = cultureKey;
     }
 
-    @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        ItemStack stack = player.getItemInHand(hand);
-        if (!level.isClientSide()) {
-            // TODO: Open parchment GUI with culture-specific information
-            player.sendSystemMessage(Component.literal(
-                    "§6[Millénaire] §rReading parchment: §e" + cultureKey
-                    + "§r. GUI not yet implemented."));
-            player.getCooldowns().addCooldown(this, 10);
-        }
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+    public ItemParchment(Properties props) {
+        this(props, "");
     }
 
-    public String getCultureKey() { return cultureKey; }
+    public String getCultureKey() {
+        return cultureKey;
+    }
+
+    @Override
+    public net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> use(
+            net.minecraft.world.level.Level level, net.minecraft.world.entity.player.Player player,
+            net.minecraft.world.InteractionHand hand) {
+        net.minecraft.world.item.ItemStack stack = player.getItemInHand(hand);
+        if (!level.isClientSide && player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            org.dizzymii.millenaire2.network.ServerPacketSender.sendOpenGui(
+                    sp, org.dizzymii.millenaire2.network.MillPacketIds.GUI_VILLAGE_BOOK, 0, null);
+        }
+        return net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+    }
 }
