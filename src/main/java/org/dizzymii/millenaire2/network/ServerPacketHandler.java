@@ -80,6 +80,18 @@ public final class ServerPacketHandler {
                         building.getTradeGoods(), profile.deniers, rep, vName);
             }
 
+            // Send greeting dialogue
+            String cultureKey = villager.getCultureKey();
+            if (cultureKey != null && !cultureKey.isEmpty()) {
+                String greeting = org.dizzymii.millenaire2.util.VillageUtilities.getVillagerSentence(
+                        cultureKey, "villager.greeting");
+                if (!greeting.equals("villager.greeting")) {
+                    String name = villager.getFirstName();
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "\u00a7e" + name + ":\u00a7r " + greeting));
+                }
+            }
+
             // Open trade GUI for the villager
             ServerPacketSender.sendOpenGui(player, MillPacketIds.GUI_TRADE, villager.getId(), villager.townHallPoint);
             MillLog.minor("ServerPacketHandler", "Player " + player.getName().getString()

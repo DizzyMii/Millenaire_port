@@ -45,8 +45,15 @@ public final class VillageUtilities {
     }
 
     public static String getVillagerSentence(String cultureKey, String sentenceKey) {
-        // Dialogue lookup via culture language system; full implementation requires
-        // CultureLanguage integration on Culture. Returns raw key as fallback for now.
+        // Try culture-specific key first: e.g. "norman.greeting"
+        String culturePrefixed = cultureKey + "." + sentenceKey;
+        if (LanguageUtilities.hasString(culturePrefixed)) {
+            return LanguageUtilities.string(culturePrefixed);
+        }
+        // Fallback to generic key: e.g. "greeting"
+        if (LanguageUtilities.hasString(sentenceKey)) {
+            return LanguageUtilities.string(sentenceKey);
+        }
         return sentenceKey;
     }
 }

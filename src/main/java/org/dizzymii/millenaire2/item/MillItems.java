@@ -181,7 +181,7 @@ public class MillItems {
     public static final DeferredItem<Item> CLOTHES_SELJUK_COTTON = registerItem("clothes_seljuk_cotton", () -> new Item(props()));
 
     // ========== Banners (stubbed) ==========
-    public static final DeferredItem<Item> VILLAGE_BANNER = registerItem("villagebanner", () -> new Item(props()));
+    public static final DeferredItem<Item> VILLAGE_BANNER = registerItem("villagebanner", () -> new ItemVillageBanner(props()));
     public static final DeferredItem<Item> CULTURE_BANNER = registerItem("culturebanner", () -> new Item(props()));
 
     // ========== Amulets ==========
