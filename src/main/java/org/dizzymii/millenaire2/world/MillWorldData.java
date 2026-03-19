@@ -11,6 +11,7 @@ import org.dizzymii.millenaire2.Millenaire2;
 import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
+import org.dizzymii.millenaire2.village.RaidTracker;
 import org.dizzymii.millenaire2.village.VillagerRecord;
 
 import javax.annotation.Nullable;
@@ -37,6 +38,7 @@ public class MillWorldData extends SavedData {
     public HashMap<UUID, UserProfile> profiles = new HashMap<>();
 
     @Nullable public Level world;
+    public final RaidTracker raidTracker = new RaidTracker();
 
     public boolean millenaireEnabled = true;
     public boolean generateVillages = true;
@@ -210,6 +212,9 @@ public class MillWorldData extends SavedData {
                 b.tick();
             }
         }
+
+        // Tick active raids
+        raidTracker.tick(this);
     }
 
     // ========== NBT persistence ==========
@@ -245,6 +250,9 @@ public class MillWorldData extends SavedData {
             profileList.add(pTag);
         }
         root.put("profiles", profileList);
+
+        // Save raid tracker
+        root.put("raidTracker", raidTracker.save());
 
         MillLog.minor("MillWorldData", "Saved " + buildings.size() + " buildings, " + profiles.size() + " profiles.");
         return root;
@@ -286,6 +294,11 @@ public class MillWorldData extends SavedData {
                     data.profiles.put(p.uuid, p);
                 }
             }
+        }
+
+        // Load raid tracker
+        if (root.contains("raidTracker", Tag.TAG_COMPOUND)) {
+            data.raidTracker.load(root.getCompound("raidTracker"));
         }
 
         MillLog.minor("MillWorldData", "Loaded " + data.buildings.size() + " buildings, " + data.profiles.size() + " profiles.");

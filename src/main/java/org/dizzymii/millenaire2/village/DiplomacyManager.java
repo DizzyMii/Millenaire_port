@@ -182,13 +182,13 @@ public class DiplomacyManager {
         int raiderCount = Math.min(maxRaiders, attacker.getVillagerRecords().size() / 2);
         raiderCount = Math.max(1, raiderCount);
 
-        // Mark villagers as raiders
-        int marked = 0;
+        // Mark villagers as raiders and collect their IDs
+        java.util.List<Long> raiderIds = new java.util.ArrayList<>();
         for (VillagerRecord vr : attacker.getVillagerRecords()) {
             if (vr.killed || vr.awayraiding || vr.awayhired) continue;
             vr.awayraiding = true;
-            marked++;
-            if (marked >= raiderCount) break;
+            raiderIds.add(vr.getVillagerId());
+            if (raiderIds.size() >= raiderCount) break;
         }
 
         // Apply relation loss
@@ -200,9 +200,14 @@ public class DiplomacyManager {
         attacker.raidsPerformed.add(targetName);
         targetTh.raidsSuffered.add(attackerName);
 
-        if (mw != null) mw.setDirty();
+        // Register raid with the tracker for lifecycle management
+        if (attacker.getPos() != null) {
+            mw.raidTracker.startRaid(attacker.getPos(), targetVillagePos, raiderIds, raidDurationTicks);
+        }
+
+        mw.setDirty();
         MillLog.minor("DiplomacyManager", "Raid triggered: " + attackerName
-                + " -> " + targetName + " (" + marked + " raiders)");
+                + " -> " + targetName + " (" + raiderIds.size() + " raiders)");
     }
 
     /**
