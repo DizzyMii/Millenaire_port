@@ -284,9 +284,89 @@ public final class ServerPacketHandler {
 
     private static void handleChiefAction(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Chief action " + actionId + " from " + player.getName().getString());
-        // Chief actions modify village building priorities, crop selection, diplomacy, etc.
-        // Actual village modification deferred to when Village tick system is complete
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            int villagerEntityId = r.readInt();
+            Entity entity = player.level().getEntity(villagerEntityId);
+            if (!(entity instanceof MillVillager villager)) return;
+
+            org.dizzymii.millenaire2.village.Building th = villager.getTownHallBuilding();
+            if (th == null) return;
+
+            // Only the controlling player (or ops) can issue chief commands
+            if (!th.isControlledBy(player.getUUID()) && !player.hasPermissions(2)) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "\u00a7c[Millénaire] You do not control this village."));
+                return;
+            }
+
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw == null) return;
+
+            switch (actionId) {
+                case MillPacketIds.GUIACTION_CHIEF_BUILDING -> {
+                    // Queue a building project: read planSetKey
+                    String planSetKey = r.readString();
+                    org.dizzymii.millenaire2.culture.Culture culture =
+                            th.cultureKey != null ? org.dizzymii.millenaire2.culture.Culture.getCultureByName(th.cultureKey) : null;
+                    if (culture == null) return;
+                    org.dizzymii.millenaire2.culture.BuildingPlanSet planSet = culture.planSets.get(planSetKey);
+                    if (planSet == null) {
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                                "\u00a7c[Millénaire] Unknown building: " + planSetKey));
+                        return;
+                    }
+                    th.buildingsBought.add(planSetKey);
+                    mw.setDirty();
+                    String displayName = planSet.name != null ? planSet.name : planSetKey;
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "\u00a76[Millénaire]\u00a7r Queued building: " + displayName));
+                }
+                case MillPacketIds.GUIACTION_CHIEF_CONTROL -> {
+                    // Transfer or release control
+                    if (r.hasRemaining()) {
+                        String targetName = r.readString();
+                        if ("release".equalsIgnoreCase(targetName)) {
+                            th.controlledBy = null;
+                            th.controlledByName = null;
+                            player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                                    "\u00a76[Millénaire]\u00a7r Village control released."));
+                        } else {
+                            // Transfer to another player
+                            ServerPlayer target = player.server.getPlayerList().getPlayerByName(targetName);
+                            if (target != null) {
+                                th.controlledBy = target.getUUID();
+                                th.controlledByName = target.getName().getString();
+                                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                                        "\u00a76[Millénaire]\u00a7r Village control transferred to " + targetName));
+                            }
+                        }
+                    }
+                    mw.setDirty();
+                }
+                case MillPacketIds.GUIACTION_CHIEF_DIPLOMACY -> {
+                    // Set diplomatic stance with another village
+                    if (r.hasRemaining()) {
+                        int tx = r.readInt();
+                        int ty = r.readInt();
+                        int tz = r.readInt();
+                        int relation = r.readInt();
+                        org.dizzymii.millenaire2.util.Point targetPoint =
+                                new org.dizzymii.millenaire2.util.Point(tx, ty, tz);
+                        th.setRelation(targetPoint, relation);
+                        mw.setDirty();
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                                "\u00a76[Millénaire]\u00a7r Diplomatic stance updated."));
+                    }
+                }
+                default -> MillLog.minor("ServerPacketHandler",
+                        "Chief action " + actionId + " from " + player.getName().getString());
+            }
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling chief action", e);
+        } finally {
+            r.release();
+        }
     }
 
     private static void handleQuestAction(int actionId, byte[] data, IPayloadContext context) {
@@ -360,6 +440,8 @@ public final class ServerPacketHandler {
         PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
         try {
             String cultureKey = r.readString();
+            // Read optional controlled flag (true = player-controlled village)
+            boolean controlled = r.hasRemaining() && r.readBoolean();
 
             org.dizzymii.millenaire2.culture.Culture culture =
                     org.dizzymii.millenaire2.culture.Culture.getCultureByName(cultureKey);
@@ -379,8 +461,20 @@ public final class ServerPacketHandler {
                     .generateNewVillage(level, playerPos, culture, mw, level.random);
 
             if (generated) {
+                // If controlled, find the newly created townhall and mark it as player-owned
+                if (controlled) {
+                    org.dizzymii.millenaire2.util.Point pPos =
+                            new org.dizzymii.millenaire2.util.Point(playerPos);
+                    org.dizzymii.millenaire2.village.Building nearest = findNearestTownhall(mw, pPos, 50);
+                    if (nearest != null) {
+                        nearest.controlledBy = player.getUUID();
+                        nearest.controlledByName = player.getName().getString();
+                    }
+                }
+
+                String type = controlled ? "controlled " : "";
                 player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                        "\u00a76[Millénaire]\u00a7r Summoned a " + cultureKey + " village!"));
+                        "\u00a76[Millénaire]\u00a7r Summoned a " + type + cultureKey + " village!"));
                 mw.setDirty();
             } else {
                 player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
@@ -391,6 +485,23 @@ public final class ServerPacketHandler {
         } finally {
             r.release();
         }
+    }
+
+    @javax.annotation.Nullable
+    private static org.dizzymii.millenaire2.village.Building findNearestTownhall(
+            org.dizzymii.millenaire2.world.MillWorldData mw,
+            org.dizzymii.millenaire2.util.Point near, double maxDist) {
+        org.dizzymii.millenaire2.village.Building nearest = null;
+        double nearestDist = Double.MAX_VALUE;
+        for (org.dizzymii.millenaire2.village.Building b : mw.allBuildings()) {
+            if (!b.isTownhall || b.getPos() == null) continue;
+            double dist = near.distanceTo(b.getPos());
+            if (dist < maxDist && dist < nearestDist) {
+                nearest = b;
+                nearestDist = dist;
+            }
+        }
+        return nearest;
     }
 
     private static void handleHireAction(int actionId, byte[] data, IPayloadContext context) {

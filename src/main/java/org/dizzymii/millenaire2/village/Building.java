@@ -90,6 +90,12 @@ public class Building {
     @Nullable public UUID controlledBy = null;
     @Nullable public String controlledByName = null;
 
+    public boolean isPlayerControlled() { return controlledBy != null; }
+
+    public boolean isControlledBy(UUID playerUUID) {
+        return controlledBy != null && controlledBy.equals(playerUUID);
+    }
+
     @Nullable public MillWorldData mw;
     @Nullable public Level world;
 
