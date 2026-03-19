@@ -285,6 +285,11 @@ public class MillBlocks {
     public static final DeferredBlock<Block> SOIL_BLOCK = Millenaire2.BLOCKS.registerSimpleBlock("soil", mockProps());
     public static final DeferredBlock<Block> DECOR_BLOCK = Millenaire2.BLOCKS.registerSimpleBlock("decorblock", mockProps());
 
+    // ========== Village Stone ==========
+    public static final DeferredBlock<BlockVillageStone> VILLAGE_STONE = Millenaire2.BLOCKS.register("village_stone",
+            () -> new BlockVillageStone(BlockBehaviour.Properties.of()
+                    .strength(3.0f, 9.0f).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+
     /**
      * Called from Millenaire2 constructor to force class loading and register all blocks.
      */

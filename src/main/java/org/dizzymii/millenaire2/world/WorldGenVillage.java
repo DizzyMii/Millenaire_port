@@ -164,6 +164,9 @@ public class WorldGenVillage {
 
         worldData.addBuilding(townhall, villagePos);
 
+        // Place Village Stone at village center
+        placeVillageStone(level, villagePos);
+
         MillLog.minor("WorldGenVillage", "Generated new " + culture.key + " " + villageType.key
                 + " village at " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ()
                 + " (" + townhall.getVillagerRecords().size() + " villagers)");
@@ -492,5 +495,17 @@ public class WorldGenVillage {
 
     public static void resetTriedChunks() {
         chunkCoordsTried.clear();
+    }
+
+    /**
+     * Place a Village Stone block at the village center and link it to the townhall.
+     */
+    private static void placeVillageStone(ServerLevel level, Point villagePos) {
+        BlockPos stonePos = new BlockPos(villagePos.x, villagePos.y, villagePos.z);
+        level.setBlock(stonePos, org.dizzymii.millenaire2.block.MillBlocks.VILLAGE_STONE.get().defaultBlockState(), 3);
+        net.minecraft.world.level.block.entity.BlockEntity be = level.getBlockEntity(stonePos);
+        if (be instanceof org.dizzymii.millenaire2.entity.blockentity.VillageStoneBlockEntity vsbe) {
+            vsbe.setTownHallPos(villagePos);
+        }
     }
 }

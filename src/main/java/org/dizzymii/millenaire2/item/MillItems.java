@@ -465,6 +465,9 @@ public class MillItems {
         Millenaire2.ITEMS.registerSimpleBlockItem("import_table", MillBlocks.IMPORT_TABLE);
         Millenaire2.ITEMS.registerSimpleBlockItem("bed_straw", MillBlocks.BED_STRAW);
         Millenaire2.ITEMS.registerSimpleBlockItem("bed_charpoy", MillBlocks.BED_CHARPOY);
+
+        // Village Stone
+        Millenaire2.ITEMS.registerSimpleBlockItem("village_stone", MillBlocks.VILLAGE_STONE);
     }
 
     /**
