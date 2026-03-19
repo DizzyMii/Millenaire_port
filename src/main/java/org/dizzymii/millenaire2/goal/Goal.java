@@ -123,9 +123,10 @@ public abstract class Goal {
         registerGoal("raidvillage", rv);
         registerGoal("fleetoshelter", new GoalFleeToShelter());
 
-        // Building & path
+        // Building & path & wall
         registerGoal("buildpath", new GoalBuildPath());
         registerGoal("clearoldpath", new GoalClearOldPath());
+        registerGoal("buildwall", new GoalBuildWall());
 
         // Trade & merchant
         registerGoal("foreignmerchantkeepstall", new GoalForeignMerchantKeepStall());
