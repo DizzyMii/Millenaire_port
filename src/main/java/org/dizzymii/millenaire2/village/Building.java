@@ -66,6 +66,10 @@ public class Building {
     public boolean hasVisitors = false;
     public boolean hasAutoSpawn = false;
     public boolean underAttack = false;
+    private long lastBuildingSyncTick = 0L;
+    private static final int BUILDING_SYNC_INTERVAL = 200; // ticks between client sync
+    private static final int RESPAWN_CHECK_INTERVAL = 200; // ticks between respawn checks
+    private static final int VILLAGER_LIST_REBUILD_INTERVAL = 600; // ticks between full reconciliation
 
     @Nullable public BuildingLocation location;
     @Nullable public VillagerRecord merchantRecord = null;
@@ -245,13 +249,28 @@ public class Building {
             if (currentConstruction.isComplete()) {
                 MillLog.minor("Building", "Construction complete for: " + name);
                 currentConstruction = null;
+                onConstructionComplete();
                 if (mw != null) mw.setDirty();
             }
         }
 
-        // Spawn missing villagers if this is an active townhall or building
-        if (isActive && isTownhall && tickCounter % 200 == 0) {
+        // Spawn missing villagers for ALL active buildings with records (not just townhall)
+        if (isActive && !vrecords.isEmpty() && tickCounter % RESPAWN_CHECK_INTERVAL == 0) {
             checkAndSpawnVillagers();
+        }
+
+        // Periodic villager list reconciliation (townhall only)
+        if (isActive && isTownhall && tickCounter % VILLAGER_LIST_REBUILD_INTERVAL == 0) {
+            rebuildVillagerList();
+        }
+
+        // Building-state sync to nearby players
+        if (isActive && world instanceof ServerLevel sl) {
+            long gameTime = sl.getGameTime();
+            if (gameTime - lastBuildingSyncTick >= BUILDING_SYNC_INTERVAL) {
+                lastBuildingSyncTick = gameTime;
+                sendBuildingSyncToNearby(sl);
+            }
         }
 
         // Village expansion: check for upgrades every ~60 seconds (1200 ticks)
@@ -474,6 +493,201 @@ public class Building {
         MillLog.minor("Building", "Spawned villager: " + vr.firstName + " " + vr.familyName);
     }
 
+    // ========== Village membership ==========
+
+    /**
+     * Add a villager to this building. Creates/updates the VillagerRecord and
+     * registers it with MillWorldData.
+     */
+    public void addVillagerToBuilding(MillVillager villager) {
+        VillagerRecord vr = getVillagerRecord(villager.getVillagerId());
+        if (vr == null) {
+            vr = VillagerRecord.create(
+                    villager.getCultureKey(),
+                    villager.vtypeKey != null ? villager.vtypeKey : "",
+                    villager.getFirstName(),
+                    villager.getFamilyName(),
+                    villager.getGender());
+            vr.setVillagerId(villager.getVillagerId());
+        }
+        vr.setHousePos(pos);
+        vr.setTownHallPos(isTownhall ? pos : townHallPos);
+        addVillagerRecord(vr);
+
+        villager.housePoint = pos;
+        villager.townHallPoint = isTownhall ? pos : townHallPos;
+        villagers.add(villager);
+
+        // Also register with MillWorldData
+        if (mw != null) {
+            mw.addVillagerRecord(vr);
+            mw.setDirty();
+        }
+    }
+
+    /**
+     * Remove a villager from this building. Clears their house assignment.
+     * Does NOT delete the VillagerRecord from MillWorldData (it persists for respawn).
+     */
+    public void removeVillagerFromBuilding(long villagerId) {
+        removeVillagerRecord(villagerId);
+        villagers.removeIf(v -> v.getVillagerId() == villagerId);
+        if (mw != null) mw.setDirty();
+    }
+
+    /**
+     * Transfer a villager from this building to another.
+     */
+    public void transferVillager(long villagerId, Building target) {
+        VillagerRecord vr = getVillagerRecord(villagerId);
+        if (vr == null) return;
+
+        removeVillagerRecord(villagerId);
+        MillVillager entity = null;
+        for (MillVillager v : villagers) {
+            if (v.getVillagerId() == villagerId) {
+                entity = v;
+                break;
+            }
+        }
+        if (entity != null) {
+            villagers.remove(entity);
+            entity.housePoint = target.getPos();
+            entity.townHallPoint = target.isTownhall ? target.getPos() : target.getTownHallPos();
+            target.villagers.add(entity);
+        }
+
+        vr.setHousePos(target.getPos());
+        vr.setTownHallPos(target.isTownhall ? target.getPos() : target.getTownHallPos());
+        target.addVillagerRecord(vr);
+
+        if (mw != null) mw.setDirty();
+        MillLog.minor("Building", "Transferred villager " + vr.firstName + " from " + name + " to " + target.getName());
+    }
+
+    /**
+     * Mark a villager as dead. Updates the record but keeps it for potential resurrection.
+     */
+    public void onVillagerDeath(long villagerId) {
+        VillagerRecord vr = getVillagerRecord(villagerId);
+        if (vr != null) {
+            vr.killed = true;
+        }
+        villagers.removeIf(v -> v.getVillagerId() == villagerId);
+        if (mw != null) {
+            VillagerRecord global = mw.getVillagerRecord(villagerId);
+            if (global != null) global.killed = true;
+            mw.setDirty();
+        }
+    }
+
+    // ========== Town hall metadata ==========
+
+    /**
+     * Get total population of this village (all buildings sharing this townhall).
+     */
+    public int getVillagePopulation() {
+        if (!isTownhall || mw == null) return vrecords.size();
+        int count = 0;
+        for (Building b : mw.getBuildingsMap().values()) {
+            if (isSameVillage(b)) {
+                for (VillagerRecord vr : b.getVillagerRecords()) {
+                    if (!vr.killed) count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Get all buildings belonging to this village.
+     */
+    public List<Building> getVillageBuildings() {
+        List<Building> result = new ArrayList<>();
+        if (mw == null) return result;
+        for (Building b : mw.getBuildingsMap().values()) {
+            if (isSameVillage(b)) result.add(b);
+        }
+        return result;
+    }
+
+    /**
+     * Get the display name of this village (townhall name or culture-based).
+     */
+    public String getVillageName() {
+        if (isTownhall && name != null) return name;
+        return cultureKey != null ? cultureKey + " village" : "Unknown village";
+    }
+
+    // ========== Villager list rebuild ==========
+
+    /**
+     * Reconcile live entities with VillagerRecords.
+     * Removes stale entity references, detects orphaned entities.
+     */
+    private void rebuildVillagerList() {
+        if (!(world instanceof ServerLevel sl)) return;
+        if (pos == null) return;
+
+        // Remove stale entity references
+        villagers.removeIf(v -> !v.isAlive() || v.isRemoved());
+
+        // Check all records — if entity is loaded but not tracked, re-track
+        for (VillagerRecord vr : getVillagerRecords()) {
+            if (vr.killed) continue;
+            boolean tracked = villagers.stream()
+                    .anyMatch(v -> v.getVillagerId() == vr.getVillagerId());
+            if (tracked) continue;
+
+            // Try to find the entity in the world
+            List<MillVillager> found = sl.getEntitiesOfClass(
+                    MillVillager.class,
+                    net.minecraft.world.phys.AABB.ofSize(
+                            new net.minecraft.world.phys.Vec3(pos.x, pos.y, pos.z), 128, 64, 128),
+                    v -> v.getVillagerId() == vr.getVillagerId());
+            if (!found.isEmpty()) {
+                villagers.add(found.get(0));
+            }
+        }
+    }
+
+    // ========== Construction completion ==========
+
+    /**
+     * Called when construction finishes. Resets builder villagers' goals
+     * and triggers building-state sync.
+     */
+    private void onConstructionComplete() {
+        // Reset goals for villagers that may have been building
+        for (MillVillager v : villagers) {
+            if (v.isAlive() && !v.isRemoved()) {
+                String gk = v.goalKey;
+                if (gk != null && (gk.equals("construction") || gk.equals("getresourcesforbuild"))) {
+                    v.resetGoalState();
+                }
+            }
+        }
+
+        // Force immediate sync
+        if (world instanceof ServerLevel sl) {
+            sendBuildingSyncToNearby(sl);
+        }
+    }
+
+    // ========== Building-state sync ==========
+
+    /**
+     * Send a building sync packet to all players within range.
+     */
+    private void sendBuildingSyncToNearby(ServerLevel sl) {
+        if (pos == null) return;
+        for (net.minecraft.server.level.ServerPlayer sp : sl.getServer().getPlayerList().getPlayers()) {
+            if (sp.level() == sl && sp.blockPosition().distSqr(pos.toBlockPos()) < 128 * 128) {
+                org.dizzymii.millenaire2.network.ServerPacketSender.sendBuildingSync(sp, this);
+            }
+        }
+    }
+
     // ========== NBT persistence ==========
 
     public CompoundTag save() {
@@ -531,6 +745,8 @@ public class Building {
             relList.add(relTag);
         }
         tag.put("relations", relList);
+
+        resManager.save(tag, "res_");
 
         return tag;
     }
@@ -594,6 +810,8 @@ public class Building {
                 }
             }
         }
+
+        b.resManager.load(tag, "res_");
 
         return b;
     }

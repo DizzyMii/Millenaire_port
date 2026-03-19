@@ -1496,4 +1496,157 @@ public class MillGameTests {
                 "aggressiveStance should persist through NBT");
         helper.succeed();
     }
+
+    // ==================== Phase 2: Building Authority ====================
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testAddVillagerToBuilding(GameTestHelper helper) {
+        MillVillager villager = spawnConfiguredVillager(helper, new BlockPos(1, 2, 1));
+
+        Building building = new Building();
+        building.cultureKey = "norman";
+        building.setPos(new Point(0, 64, 0));
+        building.setTownHallPos(new Point(0, 64, 0));
+        building.isTownhall = true;
+        building.isActive = true;
+        building.mw = org.dizzymii.millenaire2.world.MillWorldData.get(helper.getLevel());
+
+        building.addVillagerToBuilding(villager);
+
+        // Verify record was created
+        VillagerRecord vr = building.getVillagerRecord(villager.getVillagerId());
+        helper.assertFalse(vr == null, "VillagerRecord should exist after addVillagerToBuilding");
+        helper.assertTrue("Test".equals(vr.firstName), "firstName should match villager");
+        helper.assertTrue(villager.housePoint != null, "Villager housePoint should be set");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testTransferVillagerBetweenBuildings(GameTestHelper helper) {
+        MillVillager villager = spawnConfiguredVillager(helper, new BlockPos(1, 2, 1));
+        org.dizzymii.millenaire2.world.MillWorldData mw =
+                org.dizzymii.millenaire2.world.MillWorldData.get(helper.getLevel());
+
+        Building src = new Building();
+        src.cultureKey = "norman";
+        src.setPos(new Point(0, 64, 0));
+        src.setTownHallPos(new Point(0, 64, 0));
+        src.isTownhall = true;
+        src.isActive = true;
+        src.mw = mw;
+
+        Building dest = new Building();
+        dest.cultureKey = "norman";
+        dest.setPos(new Point(50, 64, 50));
+        dest.setTownHallPos(new Point(0, 64, 0));
+        dest.isActive = true;
+        dest.mw = mw;
+
+        src.addVillagerToBuilding(villager);
+        src.transferVillager(villager.getVillagerId(), dest);
+
+        helper.assertTrue(src.getVillagerRecord(villager.getVillagerId()) == null,
+                "Source building should no longer have the record");
+        helper.assertFalse(dest.getVillagerRecord(villager.getVillagerId()) == null,
+                "Destination building should have the record");
+        helper.assertTrue(villager.housePoint.equals(new Point(50, 64, 50)),
+                "Villager housePoint should be updated to dest pos");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testOnVillagerDeath(GameTestHelper helper) {
+        MillVillager villager = spawnConfiguredVillager(helper, new BlockPos(1, 2, 1));
+        org.dizzymii.millenaire2.world.MillWorldData mw =
+                org.dizzymii.millenaire2.world.MillWorldData.get(helper.getLevel());
+
+        Building building = new Building();
+        building.cultureKey = "norman";
+        building.setPos(new Point(0, 64, 0));
+        building.setTownHallPos(new Point(0, 64, 0));
+        building.isTownhall = true;
+        building.isActive = true;
+        building.mw = mw;
+
+        building.addVillagerToBuilding(villager);
+        building.onVillagerDeath(villager.getVillagerId());
+
+        VillagerRecord vr = building.getVillagerRecord(villager.getVillagerId());
+        helper.assertFalse(vr == null, "Record should still exist after death");
+        helper.assertTrue(vr.killed, "Record should be marked as killed");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testVillagePopulationCount(GameTestHelper helper) {
+        org.dizzymii.millenaire2.world.MillWorldData mw =
+                org.dizzymii.millenaire2.world.MillWorldData.get(helper.getLevel());
+        Point thPos = new Point(0, 64, 0);
+
+        Building townhall = new Building();
+        townhall.cultureKey = "norman";
+        townhall.setPos(thPos);
+        townhall.setTownHallPos(thPos);
+        townhall.isTownhall = true;
+        townhall.isActive = true;
+        townhall.mw = mw;
+        mw.addBuilding(townhall, thPos);
+
+        // Add 2 records to townhall
+        VillagerRecord vr1 = VillagerRecord.create("norman", "farmer", "A", "B", MillVillager.MALE);
+        townhall.addVillagerRecord(vr1);
+        VillagerRecord vr2 = VillagerRecord.create("norman", "wife", "C", "D", MillVillager.FEMALE);
+        townhall.addVillagerRecord(vr2);
+
+        helper.assertTrue(townhall.getVillagePopulation() == 2,
+                "Population should be 2, got " + townhall.getVillagePopulation());
+
+        // Mark one as killed
+        vr1.killed = true;
+        helper.assertTrue(townhall.getVillagePopulation() == 1,
+                "Population should be 1 after death, got " + townhall.getVillagePopulation());
+
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testBuildingSyncPayloadEncoding(GameTestHelper helper) {
+        Building building = new Building();
+        building.cultureKey = "norman";
+        building.setName("Test Hall");
+        building.planSetKey = "townhall_1";
+        building.buildingLevel = 2;
+        building.isTownhall = true;
+        building.isMarket = false;
+        building.underAttack = false;
+        building.setPos(new Point(100, 64, 200));
+        building.setTownHallPos(new Point(100, 64, 200));
+
+        // Add a record for population count
+        VillagerRecord vr = VillagerRecord.create("norman", "farmer", "Test", "V", MillVillager.MALE);
+        building.addVillagerRecord(vr);
+
+        MillGenericS2CPayload payload = ServerPacketSender.buildBuildingSyncPayload(building);
+        helper.assertTrue(payload.packetType() == MillPacketIds.PACKET_BUILDING,
+                "Packet type should be PACKET_BUILDING");
+
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(payload.data());
+        boolean hasPos = r.readBoolean();
+        helper.assertTrue(hasPos, "Building should have pos");
+        int px = r.readInt(); int py = r.readInt(); int pz = r.readInt();
+        helper.assertTrue(px == 100 && py == 64 && pz == 200,
+                "Pos should be (100,64,200)");
+        String culture = r.readString();
+        helper.assertTrue("norman".equals(culture), "Culture should be norman");
+        String bname = r.readString();
+        helper.assertTrue("Test Hall".equals(bname), "Name should be Test Hall");
+        String planSet = r.readString();
+        helper.assertTrue("townhall_1".equals(planSet), "PlanSet should be townhall_1");
+        int level = r.readInt();
+        helper.assertTrue(level == 2, "Level should be 2");
+        boolean isTH = r.readBoolean();
+        helper.assertTrue(isTH, "isTownhall should be true");
+
+        helper.succeed();
+    }
 }

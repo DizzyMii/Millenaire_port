@@ -3,6 +3,7 @@ package org.dizzymii.millenaire2.network;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.item.TradeGood;
 import org.dizzymii.millenaire2.network.payloads.MillGenericS2CPayload;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.world.UserProfile;
@@ -26,6 +27,10 @@ public final class ServerPacketSender {
      * Contains identity, position, culture, goal, and appearance data.
      */
     public static void sendVillagerSync(ServerPlayer target, MillVillager villager) {
+        PacketDistributor.sendToPlayer(target, buildVillagerSyncPayload(villager));
+    }
+
+    public static MillGenericS2CPayload buildVillagerSyncPayload(MillVillager villager) {
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
         w.writeInt(villager.getId());
         w.writeLong(villager.getVillagerId());
@@ -54,9 +59,8 @@ public final class ServerPacketSender {
         writePoint(w, villager.housePoint);
         writePoint(w, villager.townHallPoint);
 
-        MillGenericS2CPayload payload = new MillGenericS2CPayload(
+        return new MillGenericS2CPayload(
                 MillPacketIds.PACKET_VILLAGER, 0, w.toByteArray());
-        PacketDistributor.sendToPlayer(target, payload);
     }
 
     /**
@@ -64,15 +68,19 @@ public final class ServerPacketSender {
      */
     public static void sendVillagerSentence(ServerPlayer target, int entityId,
                                              String speechKey, int variant, String cultureKey) {
+        PacketDistributor.sendToPlayer(target, buildVillagerSentencePayload(entityId, speechKey, variant, cultureKey));
+    }
+
+    public static MillGenericS2CPayload buildVillagerSentencePayload(int entityId,
+                                                                     String speechKey, int variant, String cultureKey) {
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
         w.writeInt(entityId);
         w.writeString(speechKey);
         w.writeInt(variant);
         w.writeString(cultureKey);
 
-        MillGenericS2CPayload payload = new MillGenericS2CPayload(
+        return new MillGenericS2CPayload(
                 MillPacketIds.PACKET_VILLAGER_SENTENCE, 0, w.toByteArray());
-        PacketDistributor.sendToPlayer(target, payload);
     }
 
     // ========== Translated chat ==========
@@ -82,6 +90,11 @@ public final class ServerPacketSender {
      */
     public static void sendTranslatedChat(ServerPlayer target, String translationKey,
                                            String cultureKey, String... args) {
+        PacketDistributor.sendToPlayer(target, buildTranslatedChatPayload(translationKey, cultureKey, args));
+    }
+
+    public static MillGenericS2CPayload buildTranslatedChatPayload(String translationKey,
+                                                                   String cultureKey, String... args) {
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
         w.writeString(translationKey);
         w.writeString(cultureKey);
@@ -90,9 +103,8 @@ public final class ServerPacketSender {
             w.writeString(arg);
         }
 
-        MillGenericS2CPayload payload = new MillGenericS2CPayload(
+        return new MillGenericS2CPayload(
                 MillPacketIds.PACKET_TRANSLATED_CHAT, 0, w.toByteArray());
-        PacketDistributor.sendToPlayer(target, payload);
     }
 
     // ========== Village list ==========
@@ -102,6 +114,10 @@ public final class ServerPacketSender {
      * Each entry: position, culture key, village name, distance.
      */
     public static void sendVillageList(ServerPlayer target, List<VillageListEntry> entries) {
+        PacketDistributor.sendToPlayer(target, buildVillageListPayload(entries));
+    }
+
+    public static MillGenericS2CPayload buildVillageListPayload(List<VillageListEntry> entries) {
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
         w.writeInt(entries.size());
         for (VillageListEntry entry : entries) {
@@ -112,9 +128,8 @@ public final class ServerPacketSender {
             w.writeBoolean(entry.isLoneBuilding);
         }
 
-        MillGenericS2CPayload payload = new MillGenericS2CPayload(
+        return new MillGenericS2CPayload(
                 MillPacketIds.PACKET_VILLAGELIST, 0, w.toByteArray());
-        PacketDistributor.sendToPlayer(target, payload);
     }
 
     // ========== Profile sync ==========
@@ -123,6 +138,10 @@ public final class ServerPacketSender {
      * Send player profile (reputation, language levels, unlocked content) to a player.
      */
     public static void sendProfile(ServerPlayer target, UserProfile profile, int updateType) {
+        PacketDistributor.sendToPlayer(target, buildProfilePayload(profile, updateType));
+    }
+
+    public static MillGenericS2CPayload buildProfilePayload(UserProfile profile, int updateType) {
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
         w.writeInt(updateType);
 
@@ -139,9 +158,8 @@ public final class ServerPacketSender {
             }
         }
 
-        MillGenericS2CPayload payload = new MillGenericS2CPayload(
+        return new MillGenericS2CPayload(
                 MillPacketIds.PACKET_PROFILE, updateType, w.toByteArray());
-        PacketDistributor.sendToPlayer(target, payload);
     }
 
     // ========== Open GUI ==========
@@ -150,14 +168,17 @@ public final class ServerPacketSender {
      * Tell a client to open a specific GUI.
      */
     public static void sendOpenGui(ServerPlayer target, int guiId, int entityId, @Nullable Point villagePos) {
+        PacketDistributor.sendToPlayer(target, buildOpenGuiPayload(guiId, entityId, villagePos));
+    }
+
+    public static MillGenericS2CPayload buildOpenGuiPayload(int guiId, int entityId, @Nullable Point villagePos) {
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
         w.writeInt(guiId);
         w.writeInt(entityId);
         writePoint(w, villagePos);
 
-        MillGenericS2CPayload payload = new MillGenericS2CPayload(
+        return new MillGenericS2CPayload(
                 MillPacketIds.PACKET_OPENGUI, guiId, w.toByteArray());
-        PacketDistributor.sendToPlayer(target, payload);
     }
 
     // ========== Trade data ==========
@@ -166,15 +187,21 @@ public final class ServerPacketSender {
      * Send trade goods list and player deniers to a player opening the trade GUI.
      */
     public static void sendTradeData(ServerPlayer target, int villagerEntityId,
-                                      java.util.List<org.dizzymii.millenaire2.item.TradeGood> goods,
+                                      java.util.List<TradeGood> goods,
                                       int deniers, int reputation, String villagerName) {
+        PacketDistributor.sendToPlayer(target, buildTradeDataPayload(villagerEntityId, goods, deniers, reputation, villagerName));
+    }
+
+    public static MillGenericS2CPayload buildTradeDataPayload(int villagerEntityId,
+                                                              java.util.List<TradeGood> goods,
+                                                              int deniers, int reputation, String villagerName) {
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
         w.writeInt(villagerEntityId);
         w.writeString(villagerName);
         w.writeInt(deniers);
         w.writeInt(reputation);
         w.writeInt(goods.size());
-        for (org.dizzymii.millenaire2.item.TradeGood good : goods) {
+        for (TradeGood good : goods) {
             w.writeString(good.item.isEmpty() ? "" : net.minecraft.core.registries.BuiltInRegistries.ITEM
                     .getKey(good.item.getItem()).toString());
             w.writeInt(good.item.getCount());
@@ -184,9 +211,8 @@ public final class ServerPacketSender {
             w.writeInt(good.getAdjustedSellPrice(reputation));
         }
 
-        MillGenericS2CPayload payload = new MillGenericS2CPayload(
+        return new MillGenericS2CPayload(
                 MillPacketIds.PACKET_SHOP, 0, w.toByteArray());
-        PacketDistributor.sendToPlayer(target, payload);
     }
 
     // ========== Internal helpers ==========
@@ -203,14 +229,67 @@ public final class ServerPacketSender {
     }
 
     private static void writeReputations(PacketDataHelper.Writer w, UserProfile profile) {
-        // Culture reputations — write count then key/value pairs
-        // Profile doesn't expose its maps directly, so we write what's accessible
-        // For now write an empty count — will be filled when profile maps are exposed
-        w.writeInt(0);
+        w.writeInt(profile.getVillageReputations().size());
+        for (var entry : profile.getVillageReputations().entrySet()) {
+            writePoint(w, entry.getKey());
+            w.writeInt(entry.getValue());
+        }
+
+        w.writeInt(profile.getCultureReputations().size());
+        for (var entry : profile.getCultureReputations().entrySet()) {
+            w.writeString(entry.getKey());
+            w.writeInt(entry.getValue());
+        }
     }
 
     private static void writeLanguages(PacketDataHelper.Writer w, UserProfile profile) {
-        w.writeInt(0);
+        w.writeInt(profile.getCultureLanguages().size());
+        for (var entry : profile.getCultureLanguages().entrySet()) {
+            w.writeString(entry.getKey());
+            w.writeInt(entry.getValue());
+        }
+    }
+
+    // ========== Building sync ==========
+
+    /**
+     * Send a building data sync packet to a specific player.
+     * Contains position, culture, name, level, construction, and population data.
+     */
+    public static void sendBuildingSync(ServerPlayer target, org.dizzymii.millenaire2.village.Building building) {
+        PacketDistributor.sendToPlayer(target, buildBuildingSyncPayload(building));
+    }
+
+    public static MillGenericS2CPayload buildBuildingSyncPayload(org.dizzymii.millenaire2.village.Building building) {
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        Point bPos = building.getPos();
+        w.writeBoolean(bPos != null);
+        if (bPos != null) {
+            w.writeInt(bPos.x);
+            w.writeInt(bPos.y);
+            w.writeInt(bPos.z);
+        }
+        w.writeString(building.cultureKey != null ? building.cultureKey : "");
+        w.writeString(building.getName() != null ? building.getName() : "");
+        w.writeString(building.planSetKey != null ? building.planSetKey : "");
+        w.writeInt(building.buildingLevel);
+        w.writeBoolean(building.isTownhall);
+        w.writeBoolean(building.isInn);
+        w.writeBoolean(building.isMarket);
+        w.writeBoolean(building.isUnderConstruction());
+        w.writeBoolean(building.underAttack);
+        w.writeInt(building.getVillagerRecords().size());
+
+        // Write townhall pos for village association
+        Point thPos = building.getTownHallPos();
+        w.writeBoolean(thPos != null);
+        if (thPos != null) {
+            w.writeInt(thPos.x);
+            w.writeInt(thPos.y);
+            w.writeInt(thPos.z);
+        }
+
+        return new MillGenericS2CPayload(MillPacketIds.PACKET_BUILDING, 0, w.toByteArray());
     }
 
     // ========== Data classes ==========
