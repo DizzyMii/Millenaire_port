@@ -9,15 +9,14 @@ import net.minecraft.world.entity.ai.memory.MemoryStatus;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
 import net.tslat.smartbrainlib.api.core.behaviour.ExtendedBehaviour;
 import org.dizzymii.millenaire2.entity.MillVillager;
-import org.dizzymii.millenaire2.entity.ai.MillMemoryTypes;
 
 import java.util.List;
 
 /**
- * Behaviour: Walk to this villager's home building.
- * Equivalent to the original GoalGoHome / night-time "go home" logic.
+ * Simple fallback behaviour that sets a random walk target near the villager.
+ * Guaranteed to run when no other idle behaviour is applicable.
  */
-public class GoToHomeBuilding extends ExtendedBehaviour<MillVillager> {
+public class RandomVillagerStroll extends ExtendedBehaviour<MillVillager> {
 
     private static final List<Pair<MemoryModuleType<?>, MemoryStatus>> MEMORY_REQUIREMENTS =
             ObjectArrayList.of(
@@ -30,19 +29,14 @@ public class GoToHomeBuilding extends ExtendedBehaviour<MillVillager> {
     }
 
     @Override
-    protected boolean checkExtraStartConditions(ServerLevel level, MillVillager villager) {
-        return villager.housePoint != null;
-    }
-
-    @Override
     protected void start(ServerLevel level, MillVillager villager, long gameTime) {
-        BlockPos home = villager.getBrain().getMemory(MillMemoryTypes.HOME_BUILDING_POS.get()).orElse(null);
-        if (home == null && villager.housePoint != null) {
-            home = villager.housePoint.toBlockPos();
-        }
-        if (home != null) {
-            villager.getBrain().setMemory(MemoryModuleType.WALK_TARGET,
-                    new WalkTarget(home, 0.6f, 2));
-        }
+        BlockPos pos = villager.blockPosition();
+        int dx = villager.getRandom().nextInt(11) - 5;
+        int dz = villager.getRandom().nextInt(11) - 5;
+        BlockPos target = pos.offset(dx, 0, dz);
+        // Find ground level
+        BlockPos ground = level.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, target);
+        villager.getBrain().setMemory(MemoryModuleType.WALK_TARGET,
+                new WalkTarget(ground, 0.5f, 2));
     }
 }

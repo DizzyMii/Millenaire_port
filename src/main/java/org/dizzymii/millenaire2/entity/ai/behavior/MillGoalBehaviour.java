@@ -30,7 +30,7 @@ public class MillGoalBehaviour extends ExtendedBehaviour<MillVillager> {
 
     private static final List<Pair<MemoryModuleType<?>, MemoryStatus>> MEMORY_REQUIREMENTS =
             ObjectArrayList.of(
-                    Pair.of(MillMemoryTypes.TOWNHALL_POS.get(), MemoryStatus.VALUE_PRESENT)
+                    Pair.of(MemoryModuleType.WALK_TARGET, MemoryStatus.REGISTERED)
             );
 
     @Nullable private Goal activeGoal;
@@ -56,7 +56,24 @@ public class MillGoalBehaviour extends ExtendedBehaviour<MillVillager> {
         if (villager.vtype.goals == null || villager.vtype.goals.isEmpty()) return false;
 
         // Try to select best goal by priority (matching original setNextGoal)
-        return selectBestGoal(villager) != null;
+        Goal best = selectBestGoal(villager);
+        if (best != null) return true;
+
+        // Fallback goals that don't depend on vtype.goals list
+        boolean isNight = (level.getDayTime() % 24000) >= 12000;
+        if (isNight && Goal.sleep != null) {
+            try {
+                GoalInformation info = Goal.sleep.getDestination(villager);
+                if (info != null && info.hasTarget()) return true;
+            } catch (Exception ignored) {}
+        }
+        if (!isNight && Goal.gosocialise != null) {
+            try {
+                GoalInformation info = Goal.gosocialise.getDestination(villager);
+                if (info != null && info.hasTarget()) return true;
+            } catch (Exception ignored) {}
+        }
+        return false;
     }
 
     @Override
@@ -66,6 +83,22 @@ public class MillGoalBehaviour extends ExtendedBehaviour<MillVillager> {
         goalStarted = gameTime;
 
         Goal best = selectBestGoal(villager);
+        if (best == null) {
+            // Try fallback goals
+            boolean isNight = (level.getDayTime() % 24000) >= 12000;
+            if (isNight && Goal.sleep != null) {
+                try {
+                    GoalInformation info = Goal.sleep.getDestination(villager);
+                    if (info != null && info.hasTarget()) best = Goal.sleep;
+                } catch (Exception ignored) {}
+            }
+            if (best == null && !isNight && Goal.gosocialise != null) {
+                try {
+                    GoalInformation info = Goal.gosocialise.getDestination(villager);
+                    if (info != null && info.hasTarget()) best = Goal.gosocialise;
+                } catch (Exception ignored) {}
+            }
+        }
         if (best == null) {
             doStop(level, villager, gameTime);
             return;

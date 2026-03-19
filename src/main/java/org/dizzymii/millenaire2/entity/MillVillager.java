@@ -159,7 +159,8 @@ public abstract class MillVillager extends PathfinderMob implements SmartBrainOw
         return BrainActivityGroup.idleTasks(
                 new FirstApplicableBehaviour<MillVillager>(
                         new MillGoalBehaviour(),
-                        new GoToHomeBuilding()
+                        new GoToHomeBuilding(),
+                        new org.dizzymii.millenaire2.entity.ai.behavior.RandomVillagerStroll()
                 ),
                 new OneRandomBehaviour<>(
                         new SetRandomLookTarget<>(),
