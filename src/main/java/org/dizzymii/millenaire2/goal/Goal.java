@@ -191,6 +191,18 @@ public abstract class Goal {
     public boolean triggerNextGoalOnFinish(MillVillager villager) { return false; }
     public boolean isStillValid(MillVillager villager) throws Exception { return true; }
 
+    /** Priority of this goal for the given villager (higher = more important). */
+    public int priority(MillVillager villager) throws Exception { return 100; }
+
+    /** Called when the goal completes or is interrupted. */
+    public void onComplete(MillVillager villager) throws Exception { }
+
+    /** Key of the next goal to chain after this one finishes, or null. */
+    public String nextGoal(MillVillager villager) throws Exception { return null; }
+
+    /** Called when the goal is first accepted by the villager. */
+    public void onAccept(MillVillager villager) throws Exception { }
+
     @Override
     public String toString() { return key != null ? key : super.toString(); }
 

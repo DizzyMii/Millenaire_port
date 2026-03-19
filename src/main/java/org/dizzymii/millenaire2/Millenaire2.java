@@ -27,6 +27,9 @@ import org.dizzymii.millenaire2.client.screen.FirePitScreen;
 import org.dizzymii.millenaire2.data.ContentDeployer;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.entity.ai.MillActivities;
+import org.dizzymii.millenaire2.entity.ai.MillMemoryTypes;
+import org.dizzymii.millenaire2.entity.ai.MillSensorTypes;
 import org.dizzymii.millenaire2.item.MillItems;
 import org.dizzymii.millenaire2.menu.MillMenuTypes;
 import org.dizzymii.millenaire2.network.MillNetworking;
@@ -73,12 +76,18 @@ public class Millenaire2 {
         ENTITY_TYPES.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
         MillMenuTypes.MENU_TYPES.register(modEventBus);
+        MillMemoryTypes.MEMORY_TYPES.register(modEventBus);
+        MillSensorTypes.SENSOR_TYPES.register(modEventBus);
+        MillActivities.ACTIVITIES.register(modEventBus);
 
         // Force class loading of registration holders
         MillBlocks.init();
         MillItems.init();
         MillEntities.init();
         MillMenuTypes.init();
+        MillMemoryTypes.init();
+        MillSensorTypes.init();
+        MillActivities.init();
 
         NeoForge.EVENT_BUS.register(this);
 
