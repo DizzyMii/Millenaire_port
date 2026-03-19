@@ -76,6 +76,10 @@ public class BlocklistLoader {
                 // Block entry - resolve legacy ID to modern block
                 Block block = resolve(blockRef, propsStr);
                 if (block == null) {
+                    if (skipped < 50) {
+                        MillLog.warn(null, "BlocklistLoader: unresolved block '" + blockRef
+                                + "' props='" + propsStr + "' (name=" + name + ")");
+                    }
                     skipped++;
                     continue;
                 }
@@ -538,6 +542,90 @@ public class BlocklistLoader {
         LEGACY.put("millenaire:icebrick|0", MillBlocks.ICE_BRICK.get());
         LEGACY.put("millenaire:snowwall", MillBlocks.WALL_SNOW.get());
         LEGACY.put("millenaire:snowwall|0", MillBlocks.WALL_SNOW.get());
+
+        // Painted bricks: silver → light_gray
+        LEGACY.put("millenaire:painted_brick_silver", MillBlocks.PAINTED_BRICK_LIGHT_GRAY.get());
+
+        // Decorated painted bricks: legacy "decorated_" → modern "deco_"
+        LEGACY.put("millenaire:painted_brick_decorated_white", MillBlocks.PAINTED_BRICK_DECO_WHITE.get());
+        LEGACY.put("millenaire:painted_brick_decorated_orange", MillBlocks.PAINTED_BRICK_DECO_ORANGE.get());
+        LEGACY.put("millenaire:painted_brick_decorated_magenta", MillBlocks.PAINTED_BRICK_DECO_MAGENTA.get());
+        LEGACY.put("millenaire:painted_brick_decorated_light_blue", MillBlocks.PAINTED_BRICK_DECO_LIGHT_BLUE.get());
+        LEGACY.put("millenaire:painted_brick_decorated_yellow", MillBlocks.PAINTED_BRICK_DECO_YELLOW.get());
+        LEGACY.put("millenaire:painted_brick_decorated_lime", MillBlocks.PAINTED_BRICK_DECO_LIME.get());
+        LEGACY.put("millenaire:painted_brick_decorated_pink", MillBlocks.PAINTED_BRICK_DECO_PINK.get());
+        LEGACY.put("millenaire:painted_brick_decorated_gray", MillBlocks.PAINTED_BRICK_DECO_GRAY.get());
+        LEGACY.put("millenaire:painted_brick_decorated_silver", MillBlocks.PAINTED_BRICK_DECO_LIGHT_GRAY.get());
+        LEGACY.put("millenaire:painted_brick_decorated_cyan", MillBlocks.PAINTED_BRICK_DECO_CYAN.get());
+        LEGACY.put("millenaire:painted_brick_decorated_purple", MillBlocks.PAINTED_BRICK_DECO_PURPLE.get());
+        LEGACY.put("millenaire:painted_brick_decorated_blue", MillBlocks.PAINTED_BRICK_DECO_BLUE.get());
+        LEGACY.put("millenaire:painted_brick_decorated_brown", MillBlocks.PAINTED_BRICK_DECO_BROWN.get());
+        LEGACY.put("millenaire:painted_brick_decorated_green", MillBlocks.PAINTED_BRICK_DECO_GREEN.get());
+        LEGACY.put("millenaire:painted_brick_decorated_red", MillBlocks.PAINTED_BRICK_DECO_RED.get());
+        LEGACY.put("millenaire:painted_brick_decorated_black", MillBlocks.PAINTED_BRICK_DECO_BLACK.get());
+
+        // Painted brick stairs: no stair blocks exist yet, map to base painted bricks as fallback
+        LEGACY.put("millenaire:stairs_painted_brick_white", MillBlocks.PAINTED_BRICK_WHITE.get());
+        LEGACY.put("millenaire:stairs_painted_brick_orange", MillBlocks.PAINTED_BRICK_ORANGE.get());
+        LEGACY.put("millenaire:stairs_painted_brick_magenta", MillBlocks.PAINTED_BRICK_MAGENTA.get());
+        LEGACY.put("millenaire:stairs_painted_brick_light_blue", MillBlocks.PAINTED_BRICK_LIGHT_BLUE.get());
+        LEGACY.put("millenaire:stairs_painted_brick_yellow", MillBlocks.PAINTED_BRICK_YELLOW.get());
+        LEGACY.put("millenaire:stairs_painted_brick_lime", MillBlocks.PAINTED_BRICK_LIME.get());
+        LEGACY.put("millenaire:stairs_painted_brick_pink", MillBlocks.PAINTED_BRICK_PINK.get());
+        LEGACY.put("millenaire:stairs_painted_brick_gray", MillBlocks.PAINTED_BRICK_GRAY.get());
+        LEGACY.put("millenaire:stairs_painted_brick_silver", MillBlocks.PAINTED_BRICK_LIGHT_GRAY.get());
+        LEGACY.put("millenaire:stairs_painted_brick_cyan", MillBlocks.PAINTED_BRICK_CYAN.get());
+        LEGACY.put("millenaire:stairs_painted_brick_purple", MillBlocks.PAINTED_BRICK_PURPLE.get());
+        LEGACY.put("millenaire:stairs_painted_brick_blue", MillBlocks.PAINTED_BRICK_BLUE.get());
+        LEGACY.put("millenaire:stairs_painted_brick_brown", MillBlocks.PAINTED_BRICK_BROWN.get());
+        LEGACY.put("millenaire:stairs_painted_brick_green", MillBlocks.PAINTED_BRICK_GREEN.get());
+        LEGACY.put("millenaire:stairs_painted_brick_red", MillBlocks.PAINTED_BRICK_RED.get());
+        LEGACY.put("millenaire:stairs_painted_brick_black", MillBlocks.PAINTED_BRICK_BLACK.get());
+
+        // Painted brick slabs: no slab blocks exist yet, map to base painted bricks as fallback
+        LEGACY.put("millenaire:slab_painted_brick_white", MillBlocks.PAINTED_BRICK_WHITE.get());
+        LEGACY.put("millenaire:slab_painted_brick_orange", MillBlocks.PAINTED_BRICK_ORANGE.get());
+        LEGACY.put("millenaire:slab_painted_brick_magenta", MillBlocks.PAINTED_BRICK_MAGENTA.get());
+        LEGACY.put("millenaire:slab_painted_brick_light_blue", MillBlocks.PAINTED_BRICK_LIGHT_BLUE.get());
+        LEGACY.put("millenaire:slab_painted_brick_yellow", MillBlocks.PAINTED_BRICK_YELLOW.get());
+        LEGACY.put("millenaire:slab_painted_brick_lime", MillBlocks.PAINTED_BRICK_LIME.get());
+        LEGACY.put("millenaire:slab_painted_brick_pink", MillBlocks.PAINTED_BRICK_PINK.get());
+        LEGACY.put("millenaire:slab_painted_brick_gray", MillBlocks.PAINTED_BRICK_GRAY.get());
+        LEGACY.put("millenaire:slab_painted_brick_silver", MillBlocks.PAINTED_BRICK_LIGHT_GRAY.get());
+        LEGACY.put("millenaire:slab_painted_brick_cyan", MillBlocks.PAINTED_BRICK_CYAN.get());
+        LEGACY.put("millenaire:slab_painted_brick_purple", MillBlocks.PAINTED_BRICK_PURPLE.get());
+        LEGACY.put("millenaire:slab_painted_brick_blue", MillBlocks.PAINTED_BRICK_BLUE.get());
+        LEGACY.put("millenaire:slab_painted_brick_brown", MillBlocks.PAINTED_BRICK_BROWN.get());
+        LEGACY.put("millenaire:slab_painted_brick_green", MillBlocks.PAINTED_BRICK_GREEN.get());
+        LEGACY.put("millenaire:slab_painted_brick_red", MillBlocks.PAINTED_BRICK_RED.get());
+        LEGACY.put("millenaire:slab_painted_brick_black", MillBlocks.PAINTED_BRICK_BLACK.get());
+
+        // Painted brick walls: no wall blocks exist yet, map to base painted bricks as fallback
+        LEGACY.put("millenaire:wall_painted_brick_white", MillBlocks.PAINTED_BRICK_WHITE.get());
+        LEGACY.put("millenaire:wall_painted_brick_orange", MillBlocks.PAINTED_BRICK_ORANGE.get());
+        LEGACY.put("millenaire:wall_painted_brick_magenta", MillBlocks.PAINTED_BRICK_MAGENTA.get());
+        LEGACY.put("millenaire:wall_painted_brick_light_blue", MillBlocks.PAINTED_BRICK_LIGHT_BLUE.get());
+        LEGACY.put("millenaire:wall_painted_brick_yellow", MillBlocks.PAINTED_BRICK_YELLOW.get());
+        LEGACY.put("millenaire:wall_painted_brick_lime", MillBlocks.PAINTED_BRICK_LIME.get());
+        LEGACY.put("millenaire:wall_painted_brick_pink", MillBlocks.PAINTED_BRICK_PINK.get());
+        LEGACY.put("millenaire:wall_painted_brick_gray", MillBlocks.PAINTED_BRICK_GRAY.get());
+        LEGACY.put("millenaire:wall_painted_brick_silver", MillBlocks.PAINTED_BRICK_LIGHT_GRAY.get());
+        LEGACY.put("millenaire:wall_painted_brick_cyan", MillBlocks.PAINTED_BRICK_CYAN.get());
+        LEGACY.put("millenaire:wall_painted_brick_purple", MillBlocks.PAINTED_BRICK_PURPLE.get());
+        LEGACY.put("millenaire:wall_painted_brick_blue", MillBlocks.PAINTED_BRICK_BLUE.get());
+        LEGACY.put("millenaire:wall_painted_brick_brown", MillBlocks.PAINTED_BRICK_BROWN.get());
+        LEGACY.put("millenaire:wall_painted_brick_green", MillBlocks.PAINTED_BRICK_GREEN.get());
+        LEGACY.put("millenaire:wall_painted_brick_red", MillBlocks.PAINTED_BRICK_RED.get());
+        LEGACY.put("millenaire:wall_painted_brick_black", MillBlocks.PAINTED_BRICK_BLACK.get());
+
+        // Tile slabs (legacy name format differs from registered name)
+        LEGACY.put("millenaire:byzantine_tiles_slab", MillBlocks.SLAB_BYZANTINE_TILES.get());
+        LEGACY.put("millenaire:gray_tiles_slab", MillBlocks.SLAB_GRAY_TILES.get());
+        LEGACY.put("millenaire:green_tiles_slab", MillBlocks.SLAB_GREEN_TILES.get());
+        LEGACY.put("millenaire:red_tiles_slab", MillBlocks.SLAB_RED_TILES.get());
+
+        // Inuit carving → closest available decorative block
+        LEGACY.put("millenaire:inuitcarving", MillBlocks.MILL_STATUE.get());
 
         // Sod
         LEGACY.put("millenaire:sod", MillBlocks.SOD.get());
