@@ -21,7 +21,11 @@ public class GoalGoSocialise extends Goal {
         if (th != null) {
             return new GoalInformation(th, 8);
         }
-        return null;
+        // BULLETPROOF: pick a random nearby position if no townhall
+        int dx = v.getRandom().nextInt(15) - 7;
+        int dz = v.getRandom().nextInt(15) - 7;
+        Point wanderTarget = new Point(v.blockPosition().offset(dx, 0, dz));
+        return new GoalInformation(wanderTarget, 3);
     }
 
     @Override

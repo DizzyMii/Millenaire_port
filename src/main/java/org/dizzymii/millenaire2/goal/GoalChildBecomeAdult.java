@@ -25,7 +25,7 @@ public class GoalChildBecomeAdult extends Goal {
             if (culture != null) {
                 org.dizzymii.millenaire2.culture.VillagerType adultType = culture.getVillagerType(v.vtype.altkey);
                 if (adultType != null) {
-                    v.vtype = adultType;
+                    v.setVillagerTypeKey(adultType.key);
                     v.refreshDimensions(); // Update bounding box for adult size
                 }
             }

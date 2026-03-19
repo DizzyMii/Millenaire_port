@@ -167,20 +167,27 @@ public class WorldGenVillage {
      */
     @Nullable
     private static VillageType pickVillageType(Culture culture, RandomSource random) {
-        List<VillageType> types = culture.listVillageTypes;
-        if (types.isEmpty()) return null;
+        // Filter to only auto-generable types (not player-controlled, weight > 0, not lone buildings)
+        List<VillageType> eligible = new ArrayList<>();
+        for (VillageType vt : culture.listVillageTypes) {
+            if (vt.playerControlled) continue;
+            if (vt.lonebuilding) continue;
+            if (vt.weight <= 0) continue;
+            eligible.add(vt);
+        }
+        if (eligible.isEmpty()) return null;
 
         int totalWeight = 0;
-        for (VillageType vt : types) {
-            totalWeight += Math.max(vt.weight, 1);
+        for (VillageType vt : eligible) {
+            totalWeight += vt.weight;
         }
         int roll = random.nextInt(Math.max(totalWeight, 1));
         int cumulative = 0;
-        for (VillageType vt : types) {
-            cumulative += Math.max(vt.weight, 1);
+        for (VillageType vt : eligible) {
+            cumulative += vt.weight;
             if (roll < cumulative) return vt;
         }
-        return types.get(0);
+        return eligible.get(0);
     }
 
     /**
@@ -238,21 +245,34 @@ public class WorldGenVillage {
     private static void createInitialVillagers(Building townhall, Culture culture,
                                                 BuildingPlan plan, Point villagePos,
                                                 RandomSource random) {
-        List<String> villagerTypes = plan.villagers;
-        if (villagerTypes.isEmpty()) {
-            // Fallback: create a default leader villager
-            VillagerRecord leader = VillagerRecord.create(
-                    culture.key, "leader",
+        boolean added = false;
+
+        // Primary: use plan.male / plan.female fields (original Millénaire format)
+        if (plan.male != null && !plan.male.isEmpty()) {
+            VillagerRecord vr = VillagerRecord.create(
+                    culture.key, plan.male,
                     getRandomName(culture, "male_first", random),
                     getRandomName(culture, "family", random),
                     MillVillager.MALE);
-            leader.setHousePos(villagePos);
-            leader.setTownHallPos(villagePos);
-            townhall.addVillagerRecord(leader);
-            return;
+            vr.setHousePos(villagePos);
+            vr.setTownHallPos(villagePos);
+            townhall.addVillagerRecord(vr);
+            added = true;
+        }
+        if (plan.female != null && !plan.female.isEmpty()) {
+            VillagerRecord vr = VillagerRecord.create(
+                    culture.key, plan.female,
+                    getRandomName(culture, "female_first", random),
+                    getRandomName(culture, "family", random),
+                    MillVillager.FEMALE);
+            vr.setHousePos(villagePos);
+            vr.setTownHallPos(villagePos);
+            townhall.addVillagerRecord(vr);
+            added = true;
         }
 
-        for (String vtKey : villagerTypes) {
+        // Secondary: use plan.villagers list (per-level villager entries)
+        for (String vtKey : plan.villagers) {
             VillagerType vtype = culture.getVillagerType(vtKey);
             int gender = MillVillager.MALE;
             if (vtype != null && "female".equalsIgnoreCase(vtype.gender)) gender = MillVillager.FEMALE;
@@ -266,6 +286,31 @@ public class WorldGenVillage {
             vr.setHousePos(villagePos);
             vr.setTownHallPos(villagePos);
             townhall.addVillagerRecord(vr);
+            added = true;
+        }
+
+        // Fallback: find a leader-like type from the culture's registered villager types
+        if (!added) {
+            String leaderKey = null;
+            for (VillagerType vt : culture.listVillagerTypes) {
+                if (vt.key.contains("leader") || vt.key.contains("chief")) {
+                    leaderKey = vt.key;
+                    break;
+                }
+            }
+            if (leaderKey == null && !culture.listVillagerTypes.isEmpty()) {
+                leaderKey = culture.listVillagerTypes.get(0).key;
+            }
+            if (leaderKey != null) {
+                VillagerRecord leader = VillagerRecord.create(
+                        culture.key, leaderKey,
+                        getRandomName(culture, "male_first", random),
+                        getRandomName(culture, "family", random),
+                        MillVillager.MALE);
+                leader.setHousePos(villagePos);
+                leader.setTownHallPos(villagePos);
+                townhall.addVillagerRecord(leader);
+            }
         }
     }
 

@@ -17,7 +17,8 @@ public class GoalGoRest extends Goal {
         if (home != null) {
             return new GoalInformation(home, 3);
         }
-        return null;
+        // BULLETPROOF: rest in place if no home
+        return new GoalInformation(new Point(v.blockPosition()), 1);
     }
 
     @Override

@@ -267,6 +267,8 @@ public class MillBlocks {
             () -> new BlockPanel(BlockBehaviour.Properties.of().strength(2.5f).sound(SoundType.WOOD)));
     public static final DeferredBlock<BlockImportTable> IMPORT_TABLE = Millenaire2.BLOCKS.register("import_table",
             () -> new BlockImportTable(BlockBehaviour.Properties.of().strength(2.5f).sound(SoundType.WOOD)));
+    public static final DeferredBlock<BlockVillageStone> VILLAGE_STONE = Millenaire2.BLOCKS.register("village_stone",
+            () -> new BlockVillageStone(BlockBehaviour.Properties.of().strength(3.0f, 9.0f).sound(SoundType.STONE).requiresCorrectToolForDrops()));
     public static final DeferredBlock<Block> BED_STRAW = Millenaire2.BLOCKS.registerSimpleBlock("bed_straw",
             BlockBehaviour.Properties.of().strength(0.2f).sound(SoundType.WOOL));
     public static final DeferredBlock<Block> BED_CHARPOY = Millenaire2.BLOCKS.registerSimpleBlock("bed_charpoy",

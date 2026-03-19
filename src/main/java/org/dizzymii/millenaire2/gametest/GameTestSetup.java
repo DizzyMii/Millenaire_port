@@ -24,6 +24,12 @@ public class GameTestSetup {
         if (initialized) return;
         initialized = true;
 
+        // Ensure data-driven things are loaded since gametests run before standard server events
+        org.dizzymii.millenaire2.buildingplan.PointType.loadFromServer(level.getServer());
+        org.dizzymii.millenaire2.culture.Culture.loadCultures();
+        org.dizzymii.millenaire2.world.BiomeCultureMapper.loadFromServer(level.getServer());
+        org.dizzymii.millenaire2.item.TradeGoodLoader.loadFromServer(level.getServer());
+
         try {
             StructureTemplateManager manager = level.getStructureManager();
             ResourceLocation emptyId = ResourceLocation.fromNamespaceAndPath(

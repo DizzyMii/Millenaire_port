@@ -165,6 +165,11 @@ public abstract class Goal {
 
     public int range(MillVillager villager) { return ACTIVATION_RANGE; }
 
+    public int priority(MillVillager villager) { return 0; }
+    public void onAccept(MillVillager villager) {}
+    public void onComplete(MillVillager villager) {}
+    public String nextGoal(MillVillager villager) { return null; }
+
     public String labelKey(MillVillager villager) { return key; }
     public String labelKeyWhileTravelling(MillVillager villager) { return key; }
 
@@ -175,6 +180,10 @@ public abstract class Goal {
 
     @Override
     public String toString() { return key != null ? key : super.toString(); }
+
+    public static Goal getGoal(String key) {
+        return goals == null || key == null ? null : goals.get(key.toLowerCase());
+    }
 
     // --- Helper to register a goal ---
     protected static void registerGoal(String key, Goal goal) {

@@ -118,6 +118,10 @@ public class VillagerRecord implements Cloneable {
         if (townHallPos != null) townHallPos.writeToNBT(tag, "th");
         if (originalVillagePos != null) originalVillagePos.writeToNBT(tag, "origVillage");
 
+        if (type != null) tag.putString("type", type);
+        if (firstName != null) tag.putString("firstName", firstName);
+        if (familyName != null) tag.putString("familyName", familyName);
+
         // Save inventory
         CompoundTag invTag = new CompoundTag();
         for (Map.Entry<String, Integer> entry : inventory.entrySet()) {
@@ -165,6 +169,10 @@ public class VillagerRecord implements Cloneable {
         vr.housePos = Point.readFromNBT(tag, "house");
         vr.townHallPos = Point.readFromNBT(tag, "th");
         vr.originalVillagePos = Point.readFromNBT(tag, "origVillage");
+
+        if (tag.contains("type", Tag.TAG_STRING)) vr.type = tag.getString("type");
+        if (tag.contains("firstName", Tag.TAG_STRING)) vr.firstName = tag.getString("firstName");
+        if (tag.contains("familyName", Tag.TAG_STRING)) vr.familyName = tag.getString("familyName");
 
         // Load inventory
         if (tag.contains("inventory", Tag.TAG_COMPOUND)) {

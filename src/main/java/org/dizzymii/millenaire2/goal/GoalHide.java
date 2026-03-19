@@ -14,7 +14,8 @@ public class GoalHide extends Goal {
         if (home != null) {
             return new GoalInformation(home, 3);
         }
-        return null;
+        // BULLETPROOF: hide in place if no home
+        return new GoalInformation(new Point(villager.blockPosition()), 1);
     }
 
     @Override

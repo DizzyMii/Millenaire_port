@@ -10,6 +10,7 @@ import org.dizzymii.millenaire2.entity.blockentity.MillFirePitBlockEntity;
 import org.dizzymii.millenaire2.entity.blockentity.MillImportTableBlockEntity;
 import org.dizzymii.millenaire2.entity.blockentity.MillLockedChestBlockEntity;
 import org.dizzymii.millenaire2.entity.blockentity.MillPanelBlockEntity;
+import org.dizzymii.millenaire2.entity.blockentity.VillageStoneBlockEntity;
 
 /**
  * Central registration for entity types and block entity types.
@@ -88,6 +89,13 @@ public class MillEntities {
                     () -> BlockEntityType.Builder.of(
                             MillImportTableBlockEntity::new,
                             MillBlocks.IMPORT_TABLE.get()
+                    ).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<VillageStoneBlockEntity>> VILLAGE_STONE_BE =
+            Millenaire2.BLOCK_ENTITY_TYPES.register("village_stone",
+                    () -> BlockEntityType.Builder.of(
+                            VillageStoneBlockEntity::new,
+                            MillBlocks.VILLAGE_STONE.get()
                     ).build(null));
 
     /**

@@ -193,6 +193,11 @@ public class VillagerType {
             vt.isDefensive = vt.containsTag(TAG_DEFENSIVE);
             vt.noResurrect = vt.containsTag(TAG_NORESURRECT);
 
+            // Normalize all goal keys to lowercase for consistent lookup
+            if (vt.goals != null) {
+                vt.goals.replaceAll(String::toLowerCase);
+            }
+
             MillLog.minor(vt, "Loaded villager type: " + vt.key);
             return vt;
         } catch (Exception e) {

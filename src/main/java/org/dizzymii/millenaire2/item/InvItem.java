@@ -110,6 +110,20 @@ public class InvItem {
         return ITEMS.get(key);
     }
 
+    public static InvItem fromItem(Item item) {
+        if (item == null || item == Items.AIR) {
+            return null;
+        }
+
+        for (InvItem invItem : ITEMS.values()) {
+            if (invItem.getItem() == item) {
+                return invItem;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Get an InvItem by its Millénaire key, returning a fallback if not found.
      */

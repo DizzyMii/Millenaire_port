@@ -83,7 +83,7 @@ public abstract class MillVillager extends PathfinderMob implements SmartBrainOw
     @Nullable public VillagerType vtype;
     public int action = 0;
     @Nullable public String goalKey = null;
-    @Nullable private Goal currentGoal = null;
+    @Nullable public Goal currentGoal = null;
     @Nullable private GoalInformation goalInformation = null;
     @Nullable private Point pathDestPoint;
     @Nullable public Point housePoint = null;
@@ -276,8 +276,15 @@ public abstract class MillVillager extends PathfinderMob implements SmartBrainOw
     public void resolveVillagerType() {
         if (vtypeKey == null || vtypeKey.isEmpty()) return;
         org.dizzymii.millenaire2.culture.Culture culture = getCulture();
-        if (culture != null) {
-            vtype = culture.getVillagerType(vtypeKey);
+        if (culture == null) {
+            MillLog.warn(this, "resolveVillagerType: no culture for key='" + getCultureKey() + "'");
+            return;
+        }
+        vtype = culture.getVillagerType(vtypeKey);
+        if (vtype == null) {
+            MillLog.warn(this, "resolveVillagerType: culture '" + culture.key
+                    + "' has no villager type '" + vtypeKey + "' (available: "
+                    + culture.villagerTypes.size() + " types)");
         }
     }
 
@@ -288,6 +295,8 @@ public abstract class MillVillager extends PathfinderMob implements SmartBrainOw
         this.vtypeKey = key;
         resolveVillagerType();
     }
+
+    private boolean emergencyDefaultsWarned = false;
 
     private void ensureRuntimeDefaults() {
         if (villagerId == -1L) {
@@ -319,6 +328,24 @@ public abstract class MillVillager extends PathfinderMob implements SmartBrainOw
             }
         }
 
+        // BULLETPROOF: If vtype is STILL null after all resolution, create synthetic emergency type
+        if (vtype == null) {
+            vtype = createEmergencyVillagerType();
+            vtypeKey = "_fallback";
+            if (!emergencyDefaultsWarned) {
+                MillLog.warn(this, "Using emergency fallback VillagerType for villager at " + blockPosition());
+                emergencyDefaultsWarned = true;
+            }
+        }
+
+        // BULLETPROOF: Ensure housePoint is never null — fallback goals depend on it
+        if (housePoint == null && townHallPoint != null) {
+            housePoint = townHallPoint;
+        }
+        if (housePoint == null) {
+            housePoint = new Point(this.blockPosition());
+        }
+
         if (culture != null && vtype != null) {
             if (getFirstName().isEmpty()) {
                 String first = vtype.firstNameList != null && !vtype.firstNameList.isEmpty()
@@ -334,6 +361,27 @@ public abstract class MillVillager extends PathfinderMob implements SmartBrainOw
                 setFamilyName(family);
             }
         }
+
+        // Ensure villager has a name even without culture
+        if (getFirstName().isEmpty()) {
+            setFirstName("Villager");
+        }
+    }
+
+    /**
+     * Create a synthetic emergency VillagerType with basic goals.
+     * This ensures the AI always has something to work with.
+     */
+    private VillagerType createEmergencyVillagerType() {
+        org.dizzymii.millenaire2.culture.Culture culture = getCulture();
+        VillagerType emergency = new VillagerType(culture, "_fallback");
+        emergency.gender = getGender() == FEMALE ? "female" : "male";
+        emergency.isChild = false;
+        emergency.goals = new java.util.ArrayList<>();
+        emergency.goals.add("gosocialise");
+        emergency.goals.add("gorest");
+        emergency.goals.add("sleep");
+        return emergency;
     }
 
     @Nullable
