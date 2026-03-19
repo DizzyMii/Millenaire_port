@@ -428,13 +428,47 @@ public class Building {
     /**
      * Townhall checks all buildings in the village for possible upgrades,
      * then checks if new buildings from the VillageType should be constructed.
+     * Gated by: concurrent construction count, population, and resources.
      */
     private void checkVillageExpansion() {
         if (mw == null || cultureKey == null) return;
         Culture culture = Culture.getCultureByName(cultureKey);
         if (culture == null) return;
 
-        // 1. Try to upgrade existing buildings that are idle
+        if (villageTypeKey == null) return;
+        VillageType vtype = culture.villageTypes.get(villageTypeKey);
+        if (vtype == null) vtype = culture.loneBuildingTypes.get(villageTypeKey);
+        if (vtype == null) return;
+
+        // Gate: check concurrent construction limit
+        int activeConstructions = countActiveConstructions();
+        if (activeConstructions >= vtype.maxSimultaneousConstructions) return;
+
+        // Gate: need at least 2 villagers before expanding beyond start buildings
+        int villagerCount = countVillageVillagers();
+        int buildingCount = countVillageBuildings();
+
+        // Collect what plan sets are already built in this village (with counts)
+        java.util.Map<String, Integer> builtPlanSetCounts = new java.util.HashMap<>();
+        for (Building b : mw.getBuildingsMap().values()) {
+            if (!isSameVillage(b)) continue;
+            if (b.planSetKey != null) {
+                builtPlanSetCounts.merge(b.planSetKey, 1, Integer::sum);
+            }
+        }
+        java.util.Set<String> builtPlanSets = builtPlanSetCounts.keySet();
+
+        // 1. Start buildings: always build these first if missing
+        String needed = findNeededBuilding(vtype.startBuildings, builtPlanSets, culture);
+        if (needed != null) {
+            startNewBuilding(needed, culture);
+            return;
+        }
+
+        // Gate: need at least 2 villagers for upgrades and further expansion
+        if (villagerCount < 2 && buildingCount > 1) return;
+
+        // 2. Try to upgrade existing buildings that are idle
         for (Building b : mw.getBuildingsMap().values()) {
             if (b == this) continue;
             if (!isSameVillage(b)) continue;
@@ -442,30 +476,20 @@ public class Building {
             if (b.canUpgrade()) {
                 if (b.tryUpgrade()) {
                     MillLog.minor("Building", "Village expansion: upgrading " + b.getName());
-                    return; // One upgrade per cycle
+                    return; // One action per cycle
                 }
             }
         }
 
-        // 2. Try to build new buildings from village type definition
-        if (villageTypeKey == null) return;
-        VillageType vtype = culture.villageTypes.get(villageTypeKey);
-        if (vtype == null) vtype = culture.loneBuildingTypes.get(villageTypeKey);
-        if (vtype == null) return;
-
-        // Collect what plan sets are already built in this village
-        java.util.Set<String> builtPlanSets = new java.util.HashSet<>();
-        for (Building b : mw.getBuildingsMap().values()) {
-            if (!isSameVillage(b)) continue;
-            if (b.planSetKey != null) builtPlanSets.add(b.planSetKey);
+        // 3. Core buildings: must all be present before secondary
+        needed = findNeededBuilding(vtype.coreBuildings, builtPlanSets, culture);
+        if (needed != null) {
+            startNewBuilding(needed, culture);
+            return;
         }
 
-        // Check core buildings first, then secondary
-        String needed = findNeededBuilding(vtype.coreBuildings, builtPlanSets, culture);
-        if (needed == null) {
-            needed = findNeededBuilding(vtype.secondaryBuildings, builtPlanSets, culture);
-        }
-
+        // 4. Secondary buildings
+        needed = findNeededBuilding(vtype.secondaryBuildings, builtPlanSets, culture);
         if (needed != null) {
             startNewBuilding(needed, culture);
         }
@@ -475,12 +499,51 @@ public class Building {
     private String findNeededBuilding(List<String> candidates, java.util.Set<String> alreadyBuilt, Culture culture) {
         for (String planSetKey : candidates) {
             if (alreadyBuilt.contains(planSetKey)) continue;
+            // Skip excluded buildings
             BuildingPlanSet planSet = culture.planSets.get(planSetKey);
             if (planSet != null && planSet.getInitialPlan() != null) {
                 return planSetKey;
             }
         }
         return null;
+    }
+
+    /**
+     * Count buildings in this village currently under construction.
+     */
+    private int countActiveConstructions() {
+        if (mw == null) return 0;
+        int count = 0;
+        for (Building b : mw.getBuildingsMap().values()) {
+            if (!isSameVillage(b)) continue;
+            if (b.isUnderConstruction()) count++;
+        }
+        return count;
+    }
+
+    /**
+     * Count total villagers across all buildings in this village.
+     */
+    private int countVillageVillagers() {
+        if (mw == null) return 0;
+        int count = 0;
+        for (Building b : mw.getBuildingsMap().values()) {
+            if (!isSameVillage(b)) continue;
+            count += b.vrecords.size();
+        }
+        return count;
+    }
+
+    /**
+     * Count total buildings in this village.
+     */
+    private int countVillageBuildings() {
+        if (mw == null) return 0;
+        int count = 0;
+        for (Building b : mw.getBuildingsMap().values()) {
+            if (isSameVillage(b)) count++;
+        }
+        return count;
     }
 
     /**
