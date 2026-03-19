@@ -49,8 +49,33 @@ public class BuildingLocation implements Cloneable {
     public boolean showTownHallSigns = false;
     public boolean isSubBuildingLocation = false;
 
+    private static final int MIN_BUILDING_DISTANCE = 5;
+
     public int getVariation() { return variation; }
     public void setVariation(int v) { this.variation = v; }
+
+    /**
+     * Compute bounding box and margins from position and dimensions.
+     * Must be called after pos, length, width, and orientation are set.
+     */
+    public void computeMargins() {
+        if (pos == null) return;
+        int halfLen = length / 2;
+        int halfWid = width / 2;
+        minx = pos.x - halfLen;
+        maxx = pos.x + halfLen;
+        minz = pos.z - halfWid;
+        maxz = pos.z + halfWid;
+        miny = pos.y;
+        maxy = pos.y + 10; // Default building height estimate
+
+        minxMargin = minx - MIN_BUILDING_DISTANCE;
+        maxxMargin = maxx + MIN_BUILDING_DISTANCE;
+        minzMargin = minz - MIN_BUILDING_DISTANCE;
+        maxzMargin = maxz + MIN_BUILDING_DISTANCE;
+        minyMargin = miny - 3;
+        maxyMargin = maxy + 1;
+    }
 
     // ========== NBT persistence ==========
 

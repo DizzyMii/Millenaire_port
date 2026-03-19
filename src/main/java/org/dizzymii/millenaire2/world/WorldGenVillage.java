@@ -143,6 +143,7 @@ public class WorldGenVillage {
         townhall.setName(generateVillageName(culture, random));
         townhall.setPos(villagePos);
         townhall.setTownHallPos(villagePos);
+        location.computeMargins();
         townhall.location = location;
         townhall.mw = worldData;
         townhall.world = level;
@@ -212,7 +213,7 @@ public class WorldGenVillage {
     /**
      * Load BuildingBlock list from a plan's PNG file via PngPlanLoader.
      */
-    private static List<BuildingBlock> loadPlanBlocks(Culture culture, BuildingPlanSet planSet,
+    public static List<BuildingBlock> loadPlanBlocks(Culture culture, BuildingPlanSet planSet,
                                                        BuildingPlan plan) {
         // Locate the PNG file
         File contentDir = MillCommonUtilities.getMillenaireContentDir();

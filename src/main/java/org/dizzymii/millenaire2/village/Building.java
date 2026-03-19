@@ -93,6 +93,8 @@ public class Building {
     @Nullable public MillWorldData mw;
     @Nullable public Level world;
 
+    @Nullable public VillageGeography geography;
+
     // ========== Accessors ==========
 
     @Nullable
@@ -399,6 +401,31 @@ public class Building {
     // ========== Village expansion ==========
 
     /**
+     * Collect all BuildingLocations in this village for geography updates.
+     */
+    private List<BuildingLocation> collectVillageLocations() {
+        List<BuildingLocation> locations = new ArrayList<>();
+        if (location != null) locations.add(location);
+        if (mw == null) return locations;
+        for (Building b : mw.getBuildingsMap().values()) {
+            if (b == this) continue;
+            if (!isSameVillage(b)) continue;
+            if (b.location != null) locations.add(b.location);
+        }
+        return locations;
+    }
+
+    /**
+     * Ensure the VillageGeography is up-to-date. Called before building placement.
+     */
+    private void updateGeography() {
+        if (pos == null || !(world instanceof ServerLevel serverLevel)) return;
+        if (geography == null) geography = new VillageGeography();
+        List<BuildingLocation> locations = collectVillageLocations();
+        geography.update(serverLevel, locations, pos, 80);
+    }
+
+    /**
      * Townhall checks all buildings in the village for possible upgrades,
      * then checks if new buildings from the VillageType should be constructed.
      */
@@ -458,6 +485,7 @@ public class Building {
 
     /**
      * Start construction of a new building near the townhall.
+     * Uses VillageGeography to find a valid terrain location.
      */
     private void startNewBuilding(String newPlanSetKey, Culture culture) {
         if (pos == null || !(world instanceof ServerLevel serverLevel)) return;
@@ -466,14 +494,30 @@ public class Building {
         BuildingPlan initialPlan = planSet.getInitialPlan();
         if (initialPlan == null || !initialPlan.hasImage()) return;
 
-        // Find a position near the townhall (offset by existing building count)
-        int buildingCount = 0;
-        for (Building b : mw.getBuildingsMap().values()) {
-            if (isSameVillage(b)) buildingCount++;
+        // Update terrain grid and find a valid location
+        updateGeography();
+        int bldgLen = initialPlan.length > 0 ? initialPlan.length : 12;
+        int bldgWid = initialPlan.width > 0 ? initialPlan.width : 12;
+
+        Point newPos = null;
+        if (geography != null) {
+            newPos = geography.findBuildingLocation(
+                    pos.x, pos.z, bldgLen, bldgWid, 8, 80, 3);
         }
-        int offsetX = ((buildingCount % 4) - 1) * 20;
-        int offsetZ = ((buildingCount / 4) + 1) * 20;
-        Point newPos = new Point(pos.x + offsetX, pos.y, pos.z + offsetZ);
+
+        // Fallback to grid offset if geography search fails
+        if (newPos == null) {
+            int buildingCount = 0;
+            if (mw != null) {
+                for (Building b : mw.getBuildingsMap().values()) {
+                    if (isSameVillage(b)) buildingCount++;
+                }
+            }
+            int offsetX = ((buildingCount % 4) - 1) * 20;
+            int offsetZ = ((buildingCount / 4) + 1) * 20;
+            newPos = new Point(pos.x + offsetX, pos.y, pos.z + offsetZ);
+            MillLog.minor("Building", "Geography search failed for " + newPlanSetKey + ", using grid offset");
+        }
 
         // Create the building
         Building newBuilding = new Building();
@@ -492,7 +536,25 @@ public class Building {
         newBuilding.location.cultureKey = cultureKey;
         newBuilding.location.orientation = 0;
         newBuilding.applyPlanMetadata(planSet, initialPlan);
+        newBuilding.location.computeMargins();
         org.dizzymii.millenaire2.world.WorldGenVillage.applyPlanSpecialPositions(newBuilding, initialPlan);
+
+        // Load blocks and compute resource cost
+        java.util.List<org.dizzymii.millenaire2.buildingplan.BuildingBlock> planBlocks =
+                org.dizzymii.millenaire2.world.WorldGenVillage.loadPlanBlocks(culture, planSet, initialPlan);
+        if (!planBlocks.isEmpty()) {
+            java.util.Map<String, Integer> cost = ResourceCostCalculator.computeCost(planBlocks);
+            if (!cost.isEmpty() && !ResourceCostCalculator.hasResources(this, cost)) {
+                MillLog.minor("Building", "Insufficient resources for " + newPlanSetKey
+                        + ". Need: " + cost);
+                return;
+            }
+            // Deduct resources
+            if (!cost.isEmpty()) {
+                ResourceCostCalculator.deductResources(this, cost);
+                MillLog.minor("Building", "Deducted resources for " + newPlanSetKey + ": " + cost);
+            }
+        }
 
         // Start construction
         ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, newPos, serverLevel);
@@ -500,6 +562,12 @@ public class Building {
             newBuilding.currentConstruction = cip;
             mw.addBuilding(newBuilding, newPos);
             mw.setDirty();
+
+            // Register in geography to prevent overlap
+            if (geography != null && newBuilding.location != null) {
+                geography.registerNewBuilding(newBuilding.location);
+            }
+
             MillLog.minor("Building", "Village expansion: new building " + newPlanSetKey + " at " + newPos);
         }
     }
