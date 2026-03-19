@@ -94,6 +94,7 @@ public abstract class Goal {
         registerGoal("gosocialise", gosocialise);
 
         // Agriculture & gathering
+        registerGoal("farmcrops", new GoalFarmCrops());
         registerGoal("gathergoods", new GoalGatherGoods());
         registerGoal("bringbackresourceshome", new GoalBringBackResourcesHome());
         registerGoal("getgoodsforhousehold", new GoalGetGoodsForHousehold());
@@ -134,6 +135,10 @@ public abstract class Goal {
         // Brewing & crafting
         registerGoal("brewpotions", new GoalBrewPotions());
         registerGoal("bepujaperformer", new GoalBePujaPerformer());
+
+        // Migration & hiring
+        registerGoal("migrate", new GoalMigrate());
+        registerGoal("followplayer", new GoalFollowPlayer());
 
         // Child
         registerGoal("childbecomeadult", new GoalChildBecomeAdult());
