@@ -94,6 +94,7 @@ public class Building {
     @Nullable public Level world;
 
     @Nullable public VillageGeography geography;
+    @Nullable public VillagePathPlanner pathPlanner;
 
     // ========== Accessors ==========
 
@@ -381,6 +382,11 @@ public class Building {
             checkVillageExpansion();
         }
 
+        // Path construction: place pending path blocks every slow tick (townhall only)
+        if (isActive && isTownhall && world instanceof ServerLevel serverLvl) {
+            tickPathConstruction(serverLvl);
+        }
+
         // Resource production every ~10 seconds (200 ticks)
         if (isActive && tickCounter % 200 == 0) {
             tickResourceProduction();
@@ -395,6 +401,31 @@ public class Building {
         // Diplomacy: relation decay every ~60 minutes (72000 ticks)
         if (isActive && isTownhall && tickCounter % 72000 == 0) {
             DiplomacyManager.tickRelationDecay(this);
+        }
+    }
+
+    // ========== Path construction ==========
+
+    /**
+     * Place pending path blocks and trigger re-planning when needed.
+     */
+    private void tickPathConstruction(ServerLevel serverLevel) {
+        // Re-plan paths every ~5 minutes (6000 ticks) or when planner is empty
+        if (pathPlanner == null || (tickCounter % 6000 == 0 && !pathPlanner.hasPendingPaths())) {
+            if (pathPlanner == null) pathPlanner = new VillagePathPlanner();
+            updateGeography();
+            pathPlanner.planPaths(this, geography, serverLevel);
+        }
+
+        // Place up to 2 path blocks per slow tick
+        if (pathPlanner.hasPendingPaths()) {
+            for (int i = 0; i < 2; i++) {
+                Point p = pathPlanner.getNextPathBlock();
+                if (p == null) break;
+                if (VillagePathPlanner.placePathBlock(serverLevel, p)) {
+                    pathPlanner.markPlaced(p);
+                }
+            }
         }
     }
 
