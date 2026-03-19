@@ -1,5 +1,6 @@
 package org.dizzymii.millenaire2.culture;
 
+import org.dizzymii.millenaire2.buildingplan.PngPlanLoader;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ConfigField;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.FieldDocumentation;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ParameterType;
@@ -184,6 +185,8 @@ public class BuildingPlan {
             planImage = ImageIO.read(imageFile);
             if (planImage != null) {
                 parsePlanImage();
+                specialPositions.clear();
+                PngPlanLoader.loadPlan(imageFile, width, altitudeOffset, specialPositions);
             }
         } catch (Exception e) {
             MillLog.error(this, "Error loading plan image: " + fileName, e);

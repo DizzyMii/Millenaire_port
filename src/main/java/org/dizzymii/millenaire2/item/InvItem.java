@@ -117,9 +117,19 @@ public class InvItem {
         return ITEMS.getOrDefault(key, fallback);
     }
 
-    /**
-     * Check if an InvItem with the given key exists.
-     */
+    @javax.annotation.Nullable
+    public static InvItem fromItem(Item item) {
+        if (item == null || item == Items.AIR) {
+            return null;
+        }
+        for (InvItem invItem : ITEMS.values()) {
+            if (invItem.getItem() == item) {
+                return invItem;
+            }
+        }
+        return null;
+    }
+
     public static boolean exists(String key) {
         return ITEMS.containsKey(key);
     }

@@ -1,7 +1,9 @@
 package org.dizzymii.millenaire2.goal;
 
 import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.entity.action.VillagerActions;
 import org.dizzymii.millenaire2.util.Point;
+import org.dizzymii.millenaire2.village.Building;
 
 /**
  * Villager collects trade goods from the townhall to stock their shop.
@@ -19,19 +21,18 @@ public class GoalGetResourcesForShops extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        org.dizzymii.millenaire2.village.Building th = v.getTownHallBuilding();
-        if (th != null) {
-            for (java.util.Map.Entry<org.dizzymii.millenaire2.item.InvItem, Integer> entry : th.resManager.resources.entrySet()) {
-                int take = Math.min(entry.getValue(), 8);
-                if (take > 0 && th.resManager.takeGoods(entry.getKey(), take)) {
-                    v.addToInv(entry.getKey(), take);
-                    break;
-                }
-            }
+        Building th = v.getTownHallBuilding();
+        GoalActionSupport.TransferChoice choice = GoalActionSupport.firstAvailableStoredGoods(th, 8);
+        if (th == null || choice == null) {
+            return true;
         }
-        return true;
+        return switch (GoalActionSupport.advanceAction(v, "get_resources_for_shop_" + choice.item().key,
+                VillagerActions.takeStoredGoods(th, choice.item(), choice.amount()))) {
+            case RUNNING -> false;
+            case SUCCESS, FAILED -> true;
+        };
     }
 
     @Override
-    public int actionDuration(MillVillager v) { return 15; }
+    public int actionDuration(MillVillager v) { return GoalActionSupport.runtimeBackedDuration(v, 15); }
 }

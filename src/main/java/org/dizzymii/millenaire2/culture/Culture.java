@@ -66,6 +66,10 @@ public class Culture {
     @FieldDocumentation(explanation = "A resource path to a panel texture.")
     public String panelTexture = "millenaire2:textures/entity/panels/default.png";
 
+    @ConfigField(type = ParameterType.STRING, paramName = "icon")
+    @FieldDocumentation(explanation = "Icon identifier for UI display.")
+    public String icon = null;
+
     // --- Runtime data (populated during loading) ---
     public final Map<String, VillagerType> villagerTypes = new HashMap<>();
     public List<VillagerType> listVillagerTypes = new ArrayList<>();

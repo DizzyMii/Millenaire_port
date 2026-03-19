@@ -89,6 +89,51 @@ public class MillWorldData extends SavedData {
         return buildings;
     }
 
+    public List<Building> getVillageBuildings(@Nullable Point townHallPos) {
+        List<Building> matches = new ArrayList<>();
+        if (townHallPos == null) {
+            return matches;
+        }
+        for (Building building : buildings.values()) {
+            Point buildingTownHall = building.isTownhall ? building.getPos() : building.getTownHallPos();
+            if (townHallPos.equals(buildingTownHall)) {
+                matches.add(building);
+            }
+        }
+        return matches;
+    }
+
+    public List<Building> findBuildingsWithTag(@Nullable Point townHallPos, String tag) {
+        List<Building> matches = new ArrayList<>();
+        if (tag == null || tag.isBlank()) {
+            return matches;
+        }
+        for (Building building : getVillageBuildings(townHallPos)) {
+            if (building.hasTag(tag)) {
+                matches.add(building);
+            }
+        }
+        return matches;
+    }
+
+    @Nullable
+    public Building findNearestBuildingWithTag(@Nullable Point townHallPos, @Nullable Point origin, String tag) {
+        Building nearest = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (Building building : findBuildingsWithTag(townHallPos, tag)) {
+            Point point = building.getPos() != null ? building.getPos() : building.getTownHallPos();
+            if (point == null) {
+                continue;
+            }
+            double distance = origin != null ? origin.distanceTo(point) : 0.0;
+            if (nearest == null || distance < bestDistance) {
+                nearest = building;
+                bestDistance = distance;
+            }
+        }
+        return nearest;
+    }
+
     public void removeBuilding(Point p) {
         buildings.remove(p);
         setDirty();

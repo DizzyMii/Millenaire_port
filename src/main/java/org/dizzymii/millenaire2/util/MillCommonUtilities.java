@@ -7,6 +7,12 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +25,7 @@ import java.util.Random;
 public class MillCommonUtilities {
 
     private static final Random random = new Random();
+    private static final Charset LEGACY_TEXT_CHARSET = Charset.forName("windows-1252");
 
     /**
      * Returns the root Millénaire content directory (game_dir/millenaire2/).
@@ -86,11 +93,23 @@ public class MillCommonUtilities {
     }
 
     public static BufferedReader getReader(File file) throws IOException {
-        return Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8);
+        byte[] bytes = Files.readAllBytes(file.toPath());
+        return new BufferedReader(new StringReader(decodeText(bytes)));
     }
 
     public static BufferedWriter getWriter(File file) throws IOException {
         return Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8);
+    }
+
+    private static String decodeText(byte[] bytes) throws IOException {
+        CharsetDecoder utf8Decoder = StandardCharsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT);
+        try {
+            return utf8Decoder.decode(ByteBuffer.wrap(bytes)).toString();
+        } catch (CharacterCodingException ignored) {
+            return LEGACY_TEXT_CHARSET.decode(ByteBuffer.wrap(bytes)).toString();
+        }
     }
 
     /**

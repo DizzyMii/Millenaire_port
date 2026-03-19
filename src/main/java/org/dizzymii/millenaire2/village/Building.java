@@ -129,6 +129,121 @@ public class Building {
 
     public Set<Point> getKnownVillages() { return relations.keySet(); }
 
+    public List<String> getTags() {
+        return location != null ? location.tags : List.of();
+    }
+
+    public List<String> getVillageTags() {
+        return location != null ? location.villageTags : List.of();
+    }
+
+    public List<String> getClearTags() {
+        return location != null ? location.clearTags : List.of();
+    }
+
+    public boolean hasTag(String tag) {
+        String normalized = normalizeMetadataValue(tag);
+        if (normalized.isEmpty()) {
+            return false;
+        }
+        if (location != null) {
+            for (String value : location.tags) {
+                if (normalized.equals(normalizeMetadataValue(value))) {
+                    return true;
+                }
+            }
+        }
+        return (BuildingTags.TAG_INN.equals(normalized) && isInn)
+                || (BuildingTags.TAG_MARKET.equals(normalized) && isMarket)
+                || (BuildingTags.TAG_AUTO_SPAWN_VILLAGERS.equals(normalized) && hasAutoSpawn);
+    }
+
+    public boolean hasShop(String shopKey) {
+        return location != null && location.shop != null
+                && normalizeMetadataValue(location.shop).equals(normalizeMetadataValue(shopKey));
+    }
+
+    @Nullable
+    public Point getActivityPosition(String targetPosition) {
+        if (location == null) {
+            return pos;
+        }
+        Point resolved = switch (normalizeMetadataValue(targetPosition)) {
+            case "sleep", "sleeping" -> location.sleepingPos;
+            case "sell", "selling" -> location.sellingPos;
+            case "craft", "crafting" -> location.craftingPos;
+            case "shelter" -> location.shelterPos;
+            case "defend", "defending" -> location.defendingPos;
+            case "leasure", "leisure" -> location.leisurePos;
+            case "chest", "mainchest", "lockedchest" -> location.chestPos;
+            default -> location.pos;
+        };
+        return resolved != null ? resolved : pos;
+    }
+
+    public void applyPlanMetadata(@Nullable BuildingPlanSet planSet, @Nullable BuildingPlan plan) {
+        BuildingLocation activeLocation = ensureLocation();
+        ArrayList<String> combinedTags = new ArrayList<>();
+        if (planSet != null) {
+            activeLocation.planKey = planSet.key;
+            combinedTags.addAll(planSet.tags);
+        }
+        if (plan != null) {
+            combinedTags.addAll(plan.tags);
+            activeLocation.width = plan.width;
+            activeLocation.length = plan.length;
+            activeLocation.level = buildingLevel;
+            if (plan.priorityMoveIn > 0) {
+                activeLocation.priorityMoveIn = plan.priorityMoveIn;
+            }
+            if (!plan.shops.isEmpty()) {
+                activeLocation.shop = normalizeMetadataValue(plan.shops.get(0));
+            }
+        }
+        replaceNormalized(activeLocation.tags, combinedTags);
+        replaceNormalized(activeLocation.villageTags, plan != null ? plan.villageTags : List.of());
+        replaceNormalized(activeLocation.clearTags, plan != null ? plan.clearTags : List.of());
+        replaceNormalized(activeLocation.subBuildings, List.of());
+        if (planSet != null) {
+            appendNormalized(activeLocation.subBuildings, planSet.subBuildings);
+        }
+        if (plan != null) {
+            appendNormalized(activeLocation.subBuildings, plan.subBuildings);
+        }
+        syncLegacyFlagsFromTags();
+    }
+
+    public void syncLegacyFlagsFromTags() {
+        isInn = hasTag(BuildingTags.TAG_INN);
+        isMarket = hasTag(BuildingTags.TAG_MARKET);
+        hasAutoSpawn = hasTag(BuildingTags.TAG_AUTO_SPAWN_VILLAGERS);
+    }
+
+    private BuildingLocation ensureLocation() {
+        if (location == null) {
+            location = new BuildingLocation();
+        }
+        return location;
+    }
+
+    private static String normalizeMetadataValue(String value) {
+        return value == null ? "" : value.trim().toLowerCase();
+    }
+
+    private static void replaceNormalized(List<String> target, Collection<String> values) {
+        target.clear();
+        appendNormalized(target, values);
+    }
+
+    private static void appendNormalized(List<String> target, Collection<String> values) {
+        for (String value : values) {
+            String normalized = normalizeMetadataValue(value);
+            if (!normalized.isEmpty() && !target.contains(normalized)) {
+                target.add(normalized);
+            }
+        }
+    }
+
     // ========== Resource manager ==========
 
     public final BuildingResManager resManager = new BuildingResManager(this);
@@ -191,6 +306,11 @@ public class Building {
             if (cip != null) {
                 currentConstruction = cip;
                 buildingLevel = nextLevel;
+                if (location != null) {
+                    location.level = nextLevel;
+                }
+                applyPlanMetadata(planSet, nextPlan);
+                org.dizzymii.millenaire2.world.WorldGenVillage.applyPlanSpecialPositions(this, nextPlan);
                 if (mw != null) mw.setDirty();
                 MillLog.minor("Building", "Started upgrade to level " + nextLevel + " for: " + name);
                 return true;
@@ -367,6 +487,12 @@ public class Building {
         newBuilding.setName(planSet.name != null ? planSet.name : newPlanSetKey);
         newBuilding.mw = mw;
         newBuilding.world = world;
+        newBuilding.location = new BuildingLocation();
+        newBuilding.location.pos = newPos;
+        newBuilding.location.cultureKey = cultureKey;
+        newBuilding.location.orientation = 0;
+        newBuilding.applyPlanMetadata(planSet, initialPlan);
+        org.dizzymii.millenaire2.world.WorldGenVillage.applyPlanSpecialPositions(newBuilding, initialPlan);
 
         // Start construction
         ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, newPos, serverLevel);
@@ -496,6 +622,7 @@ public class Building {
         if (townHallPos != null) townHallPos.writeToNBT(tag, "th");
 
         if (location != null) location.save(tag, "loc");
+        resManager.save(tag, "res.");
 
         if (controlledBy != null) {
             tag.putUUID("controlledBy", controlledBy);
@@ -555,6 +682,8 @@ public class Building {
         b.townHallPos = Point.readFromNBT(tag, "th");
 
         b.location = BuildingLocation.read(tag, "loc");
+        b.resManager.load(tag, "res.");
+        b.syncLegacyFlagsFromTags();
 
         if (tag.hasUUID("controlledBy")) {
             b.controlledBy = tag.getUUID("controlledBy");

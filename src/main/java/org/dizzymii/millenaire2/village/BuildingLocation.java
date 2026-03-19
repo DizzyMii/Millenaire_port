@@ -37,8 +37,12 @@ public class BuildingLocation implements Cloneable {
     @Nullable public Point craftingPos;
     @Nullable public Point shelterPos;
     @Nullable public Point defendingPos;
+    @Nullable public Point leisurePos;
 
     @Nullable public String cultureKey;
+    public CopyOnWriteArrayList<String> tags = new CopyOnWriteArrayList<>();
+    public CopyOnWriteArrayList<String> villageTags = new CopyOnWriteArrayList<>();
+    public CopyOnWriteArrayList<String> clearTags = new CopyOnWriteArrayList<>();
     public CopyOnWriteArrayList<String> subBuildings = new CopyOnWriteArrayList<>();
     public boolean upgradesAllowed = true;
     public boolean bedrocklevel = false;
@@ -93,6 +97,7 @@ public class BuildingLocation implements Cloneable {
         if (craftingPos != null) craftingPos.write(tag, label + "_craft");
         if (shelterPos != null) shelterPos.write(tag, label + "_shelter");
         if (defendingPos != null) defendingPos.write(tag, label + "_defend");
+        if (leisurePos != null) leisurePos.write(tag, label + "_leisure");
 
         // Sub-buildings
         ListTag subList = new ListTag();
@@ -100,6 +105,24 @@ public class BuildingLocation implements Cloneable {
             subList.add(StringTag.valueOf(sub));
         }
         tag.put(label + "_subs", subList);
+
+        ListTag tagList = new ListTag();
+        for (String value : tags) {
+            tagList.add(StringTag.valueOf(value));
+        }
+        tag.put(label + "_tags", tagList);
+
+        ListTag villageTagList = new ListTag();
+        for (String value : villageTags) {
+            villageTagList.add(StringTag.valueOf(value));
+        }
+        tag.put(label + "_villagetags", villageTagList);
+
+        ListTag clearTagList = new ListTag();
+        for (String value : clearTags) {
+            clearTagList.add(StringTag.valueOf(value));
+        }
+        tag.put(label + "_cleartags", clearTagList);
     }
 
     @Nullable
@@ -148,12 +171,31 @@ public class BuildingLocation implements Cloneable {
         bl.craftingPos = Point.read(tag, label + "_craft");
         bl.shelterPos = Point.read(tag, label + "_shelter");
         bl.defendingPos = Point.read(tag, label + "_defend");
+        bl.leisurePos = Point.read(tag, label + "_leisure");
 
         // Sub-buildings
         if (tag.contains(label + "_subs", Tag.TAG_LIST)) {
             ListTag subList = tag.getList(label + "_subs", Tag.TAG_STRING);
             for (int i = 0; i < subList.size(); i++) {
                 bl.subBuildings.add(subList.getString(i));
+            }
+        }
+        if (tag.contains(label + "_tags", Tag.TAG_LIST)) {
+            ListTag tagList = tag.getList(label + "_tags", Tag.TAG_STRING);
+            for (int i = 0; i < tagList.size(); i++) {
+                bl.tags.add(tagList.getString(i));
+            }
+        }
+        if (tag.contains(label + "_villagetags", Tag.TAG_LIST)) {
+            ListTag tagList = tag.getList(label + "_villagetags", Tag.TAG_STRING);
+            for (int i = 0; i < tagList.size(); i++) {
+                bl.villageTags.add(tagList.getString(i));
+            }
+        }
+        if (tag.contains(label + "_cleartags", Tag.TAG_LIST)) {
+            ListTag tagList = tag.getList(label + "_cleartags", Tag.TAG_STRING);
+            for (int i = 0; i < tagList.size(); i++) {
+                bl.clearTags.add(tagList.getString(i));
             }
         }
         return bl;
@@ -163,6 +205,9 @@ public class BuildingLocation implements Cloneable {
     public BuildingLocation clone() {
         try {
             BuildingLocation copy = (BuildingLocation) super.clone();
+            copy.tags = new CopyOnWriteArrayList<>(this.tags);
+            copy.villageTags = new CopyOnWriteArrayList<>(this.villageTags);
+            copy.clearTags = new CopyOnWriteArrayList<>(this.clearTags);
             copy.subBuildings = new CopyOnWriteArrayList<>(this.subBuildings);
             return copy;
         } catch (CloneNotSupportedException e) {

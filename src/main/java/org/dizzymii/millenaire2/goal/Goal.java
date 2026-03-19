@@ -144,6 +144,17 @@ public abstract class Goal {
         org.dizzymii.millenaire2.goal.generic.GoalGeneric.loadGenericGoals();
     }
 
+    public static String normalizeKey(String key) {
+        return key == null ? "" : key.trim().toLowerCase();
+    }
+
+    public static Goal getGoal(String key) {
+        if (goals == null) {
+            return null;
+        }
+        return goals.get(normalizeKey(key));
+    }
+
     // --- Abstract methods ---
     public abstract GoalInformation getDestination(MillVillager villager) throws Exception;
     public abstract boolean performAction(MillVillager villager) throws Exception;
@@ -178,7 +189,8 @@ public abstract class Goal {
 
     // --- Helper to register a goal ---
     protected static void registerGoal(String key, Goal goal) {
-        goal.key = key;
-        goals.put(key, goal);
+        String normalizedKey = normalizeKey(key);
+        goal.key = normalizedKey;
+        goals.put(normalizedKey, goal);
     }
 }

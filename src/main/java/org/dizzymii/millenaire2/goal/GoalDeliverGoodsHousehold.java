@@ -1,7 +1,9 @@
 package org.dizzymii.millenaire2.goal;
 
 import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.entity.action.VillagerActions;
 import org.dizzymii.millenaire2.util.Point;
+import org.dizzymii.millenaire2.village.Building;
 
 /**
  * Villager delivers goods collected from the townhall to their household building.
@@ -19,16 +21,16 @@ public class GoalDeliverGoodsHousehold extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        org.dizzymii.millenaire2.village.Building home = v.getHomeBuilding();
-        if (home != null) {
-            for (java.util.Map.Entry<org.dizzymii.millenaire2.item.InvItem, Integer> entry : v.inventory.entrySet()) {
-                home.resManager.storeGoods(entry.getKey(), entry.getValue());
-            }
+        Building home = v.getHomeBuilding();
+        if (home == null || v.inventory.isEmpty()) {
+            return true;
         }
-        v.inventory.clear();
-        return true;
+        return switch (GoalActionSupport.advanceAction(v, "deliver_goods_household", VillagerActions.storeAllInventory(home))) {
+            case RUNNING -> false;
+            case SUCCESS, FAILED -> true;
+        };
     }
 
     @Override
-    public int actionDuration(MillVillager v) { return 10; }
+    public int actionDuration(MillVillager v) { return GoalActionSupport.runtimeBackedDuration(v, 10); }
 }

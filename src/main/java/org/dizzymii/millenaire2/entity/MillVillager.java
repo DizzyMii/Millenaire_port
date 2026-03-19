@@ -7,11 +7,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.SimpleContainer;
 
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -71,8 +73,6 @@ public abstract class MillVillager extends PathfinderMob {
     @Nullable public Point prevPoint = null;
     @Nullable public Point townHallPoint = null;
     public boolean extraLog = false;
-    public ItemStack heldItem = ItemStack.EMPTY;
-    public ItemStack heldItemOffHand = ItemStack.EMPTY;
     public long timer = 0L;
     public long actionStart = 0L;
     public boolean allowRandomMoves = false;
@@ -81,7 +81,6 @@ public abstract class MillVillager extends PathfinderMob {
     public int longDistanceStuck;
     public boolean nightActionPerformed = false;
     public long speech_started = 0L;
-    public HashMap<InvItem, Integer> inventory = new HashMap<>();
     public long pathingTime;
     public int nbPathsCalculated = 0;
     public long goalStarted = 0L;
@@ -107,6 +106,8 @@ public abstract class MillVillager extends PathfinderMob {
     public boolean isRaider = false;
     private long villagerId = -1L;
     private int goalTickCounter = 0;
+    public final VillagerInventory inventory = new VillagerInventory();
+    private final VillagerActionRuntime actionRuntime = new VillagerActionRuntime();
 
     protected MillVillager(EntityType<? extends MillVillager> type, Level level) {
         super(type, level);
@@ -188,6 +189,16 @@ public abstract class MillVillager extends PathfinderMob {
     @Nullable public Goal getCurrentGoal() { return currentGoal; }
     @Nullable public Point getPathDestPoint() { return pathDestPoint; }
     public void setPathDestPoint(@Nullable Point p) { this.pathDestPoint = p; }
+    public VillagerActionRuntime getActionRuntime() { return actionRuntime; }
+    public SimpleContainer getInventoryContainer() { return inventory.asContainer(); }
+    public int getSelectedInventorySlot() { return inventory.getSelectedSlot(); }
+    public void setSelectedInventorySlot(int slot) { inventory.setSelectedSlot(slot); }
+    public ItemStack getSelectedInventoryItem() { return inventory.getSelectedItem(); }
+    public void syncSelectedItemToHands() {
+        ItemStack selected = getSelectedInventoryItem();
+        this.setItemSlot(EquipmentSlot.MAINHAND, selected.copy());
+        this.heldItemCount = selected.getCount();
+    }
 
     // ========== Custom display name ==========
 
@@ -224,6 +235,7 @@ public abstract class MillVillager extends PathfinderMob {
             goalTickCounter = 0;
             tickGoalSelection();
         }
+        actionRuntime.tick(this);
         tickGoalExecution();
     }
 
@@ -262,7 +274,7 @@ public abstract class MillVillager extends PathfinderMob {
         // Try to find a suitable goal from the villager type's goal list
         if (vtype != null && !vtype.goals.isEmpty()) {
             for (String gKey : vtype.goals) {
-                Goal g = Goal.goals.get(gKey);
+                Goal g = Goal.getGoal(gKey);
                 if (g == null) continue;
                 if (isNight && !g.canBeDoneAtNight()) continue;
                 if (!isNight && !g.canBeDoneInDayTime()) continue;
@@ -285,7 +297,7 @@ public abstract class MillVillager extends PathfinderMob {
                 try {
                     GoalInformation info = g.getDestination(this);
                     if (info != null && info.hasTarget()) {
-                        setActiveGoal(gKey, g, info);
+                        setActiveGoal(g.key, g, info);
                         return;
                     }
                 } catch (Exception e) {
@@ -305,6 +317,11 @@ public abstract class MillVillager extends PathfinderMob {
             } catch (Exception ignored) {}
         }
 
+        Point wanderTarget = housePoint != null ? housePoint : townHallPoint;
+        if (wanderTarget == null) {
+            wanderTarget = new Point(this.blockPosition());
+        }
+
         // Daytime idle: try socialise, otherwise wander near home
         if (!isNight) {
             if (Goal.gosocialise != null) {
@@ -316,24 +333,24 @@ public abstract class MillVillager extends PathfinderMob {
                     }
                 } catch (Exception ignored) {}
             }
-            // Random wander near home point
-            Point wanderTarget = housePoint != null ? housePoint : townHallPoint;
-            if (wanderTarget != null) {
-                int dx = this.getRandom().nextInt(11) - 5;
-                int dz = this.getRandom().nextInt(11) - 5;
-                Point wander = new Point(wanderTarget.x + dx, wanderTarget.y, wanderTarget.z + dz);
-                this.getNavigation().moveTo(wander.x + 0.5, wander.y, wander.z + 0.5, 0.5);
-            }
+        }
+        if (wanderTarget != null) {
+            int dx = this.getRandom().nextInt(11) - 5;
+            int dz = this.getRandom().nextInt(11) - 5;
+            Point wander = new Point(wanderTarget.x + dx, wanderTarget.y, wanderTarget.z + dz);
+            this.getNavigation().moveTo(wander.x + 0.5, wander.y, wander.z + 0.5, 0.5);
         }
     }
 
     private void setActiveGoal(String key, Goal goal, GoalInformation info) {
-        this.goalKey = key;
+        actionRuntime.reset(this);
+        String normalizedKey = Goal.normalizeKey(key);
+        this.goalKey = normalizedKey;
         this.currentGoal = goal;
         this.goalInformation = info;
         this.goalStarted = this.level().getGameTime();
         this.actionStart = this.level().getGameTime();
-        this.entityData.set(DATA_GOAL_KEY, key);
+        this.entityData.set(DATA_GOAL_KEY, normalizedKey);
 
         if (info.targetPoint != null) {
             this.pathDestPoint = info.targetPoint;
@@ -351,6 +368,7 @@ public abstract class MillVillager extends PathfinderMob {
         if (currentGoal != null) {
             lastGoalTime.put(currentGoal, this.level().getGameTime());
         }
+        actionRuntime.reset(this);
         this.goalKey = null;
         this.currentGoal = null;
         this.goalInformation = null;
@@ -522,7 +540,7 @@ public abstract class MillVillager extends PathfinderMob {
         if (tag.contains("goalKey")) {
             goalKey = tag.getString("goalKey");
             if (Goal.goals != null) {
-                currentGoal = Goal.goals.get(goalKey);
+                currentGoal = Goal.getGoal(goalKey);
             }
         }
         if (tag.contains("hiredBy")) {
@@ -539,7 +557,7 @@ public abstract class MillVillager extends PathfinderMob {
                 int count = itemTag.getInt("count");
                 InvItem invItem = InvItem.get(key);
                 if (invItem != null && count > 0) {
-                    inventory.put(invItem, count);
+                    inventory.add(invItem, count);
                 }
             }
         }
@@ -567,19 +585,19 @@ public abstract class MillVillager extends PathfinderMob {
 
     // --- Inventory helpers ---
     public int countInv(InvItem item) {
-        return inventory.getOrDefault(item, 0);
+        return inventory.count(item);
     }
 
     public void addToInv(InvItem item, int count) {
-        inventory.merge(item, count, Integer::sum);
-        Integer current = inventory.get(item);
-        if (current != null && current <= 0) {
-            inventory.remove(item);
+        if (count > 0) {
+            inventory.add(item, count);
+        } else if (count < 0) {
+            inventory.remove(item, -count);
         }
     }
 
     public void removeFromInv(InvItem item, int count) {
-        addToInv(item, -count);
+        inventory.remove(item, count);
     }
 
     // ========== Concrete villager subclasses ==========

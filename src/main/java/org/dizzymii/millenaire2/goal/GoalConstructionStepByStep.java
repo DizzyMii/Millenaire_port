@@ -1,7 +1,11 @@
 package org.dizzymii.millenaire2.goal;
 
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
 import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.entity.VillagerActionRuntime;
+import org.dizzymii.millenaire2.entity.action.VillagerActions;
+import org.dizzymii.millenaire2.buildingplan.BuildingBlock;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.village.ConstructionIP;
@@ -35,15 +39,36 @@ public class GoalConstructionStepByStep extends Goal {
         ConstructionIP cip = building.currentConstruction;
         if (cip == null || cip.isComplete()) return true; // Nothing to build
 
-        if (!(villager.level() instanceof ServerLevel serverLevel)) return true;
-
-        // Place a few blocks per action tick
-        int placed = cip.placeBlocks(serverLevel, 3);
-        if (placed > 0) {
-            villager.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
-            if (building.mw != null) building.mw.setDirty();
+        BuildingBlock nextBlock = cip.peekNextBlock();
+        BlockPos origin = cip.location != null && cip.location.pos != null ? cip.location.pos.toBlockPos() : null;
+        if (nextBlock == null || origin == null || nextBlock.blockState == null) {
+            return finishConstructionStep(building, cip);
         }
 
+        BlockPos targetPos = nextBlock.getBlockPos(origin, cip.orientation);
+        BlockState targetState = BuildingBlock.rotateBlockState(nextBlock.blockState, cip.orientation);
+        if (villager.level().getBlockState(targetPos).equals(targetState)) {
+            return finishConstructionStep(building, cip);
+        }
+
+        return switch (advanceAction(villager, "construction_" + targetPos.asLong() + "_" + cip.nbBlocksDone,
+                VillagerActions.placeBlock(targetPos, targetState, false))) {
+            case RUNNING -> false;
+            case SUCCESS -> finishConstructionStep(building, cip);
+            case FAILED -> false;
+        };
+    }
+
+    @Override
+    public int actionDuration(MillVillager villager) {
+        VillagerActionRuntime runtime = villager.getActionRuntime();
+        return runtime.hasAction() || runtime.getLastResult().status() != VillagerActionRuntime.Status.IDLE ? 1 : 15;
+    }
+
+    private boolean finishConstructionStep(Building building, ConstructionIP cip) {
+        if (cip.markNextBlockPlaced() && building.mw != null) {
+            building.mw.setDirty();
+        }
         if (cip.isComplete()) {
             building.currentConstruction = null;
             if (building.mw != null) building.mw.setDirty();
@@ -52,8 +77,36 @@ public class GoalConstructionStepByStep extends Goal {
         return false;
     }
 
-    @Override
-    public int actionDuration(MillVillager villager) { return 15; }
+    private ActionProgress advanceAction(MillVillager villager, String actionKey, VillagerActionRuntime.Action action) {
+        VillagerActionRuntime runtime = villager.getActionRuntime();
+        if (runtime.hasAction()) {
+            return ActionProgress.RUNNING;
+        }
+        VillagerActionRuntime.Result lastResult = runtime.getLastResult();
+        if (lastResult.status() == VillagerActionRuntime.Status.SUCCESS) {
+            if (actionKey.equals(runtime.getLastCompletedActionKey())) {
+                runtime.reset(villager);
+                villager.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+                return ActionProgress.SUCCESS;
+            }
+            runtime.reset(villager);
+        }
+        if (lastResult.status() == VillagerActionRuntime.Status.FAILED) {
+            if (actionKey.equals(runtime.getLastCompletedActionKey())) {
+                runtime.reset(villager);
+                return ActionProgress.FAILED;
+            }
+            runtime.reset(villager);
+        }
+        runtime.start(actionKey, action, villager);
+        return ActionProgress.RUNNING;
+    }
+
+    private enum ActionProgress {
+        RUNNING,
+        SUCCESS,
+        FAILED
+    }
 
     /**
      * Find a building under construction that this villager should work on.

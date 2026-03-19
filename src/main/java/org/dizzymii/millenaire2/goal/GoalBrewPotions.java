@@ -1,7 +1,13 @@
 package org.dizzymii.millenaire2.goal;
 
 import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.entity.VillagerActionRuntime;
+import org.dizzymii.millenaire2.entity.action.VillagerActions;
+import org.dizzymii.millenaire2.item.InvItem;
+import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.util.Point;
+
+import java.util.Map;
 
 /**
  * Villager goes to their workshop to brew potions.
@@ -19,22 +25,43 @@ public class GoalBrewPotions extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        // Consume ingredients from home building and produce potions
-        org.dizzymii.millenaire2.village.Building home = v.getHomeBuilding();
-        if (home != null) {
-            // Try to consume nether wart + glass bottle to produce a potion
-            org.dizzymii.millenaire2.item.InvItem wart = org.dizzymii.millenaire2.item.InvItem.get("minecraft:nether_wart");
-            org.dizzymii.millenaire2.item.InvItem bottle = org.dizzymii.millenaire2.item.InvItem.get("minecraft:glass_bottle");
-            org.dizzymii.millenaire2.item.InvItem potion = org.dizzymii.millenaire2.item.InvItem.get("minecraft:potion");
-            if (wart != null && bottle != null && potion != null
-                    && home.resManager.takeGoods(wart, 1)
-                    && home.resManager.takeGoods(bottle, 1)) {
-                home.resManager.storeGoods(potion, 1);
-            }
+        if (resolvePendingAction(v)) {
+            return true;
         }
-        return true;
+        Building home = v.getHomeBuilding();
+        InvItem wart = InvItem.get("netherwart");
+        InvItem bottle = InvItem.get("bottle");
+        InvItem potion = InvItem.get("akwardpotion");
+        if (home == null || wart == null || bottle == null || potion == null) {
+            return true;
+        }
+        if (home.resManager.countGoods(wart) < 1 || home.resManager.countGoods(bottle) < 1) {
+            return true;
+        }
+        return switch (GoalActionSupport.advanceAction(v, "brew_potions",
+                VillagerActions.transformStoredGoods(home, Map.of(wart, 1, bottle, 1), Map.of(potion, 1)))) {
+            case RUNNING -> false;
+            case SUCCESS, FAILED -> true;
+        };
     }
 
     @Override
-    public int actionDuration(MillVillager v) { return 60; }
+    public int actionDuration(MillVillager v) { return GoalActionSupport.runtimeBackedDuration(v, 60); }
+
+    private boolean resolvePendingAction(MillVillager villager) {
+        VillagerActionRuntime runtime = villager.getActionRuntime();
+        if (runtime.hasAction()) {
+            return false;
+        }
+        String actionKey = runtime.getLastCompletedActionKey();
+        VillagerActionRuntime.Result result = runtime.getLastResult();
+        if (actionKey == null || result.status() == VillagerActionRuntime.Status.IDLE) {
+            return false;
+        }
+        if ("brew_potions".equals(actionKey)) {
+            runtime.reset(villager);
+            return true;
+        }
+        return false;
+    }
 }

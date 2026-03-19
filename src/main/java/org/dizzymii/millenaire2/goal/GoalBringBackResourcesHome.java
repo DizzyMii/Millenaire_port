@@ -1,11 +1,9 @@
 package org.dizzymii.millenaire2.goal;
 
 import org.dizzymii.millenaire2.entity.MillVillager;
-import org.dizzymii.millenaire2.item.InvItem;
+import org.dizzymii.millenaire2.entity.action.VillagerActions;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
-
-import java.util.Map;
 
 /**
  * Villager brings gathered resources back to their home building's storage.
@@ -25,15 +23,15 @@ public class GoalBringBackResourcesHome extends Goal {
     @Override
     public boolean performAction(MillVillager v) {
         Building home = v.getHomeBuilding();
-        if (home != null) {
-            for (Map.Entry<InvItem, Integer> entry : v.inventory.entrySet()) {
-                home.resManager.storeGoods(entry.getKey(), entry.getValue());
-            }
+        if (home == null || v.inventory.isEmpty()) {
+            return true;
         }
-        v.inventory.clear();
-        return true;
+        return switch (GoalActionSupport.advanceAction(v, "bring_back_resources_home", VillagerActions.storeAllInventory(home))) {
+            case RUNNING -> false;
+            case SUCCESS, FAILED -> true;
+        };
     }
 
     @Override
-    public int actionDuration(MillVillager v) { return 10; }
+    public int actionDuration(MillVillager v) { return GoalActionSupport.runtimeBackedDuration(v, 10); }
 }

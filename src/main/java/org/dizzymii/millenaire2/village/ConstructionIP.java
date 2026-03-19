@@ -63,6 +63,31 @@ public class ConstructionIP {
         return firstPassBlocks.isEmpty() && secondPassBlocks.isEmpty();
     }
 
+    @Nullable
+    public BuildingBlock peekNextBlock() {
+        if (!firstPassBlocks.isEmpty()) {
+            return firstPassBlocks.get(0);
+        }
+        return secondPassBlocks.isEmpty() ? null : secondPassBlocks.get(0);
+    }
+
+    public boolean markNextBlockPlaced() {
+        if (!firstPassBlocks.isEmpty()) {
+            firstPassBlocks.remove(0);
+            nbBlocksDone++;
+            return true;
+        }
+        if (!firstPassComplete) {
+            firstPassComplete = true;
+        }
+        if (!secondPassBlocks.isEmpty()) {
+            secondPassBlocks.remove(0);
+            nbBlocksDone++;
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Place the next block in the construction sequence.
      * @return true if a block was placed, false if construction is done or no origin
@@ -74,10 +99,12 @@ public class ConstructionIP {
 
         // First pass
         if (!firstPassBlocks.isEmpty()) {
-            BuildingBlock bb = firstPassBlocks.remove(0);
-            bb.place(level, origin, orientation);
-            nbBlocksDone++;
-            return true;
+            BuildingBlock bb = firstPassBlocks.get(0);
+            if (bb.place(level, origin, orientation)) {
+                markNextBlockPlaced();
+                return true;
+            }
+            return false;
         }
 
         if (!firstPassComplete) {
@@ -86,10 +113,12 @@ public class ConstructionIP {
 
         // Second pass
         if (!secondPassBlocks.isEmpty()) {
-            BuildingBlock bb = secondPassBlocks.remove(0);
-            bb.place(level, origin, orientation);
-            nbBlocksDone++;
-            return true;
+            BuildingBlock bb = secondPassBlocks.get(0);
+            if (bb.place(level, origin, orientation)) {
+                markNextBlockPlaced();
+                return true;
+            }
+            return false;
         }
 
         return false;

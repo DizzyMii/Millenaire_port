@@ -141,6 +141,51 @@ public class VillagerType {
     @FieldDocumentation(explanation = "Tags controlling special behaviours.")
     public List<String> tags = new ArrayList<>();
 
+    // --- Legacy params (parsed to suppress warnings) ---
+    @ConfigField(type = ParameterType.STRING, paramName = "defaultweapon")
+    @FieldDocumentation(explanation = "Default weapon item ID.")
+    public String defaultWeapon = null;
+
+    @ConfigField(type = ParameterType.STRING, paramName = "icon")
+    @FieldDocumentation(explanation = "Icon for UI display.")
+    public String icon = null;
+
+    @ConfigField(type = ParameterType.STRING, paramName = "clothes")
+    @FieldDocumentation(explanation = "Clothing overlay key.")
+    public String clothes = null;
+
+    @ConfigField(type = ParameterType.STRING_ADD, paramName = "startinginv")
+    @FieldDocumentation(explanation = "Starting inventory items.")
+    public List<String> startingInventory = new ArrayList<>();
+
+    @ConfigField(type = ParameterType.STRING_ADD, paramName = "merchantstock")
+    @FieldDocumentation(explanation = "Merchant stock items.")
+    public List<String> merchantStock = new ArrayList<>();
+
+    @ConfigField(type = ParameterType.STRING_ADD, paramName = "requiredgood")
+    @FieldDocumentation(explanation = "Goods required for this villager.")
+    public List<String> requiredGoods = new ArrayList<>();
+
+    @ConfigField(type = ParameterType.STRING_ADD, paramName = "itemneeded")
+    @FieldDocumentation(explanation = "Items needed by this villager.")
+    public List<String> itemsNeeded = new ArrayList<>();
+
+    @ConfigField(type = ParameterType.STRING, paramName = "villagerconfig")
+    @FieldDocumentation(explanation = "Villager config key for special behaviours.")
+    public String villagerConfig = null;
+
+    @ConfigField(type = ParameterType.STRING, paramName = "travelbook_held_item")
+    @FieldDocumentation(explanation = "Item held in main hand for travel book display.")
+    public String travelBookHeldItem = null;
+
+    @ConfigField(type = ParameterType.STRING, paramName = "travelbook_held_item_off_hand")
+    @FieldDocumentation(explanation = "Item held in off hand for travel book display.")
+    public String travelBookHeldItemOffHand = null;
+
+    @ConfigField(type = ParameterType.BOOLEAN, paramName = "travelbook_main_culture_villager", defaultValue = "false")
+    @FieldDocumentation(explanation = "Whether this is the main culture villager shown in travel book.")
+    public boolean travelBookMainCultureVillager = false;
+
     // --- Derived boolean flags (set after loading) ---
     public boolean isChild = false;
     public boolean isChief = false;

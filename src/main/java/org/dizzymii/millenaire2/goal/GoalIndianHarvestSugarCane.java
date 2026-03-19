@@ -3,7 +3,8 @@ package org.dizzymii.millenaire2.goal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Blocks;
 import org.dizzymii.millenaire2.entity.MillVillager;
-import org.dizzymii.millenaire2.item.InvItem;
+import org.dizzymii.millenaire2.entity.VillagerActionRuntime;
+import org.dizzymii.millenaire2.entity.action.VillagerActions;
 import org.dizzymii.millenaire2.util.Point;
 
 /**
@@ -24,28 +25,22 @@ public class GoalIndianHarvestSugarCane extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        BlockPos pos = v.blockPosition();
-        for (int dx = -4; dx <= 4; dx++) {
-            for (int dz = -4; dz <= 4; dz++) {
-                BlockPos base = pos.offset(dx, 0, dz);
-                for (int dy = 0; dy <= 3; dy++) {
-                    BlockPos check = base.above(dy);
-                    if (v.level().getBlockState(check).is(Blocks.SUGAR_CANE)
-                            && v.level().getBlockState(check.above()).is(Blocks.SUGAR_CANE)) {
-                        // Break top segment, keep base for regrowth
-                        v.level().destroyBlock(check.above(), false);
-                        InvItem cane = InvItem.get("minecraft:sugar_cane");
-                        if (cane != null) v.addToInv(cane, 1);
-                        return true;
-                    }
-                }
-            }
+        if (resolvePendingAction(v)) {
+            return true;
         }
-        return true;
+        BlockPos target = findNearbyTopSegment(v);
+        if (target == null) {
+            return true;
+        }
+        return switch (GoalActionSupport.advanceAction(v, "harvest_sugarcane_" + target.asLong(),
+                VillagerActions.breakBlock(target, true))) {
+            case RUNNING -> false;
+            case SUCCESS, FAILED -> true;
+        };
     }
 
     @Override
-    public int actionDuration(MillVillager v) { return 25; }
+    public int actionDuration(MillVillager v) { return GoalActionSupport.runtimeBackedDuration(v, 25); }
 
     private BlockPos findTallCane(MillVillager v) {
         BlockPos center = v.blockPosition();
@@ -61,5 +56,45 @@ public class GoalIndianHarvestSugarCane extends Goal {
             }
         }
         return null;
+    }
+
+    private BlockPos findNearbyTopSegment(MillVillager v) {
+        BlockPos pos = v.blockPosition();
+        for (int dx = -4; dx <= 4; dx++) {
+            for (int dz = -4; dz <= 4; dz++) {
+                BlockPos base = pos.offset(dx, 0, dz);
+                for (int dy = 0; dy <= 3; dy++) {
+                    BlockPos check = base.above(dy);
+                    if (v.level().getBlockState(check).is(Blocks.SUGAR_CANE)
+                            && v.level().getBlockState(check.above()).is(Blocks.SUGAR_CANE)) {
+                        return check.above();
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean resolvePendingAction(MillVillager villager) {
+        VillagerActionRuntime runtime = villager.getActionRuntime();
+        if (runtime.hasAction()) {
+            return false;
+        }
+        String actionKey = runtime.getLastCompletedActionKey();
+        VillagerActionRuntime.Result result = runtime.getLastResult();
+        if (actionKey == null || result.status() == VillagerActionRuntime.Status.IDLE) {
+            return false;
+        }
+        if (actionKey.startsWith("harvest_sugarcane_")) {
+            if (result.status() == VillagerActionRuntime.Status.SUCCESS) {
+                BlockPos target = GoalActionSupport.parseActionPos(actionKey, "harvest_sugarcane_");
+                if (target != null) {
+                    GoalActionSupport.collectNearbyDrops(villager, target, 1.5);
+                }
+            }
+            runtime.reset(villager);
+            return true;
+        }
+        return false;
     }
 }

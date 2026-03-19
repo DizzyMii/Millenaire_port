@@ -6,6 +6,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.dizzymii.millenaire2.buildingplan.BuildingBlock;
+import org.dizzymii.millenaire2.buildingplan.SpecialPointTypeList;
 import org.dizzymii.millenaire2.buildingplan.PngPlanLoader;
 import org.dizzymii.millenaire2.culture.BuildingPlan;
 import org.dizzymii.millenaire2.culture.BuildingPlanSet;
@@ -136,11 +137,17 @@ public class WorldGenVillage {
         townhall.isTownhall = true;
         townhall.isActive = true;
         townhall.cultureKey = culture.key;
+        townhall.planSetKey = planSet.key;
+        townhall.villageTypeKey = villageType.key;
+        townhall.buildingLevel = 0;
         townhall.setName(generateVillageName(culture, random));
         townhall.setPos(villagePos);
         townhall.setTownHallPos(villagePos);
         townhall.location = location;
         townhall.mw = worldData;
+        townhall.world = level;
+        townhall.applyPlanMetadata(planSet, initialPlan);
+        applyPlanSpecialPositions(townhall, initialPlan);
 
         // Set up construction if we have blocks
         if (!blocks.isEmpty()) {
@@ -214,11 +221,7 @@ public class WorldGenVillage {
 
         String fileName = plan.pngFileName;
         if (fileName == null) {
-            if ("initial".equals(plan.upgradeKey)) {
-                fileName = planSet.key + ".png";
-            } else {
-                fileName = planSet.key + "_" + plan.upgradeKey + ".png";
-            }
+            fileName = planSet.key + plan.planIndex + ".png";
         }
 
         File pngFile = buildingsDir.getChildFileRecursive(fileName);
@@ -229,7 +232,98 @@ public class WorldGenVillage {
         }
 
         Map<String, List<int[]>> specialPositions = new HashMap<>();
-        return PngPlanLoader.loadPlan(pngFile, plan.width, plan.altitudeOffset, specialPositions);
+        List<BuildingBlock> blocks = PngPlanLoader.loadPlan(pngFile, plan.width, plan.altitudeOffset, specialPositions);
+        plan.specialPositions.clear();
+        plan.specialPositions.putAll(specialPositions);
+        return blocks;
+    }
+
+    public static void applyPlanSpecialPositions(Building building, BuildingPlan plan) {
+        if (building.location == null || building.location.pos == null || plan == null) {
+            return;
+        }
+        Point origin = building.location.pos;
+        int orientation = building.location.orientation;
+        building.location.chestPos = firstWorldPoint(plan, origin, orientation,
+                SpecialPointTypeList.bmainchestGuess,
+                SpecialPointTypeList.bmainchestTop,
+                SpecialPointTypeList.bmainchestBottom,
+                SpecialPointTypeList.bmainchestLeft,
+                SpecialPointTypeList.bmainchestRight,
+                SpecialPointTypeList.blockedchestGuess,
+                SpecialPointTypeList.blockedchestTop,
+                SpecialPointTypeList.blockedchestBottom,
+                SpecialPointTypeList.blockedchestLeft,
+                SpecialPointTypeList.blockedchestRight);
+        building.location.sleepingPos = firstWorldPoint(plan, origin, orientation, SpecialPointTypeList.bsleepingPos);
+        building.location.sellingPos = firstWorldPoint(plan, origin, orientation, SpecialPointTypeList.bsellingPos);
+        building.location.craftingPos = firstWorldPoint(plan, origin, orientation, SpecialPointTypeList.bcraftingPos);
+        building.location.shelterPos = firstWorldPoint(plan, origin, orientation, SpecialPointTypeList.bshelterPos);
+        building.location.defendingPos = firstWorldPoint(plan, origin, orientation, SpecialPointTypeList.bdefendingPos);
+        building.location.leisurePos = firstWorldPoint(plan, origin, orientation, SpecialPointTypeList.bleasurePos);
+        building.resManager.sleepingPositions.clear();
+        if (building.location.sleepingPos != null) {
+            building.resManager.sleepingPositions.add(building.location.sleepingPos);
+        }
+        building.resManager.stalls.clear();
+        List<int[]> stalls = plan.specialPositions.get(SpecialPointTypeList.bstall);
+        if (stalls != null) {
+            for (int[] coords : stalls) {
+                Point stall = toWorldPoint(building.location.pos, building.location.orientation, coords);
+                if (stall != null) {
+                    building.resManager.stalls.add(stall);
+                }
+            }
+        }
+    }
+
+    @Nullable
+    private static Point firstWorldPoint(BuildingPlan plan, @Nullable Point origin, int orientation, String... keys) {
+        if (origin == null) {
+            return null;
+        }
+        for (String key : keys) {
+            List<int[]> positions = plan.specialPositions.get(key);
+            if (positions == null || positions.isEmpty()) {
+                continue;
+            }
+            Point point = toWorldPoint(origin, orientation, positions.get(0));
+            if (point != null) {
+                return point;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    private static Point toWorldPoint(@Nullable Point origin, int orientation, int[] coords) {
+        if (origin == null || coords == null || coords.length < 3) {
+            return null;
+        }
+        int x = coords[0];
+        int y = coords[1];
+        int z = coords[2];
+        int rx;
+        int rz;
+        switch (orientation) {
+            case 1 -> {
+                rx = z;
+                rz = -x;
+            }
+            case 2 -> {
+                rx = -x;
+                rz = -z;
+            }
+            case 3 -> {
+                rx = -z;
+                rz = x;
+            }
+            default -> {
+                rx = x;
+                rz = z;
+            }
+        }
+        return origin.getRelative(rx, y, rz);
     }
 
     /**

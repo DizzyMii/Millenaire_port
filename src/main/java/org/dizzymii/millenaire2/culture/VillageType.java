@@ -152,6 +152,55 @@ public class VillageType {
     @FieldDocumentation(explanation = "Whether this village type carries out raids.")
     public boolean carriesRaid = false;
 
+    // --- Legacy params (parsed to suppress warnings, used for player-controlled villages) ---
+    @ConfigField(type = ParameterType.STRING_ADD, paramName = "custombuilding")
+    @FieldDocumentation(explanation = "Custom buildings for player-controlled villages.")
+    public List<String> customBuildings = new ArrayList<>();
+
+    @ConfigField(type = ParameterType.STRING_ADD, paramName = "pathmaterial")
+    @FieldDocumentation(explanation = "Path materials used between buildings.")
+    public List<String> pathMaterials = new ArrayList<>();
+
+    @ConfigField(type = ParameterType.STRING, paramName = "icon")
+    @FieldDocumentation(explanation = "Icon identifier for UI display.")
+    public String icon = null;
+
+    @ConfigField(type = ParameterType.INTEGER, paramName = "maxsimultaneousconstructions", defaultValue = "1")
+    @FieldDocumentation(explanation = "Max simultaneous constructions.")
+    public int maxSimultaneousConstructions = 1;
+
+    @ConfigField(type = ParameterType.STRING, paramName = "qualifier")
+    @FieldDocumentation(explanation = "Default village name qualifier.")
+    public String qualifierName = null;
+
+    @ConfigField(type = ParameterType.STRING, paramName = "hillqualifier")
+    @FieldDocumentation(explanation = "Qualifier for hilly terrain.")
+    public String hillQualifier = null;
+
+    @ConfigField(type = ParameterType.STRING, paramName = "mountainqualifier")
+    @FieldDocumentation(explanation = "Qualifier for mountain terrain.")
+    public String mountainQualifier = null;
+
+    @ConfigField(type = ParameterType.STRING, paramName = "desertqualifier")
+    @FieldDocumentation(explanation = "Qualifier for desert terrain.")
+    public String desertQualifier = null;
+
+    @ConfigField(type = ParameterType.STRING, paramName = "forestqualifier")
+    @FieldDocumentation(explanation = "Qualifier for forest terrain.")
+    public String forestQualifier = null;
+
+    @ConfigField(type = ParameterType.STRING, paramName = "lavaqualifier")
+    @FieldDocumentation(explanation = "Qualifier for volcanic terrain.")
+    public String lavaQualifier = null;
+
+    @ConfigField(type = ParameterType.STRING, paramName = "lakequalifier")
+    @FieldDocumentation(explanation = "Qualifier for lake terrain.")
+    public String lakeQualifier = null;
+
+    @ConfigField(type = ParameterType.STRING, paramName = "oceanqualifier")
+    @FieldDocumentation(explanation = "Qualifier for ocean terrain.")
+    public String oceanQualifier = null;
+
     public VillageType(Culture culture, String key) {
         this.culture = culture;
         this.key = key;
