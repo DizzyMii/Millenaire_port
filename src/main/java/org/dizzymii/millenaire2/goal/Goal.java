@@ -120,6 +120,7 @@ public abstract class Goal {
         Goal rv = new GoalRaidVillage();
         raidVillage = rv;
         registerGoal("raidvillage", rv);
+        registerGoal("fleetoshelter", new GoalFleeToShelter());
 
         // Building & path
         registerGoal("buildpath", new GoalBuildPath());
