@@ -19,6 +19,7 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
@@ -27,6 +28,9 @@ import org.dizzymii.millenaire2.client.screen.FirePitScreen;
 import org.dizzymii.millenaire2.data.ContentDeployer;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.entity.ai.MillActivities;
+import org.dizzymii.millenaire2.entity.ai.MillMemoryTypes;
+import org.dizzymii.millenaire2.entity.ai.MillSensorTypes;
 import org.dizzymii.millenaire2.item.MillItems;
 import org.dizzymii.millenaire2.menu.MillMenuTypes;
 import org.dizzymii.millenaire2.network.MillNetworking;
@@ -73,12 +77,18 @@ public class Millenaire2 {
         ENTITY_TYPES.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
         MillMenuTypes.MENU_TYPES.register(modEventBus);
+        MillMemoryTypes.MEMORY_TYPES.register(modEventBus);
+        MillSensorTypes.SENSOR_TYPES.register(modEventBus);
+        MillActivities.ACTIVITIES.register(modEventBus);
 
         // Force class loading of registration holders
         MillBlocks.init();
         MillItems.init();
         MillEntities.init();
         MillMenuTypes.init();
+        MillMemoryTypes.init();
+        MillSensorTypes.init();
+        MillActivities.init();
 
         NeoForge.EVENT_BUS.register(this);
 
@@ -100,6 +110,28 @@ public class Millenaire2 {
         event.put(MillEntities.TARGETED_BLAZE.get(), net.minecraft.world.entity.monster.Blaze.createAttributes().build());
         event.put(MillEntities.TARGETED_WITHER_SKELETON.get(), net.minecraft.world.entity.monster.WitherSkeleton.createAttributes().build());
         event.put(MillEntities.TARGETED_GHAST.get(), net.minecraft.world.entity.monster.Ghast.createAttributes().build());
+    }
+
+    @SubscribeEvent
+    public void onServerTick(ServerTickEvent.Post event) {
+        if (worldData != null) {
+            worldData.tick();
+        }
+        // Periodic village generation check (every 200 ticks = 10 seconds)
+        if (worldData != null && worldData.generateVillages) {
+            net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
+            long gameTime = overworld.getGameTime();
+            if (gameTime % 200 == 0) {
+                for (net.minecraft.server.level.ServerPlayer player : event.getServer().getPlayerList().getPlayers()) {
+                    if (player.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                        int cx = player.blockPosition().getX() >> 4;
+                        int cz = player.blockPosition().getZ() >> 4;
+                        org.dizzymii.millenaire2.world.WorldGenVillage.attemptVillageGeneration(
+                                sl, cx, cz, sl.random, worldData);
+                    }
+                }
+            }
+        }
     }
 
     @SubscribeEvent

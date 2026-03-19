@@ -174,26 +174,27 @@ public class MillCommands {
         MillWorldData mw = Millenaire2.getWorldData();
         if (mw == null) return 0;
 
-        // Create a new townhall building at the command source's position
+        net.minecraft.server.level.ServerLevel level = ctx.getSource().getLevel();
         net.minecraft.core.BlockPos blockPos = net.minecraft.core.BlockPos.containing(
                 ctx.getSource().getPosition());
-        Point spawnPoint = new Point(blockPos);
 
-        Building th = new Building();
-        th.cultureKey = cultureName;
-        th.isTownhall = true;
-        th.isActive = true;
-        th.setPos(spawnPoint);
-        th.setTownHallPos(spawnPoint);
-        th.setName(culture.key + " Village");
-        th.world = ctx.getSource().getLevel();
-        th.mw = mw;
+        boolean success = org.dizzymii.millenaire2.world.WorldGenVillage.generateNewVillage(
+                level, blockPos, culture, mw, level.random);
 
-        mw.addBuilding(th, spawnPoint);
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "§6[Millénaire]§r Spawned " + cultureName + " village at " + spawnPoint
-        ), true);
-        return 1;
+        if (success) {
+            Point spawnPoint = new Point(blockPos);
+            Building created = mw.getBuilding(spawnPoint);
+            int villagerCount = created != null ? created.getVillagerRecords().size() : 0;
+            ctx.getSource().sendSuccess(() -> Component.literal(
+                    "§6[Millénaire]§r Spawned " + cultureName + " village at " + spawnPoint
+                    + " with " + villagerCount + " villagers"
+            ), true);
+            return 1;
+        } else {
+            ctx.getSource().sendFailure(Component.literal(
+                    "§c[Millénaire]§r Failed to spawn village. Check culture has village types and building plans."));
+            return 0;
+        }
     }
 
     private static int cmdRename(CommandContext<CommandSourceStack> ctx) {
