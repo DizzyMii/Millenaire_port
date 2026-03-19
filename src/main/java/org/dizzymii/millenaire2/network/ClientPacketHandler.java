@@ -251,20 +251,68 @@ public final class ClientPacketHandler {
     private static void handleBuildingSync(byte[] data) {
         PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
         try {
-            // Read building identification
-            Point pos = readOptionalPoint(r);
-            String name = r.hasRemaining() ? r.readString() : "";
-            String cultureKey = r.hasRemaining() ? r.readString() : "";
-            boolean isTownhall = r.hasRemaining() && r.readBoolean();
+            // Decode in the same order as ServerPacketSender.buildBuildingSyncPayload
+            Point pos = null;
+            if (r.readBoolean()) {
+                pos = new Point(r.readInt(), r.readInt(), r.readInt());
+            }
+            String cultureKey = r.readString();
+            String name = r.readString();
+            String planSetKey = r.readString();
+            int level = r.readInt();
+            boolean isTownhall = r.readBoolean();
+            boolean isInn = r.readBoolean();
+            boolean isMarket = r.readBoolean();
+            boolean underConstruction = r.readBoolean();
+            boolean underAttack = r.readBoolean();
+            int population = r.readInt();
+
+            Point thPos = null;
+            if (r.readBoolean()) {
+                thPos = new Point(r.readInt(), r.readInt(), r.readInt());
+            }
+
+            // Update client-side building cache
+            if (pos != null) {
+                ClientBuildingEntry entry = new ClientBuildingEntry(
+                        pos, cultureKey, name, planSetKey, level,
+                        isTownhall, isInn, isMarket,
+                        underConstruction, underAttack, population, thPos);
+                clientBuildings.put(pos, entry);
+            }
+
             MillLog.minor("ClientPacketHandler", "Building sync: " + name + " at " + pos
-                    + " culture=" + cultureKey + " townhall=" + isTownhall);
-            // Client-side building cache will be updated when client village tracking is implemented
+                    + " culture=" + cultureKey + " townhall=" + isTownhall + " pop=" + population);
         } catch (Exception e) {
             MillLog.error("ClientPacketHandler", "Error handling building sync", e);
         } finally {
             r.release();
         }
     }
+
+    // ========== Client building cache ==========
+
+    private static final java.util.concurrent.ConcurrentHashMap<Point, ClientBuildingEntry> clientBuildings =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    public static ClientBuildingEntry getClientBuilding(Point pos) {
+        return clientBuildings.get(pos);
+    }
+
+    public static java.util.Collection<ClientBuildingEntry> getAllClientBuildings() {
+        return clientBuildings.values();
+    }
+
+    public static void clearClientBuildings() {
+        clientBuildings.clear();
+    }
+
+    public record ClientBuildingEntry(
+            Point pos, String cultureKey, String name, String planSetKey, int level,
+            boolean isTownhall, boolean isInn, boolean isMarket,
+            boolean underConstruction, boolean underAttack, int population,
+            @javax.annotation.Nullable Point townHallPos
+    ) {}
 
     // ========== Locked chest ==========
 

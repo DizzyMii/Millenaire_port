@@ -494,6 +494,14 @@ public abstract class MillVillager extends PathfinderMob implements SmartBrainOw
                 if (vr != null) {
                     vr.killed = true;
                 }
+                // Notify the home building so it updates its entity tracking
+                if (housePoint != null) {
+                    org.dizzymii.millenaire2.village.Building home = mw.getBuilding(housePoint);
+                    if (home != null) {
+                        home.onVillagerDeath(this.villagerId);
+                    }
+                }
+                mw.setDirty();
             }
         }
     }
