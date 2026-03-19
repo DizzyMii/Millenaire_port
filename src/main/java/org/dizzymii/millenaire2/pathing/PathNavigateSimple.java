@@ -149,6 +149,12 @@ public class PathNavigateSimple implements IAStarPathedEntity {
         this.pathIndex = 0;
         this.pathPending = false;
         this.pendingTicks = 0;
+
+        // Notify the villager entity of path failure for stuck detection
+        if (entity instanceof org.dizzymii.millenaire2.entity.MillVillager mv) {
+            mv.onPathFailed();
+        }
+
         // Fallback: use vanilla navigation for short distances
         BlockPos fallbackTarget = lastRequestedTarget;
         if (fallbackTarget != null) {
