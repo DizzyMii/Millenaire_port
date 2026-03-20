@@ -61,6 +61,12 @@ public class MillEntities {
                             .sized(4.0F, 4.0F).clientTrackingRange(10)
                             .build("targeted_ghast"));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<MillGuardNpc>> GUARD_NPC =
+            Millenaire2.ENTITY_TYPES.register("guard_npc",
+                    () -> EntityType.Builder.of(MillGuardNpc::new, MobCategory.CREATURE)
+                            .sized(0.6F, 1.95F).clientTrackingRange(8).updateInterval(3)
+                            .build("guard_npc"));
+
     // ========== Block Entity Types ==========
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<MillFirePitBlockEntity>> FIRE_PIT_BE =

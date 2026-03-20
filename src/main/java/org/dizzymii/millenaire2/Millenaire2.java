@@ -110,6 +110,7 @@ public class Millenaire2 {
         event.put(MillEntities.TARGETED_BLAZE.get(), net.minecraft.world.entity.monster.Blaze.createAttributes().build());
         event.put(MillEntities.TARGETED_WITHER_SKELETON.get(), net.minecraft.world.entity.monster.WitherSkeleton.createAttributes().build());
         event.put(MillEntities.TARGETED_GHAST.get(), net.minecraft.world.entity.monster.Ghast.createAttributes().build());
+        event.put(MillEntities.GUARD_NPC.get(), org.dizzymii.millenaire2.entity.MillGuardNpc.createAttributes().build());
     }
 
     @SubscribeEvent
