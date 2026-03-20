@@ -54,6 +54,21 @@ public class SblPocSetup {
             MEMORY_TYPES.register("poc_nearby_hostile_count",
                     () -> new MemoryModuleType<>(Optional.of(Codec.INT)));
 
+    // Combat state: "melee", "ranged", or "cover"
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<String>> COMBAT_STATE =
+            MEMORY_TYPES.register("poc_combat_state",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.STRING)));
+
+    // True = strafe right, False = strafe left. Flipped periodically.
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> STRAFE_RIGHT =
+            MEMORY_TYPES.register("poc_strafe_right",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    // Whether the NPC is currently being shot at (set by IncomingDamageSensor)
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> UNDER_RANGED_FIRE =
+            MEMORY_TYPES.register("poc_under_ranged_fire",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
     // ========== Entity Type ==========
     public static final DeferredHolder<EntityType<?>, EntityType<PocNpc>> POC_NPC =
             Millenaire2.ENTITY_TYPES.register("poc_npc",

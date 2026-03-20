@@ -34,8 +34,10 @@ import net.tslat.smartbrainlib.api.core.behaviour.custom.target.TargetOrRetaliat
 import net.tslat.smartbrainlib.api.core.sensor.ExtendedSensor;
 import net.tslat.smartbrainlib.api.core.sensor.vanilla.HurtBySensor;
 import org.dizzymii.sblpoc.behaviour.EatFoodBehaviour;
+import org.dizzymii.sblpoc.behaviour.SeekCoverBehaviour;
 import org.dizzymii.sblpoc.behaviour.ShieldBlockBehaviour;
 import org.dizzymii.sblpoc.behaviour.SmartMeleeAttack;
+import org.dizzymii.sblpoc.behaviour.SmartRangedAttack;
 import org.dizzymii.sblpoc.sensor.IncomingDamageSensor;
 import org.dizzymii.sblpoc.sensor.NearbyThreatSensor;
 
@@ -50,7 +52,7 @@ import java.util.List;
  * - Eats food from inventory when damaged and safe
  * - Smart melee combat with hit-and-kite pattern
  * 
- * Spawns with: Iron Sword, Shield, 8x Steak
+ * Spawns with: Iron Sword, Shield, Bow, 32x Arrow, 8x Steak
  * Summon: /summon millenaire2:poc_npc ~ ~ ~
  */
 public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
@@ -122,9 +124,11 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
         return BrainActivityGroup.fightTasks(
                 new InvalidateAttackTarget<>(),
                 new FirstApplicableBehaviour<PocNpc>(
-                        new ShieldBlockBehaviour(),  // Priority 1: intelligent shield blocking
-                        new EatFoodBehaviour(),      // Priority 2: eat food when safe
-                        new SmartMeleeAttack()       // Priority 3: approach + melee + kite
+                        new ShieldBlockBehaviour(),  // Priority 1: reactive shield blocking
+                        new SeekCoverBehaviour(),    // Priority 2: hide from ranged fire
+                        new EatFoodBehaviour(),      // Priority 3: eat food when safe
+                        new SmartRangedAttack(),     // Priority 4: bow at range (6-24 blocks)
+                        new SmartMeleeAttack()       // Priority 5: melee + strafe + kite
                 )
         );
     }
@@ -146,8 +150,10 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
         setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_SWORD));
         setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.SHIELD));
 
-        // Stock inventory with food
-        inventory.setItem(0, new ItemStack(Items.COOKED_BEEF, 8));
+        // Stock inventory: bow, arrows, food
+        inventory.setItem(0, new ItemStack(Items.BOW));
+        inventory.setItem(1, new ItemStack(Items.ARROW, 32));
+        inventory.setItem(2, new ItemStack(Items.COOKED_BEEF, 8));
 
         // Don't drop equipment on death
         setDropChance(EquipmentSlot.MAINHAND, 0.0f);

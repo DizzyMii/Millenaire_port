@@ -30,7 +30,8 @@ public class IncomingDamageSensor extends ExtendedSensor<PocNpc> {
 
     private static final List<MemoryModuleType<?>> MEMORIES = ObjectArrayList.of(
             SblPocSetup.SHOULD_SHIELD.get(),
-            SblPocSetup.INCOMING_DAMAGE_TICKS.get()
+            SblPocSetup.INCOMING_DAMAGE_TICKS.get(),
+            SblPocSetup.UNDER_RANGED_FIRE.get()
     );
 
     public IncomingDamageSensor() {
@@ -50,6 +51,7 @@ public class IncomingDamageSensor extends ExtendedSensor<PocNpc> {
     @Override
     protected void doTick(ServerLevel level, PocNpc npc) {
         boolean shouldShield = false;
+        boolean underRangedFire = false;
 
         // 1. Check for incoming projectiles
         AABB scanBox = npc.getBoundingBox().inflate(PROJECTILE_SCAN_RANGE);
@@ -68,6 +70,7 @@ public class IncomingDamageSensor extends ExtendedSensor<PocNpc> {
                 double dist = npc.distanceToSqr(projectile);
                 if (dist < PROJECTILE_SCAN_RANGE * PROJECTILE_SCAN_RANGE) {
                     shouldShield = true;
+                    underRangedFire = true;
                     break;
                 }
             }
@@ -101,6 +104,13 @@ public class IncomingDamageSensor extends ExtendedSensor<PocNpc> {
         } else {
             BrainUtils.clearMemory(npc, SblPocSetup.SHOULD_SHIELD.get());
             BrainUtils.clearMemory(npc, SblPocSetup.INCOMING_DAMAGE_TICKS.get());
+        }
+
+        // Track whether we're specifically under ranged fire (projectiles only)
+        if (underRangedFire) {
+            BrainUtils.setMemory(npc, SblPocSetup.UNDER_RANGED_FIRE.get(), true);
+        } else {
+            BrainUtils.clearMemory(npc, SblPocSetup.UNDER_RANGED_FIRE.get());
         }
     }
 }
