@@ -35,6 +35,8 @@ import org.dizzymii.millenaire2.item.MillItems;
 import org.dizzymii.millenaire2.menu.MillMenuTypes;
 import org.dizzymii.millenaire2.network.MillNetworking;
 import org.dizzymii.millenaire2.world.MillWorldData;
+import org.dizzymii.sblpoc.PocNpc;
+import org.dizzymii.sblpoc.SblPocSetup;
 import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
@@ -80,6 +82,8 @@ public class Millenaire2 {
         MillMemoryTypes.MEMORY_TYPES.register(modEventBus);
         MillSensorTypes.SENSOR_TYPES.register(modEventBus);
         MillActivities.ACTIVITIES.register(modEventBus);
+        SblPocSetup.SENSOR_TYPES.register(modEventBus);
+        SblPocSetup.MEMORY_TYPES.register(modEventBus);
 
         // Force class loading of registration holders
         MillBlocks.init();
@@ -89,6 +93,7 @@ public class Millenaire2 {
         MillMemoryTypes.init();
         MillSensorTypes.init();
         MillActivities.init();
+        SblPocSetup.init();
 
         NeoForge.EVENT_BUS.register(this);
 
@@ -111,6 +116,7 @@ public class Millenaire2 {
         event.put(MillEntities.TARGETED_WITHER_SKELETON.get(), net.minecraft.world.entity.monster.WitherSkeleton.createAttributes().build());
         event.put(MillEntities.TARGETED_GHAST.get(), net.minecraft.world.entity.monster.Ghast.createAttributes().build());
         event.put(MillEntities.GUARD_NPC.get(), org.dizzymii.millenaire2.entity.MillGuardNpc.createAttributes().build());
+        event.put(SblPocSetup.POC_NPC.get(), PocNpc.createAttributes().build());
     }
 
     @SubscribeEvent
