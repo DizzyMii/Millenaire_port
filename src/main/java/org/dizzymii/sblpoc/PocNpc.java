@@ -41,6 +41,10 @@ import org.dizzymii.sblpoc.ai.goap.PlanExecutor;
 import org.dizzymii.sblpoc.ai.world.GameClock;
 import org.dizzymii.sblpoc.ai.world.InventoryModel;
 import org.dizzymii.sblpoc.ai.world.SpatialMemory;
+import org.dizzymii.sblpoc.movement.HotbarManager;
+import org.dizzymii.sblpoc.movement.MovementController;
+import org.dizzymii.sblpoc.movement.ReactionTimer;
+import org.dizzymii.sblpoc.personality.PersonalityProfile;
 import org.dizzymii.sblpoc.behaviour.DodgeProjectileBehaviour;
 import org.dizzymii.sblpoc.behaviour.DrinkPotionBehaviour;
 import org.dizzymii.sblpoc.behaviour.EatFoodBehaviour;
@@ -72,6 +76,10 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
     private final SimpleContainer inventory = new SimpleContainer(12);
     private final SpatialMemory spatialMemory = new SpatialMemory();
     private final InventoryModel inventoryModel = new InventoryModel(inventory);
+    private final MovementController movementController = new MovementController();
+    private final HotbarManager hotbarManager = new HotbarManager();
+    private PersonalityProfile personality;
+    private ReactionTimer reactionTimer;
     private GameClock gameClock;
     private int strategyEvalTimer = 0;
 
@@ -79,6 +87,9 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
         super(type, level);
         setPersistenceRequired();
         this.gameClock = new GameClock(level);
+        this.reactionTimer = new ReactionTimer(this.getRandom());
+        this.personality = PersonalityProfile.randomize(this.getRandom());
+        this.reactionTimer.setPersonalityModifier(personality.getReactionModifier());
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -106,6 +117,22 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
     public GameClock getGameClock() {
         if (gameClock == null) gameClock = new GameClock(level());
         return gameClock;
+    }
+
+    public MovementController getMovementController() {
+        return movementController;
+    }
+
+    public HotbarManager getHotbarManager() {
+        return hotbarManager;
+    }
+
+    public ReactionTimer getReactionTimer() {
+        return reactionTimer;
+    }
+
+    public PersonalityProfile getPersonality() {
+        return personality;
     }
 
     // ========== SmartBrainOwner Implementation ==========
@@ -175,6 +202,10 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
         // Keep inventory model in sync
         inventoryModel.updateHands(getMainHandItem(), getOffhandItem());
         inventoryModel.markDirty();
+
+        // Sprint 6: movement fidelity + hotbar management
+        movementController.tick(this);
+        hotbarManager.tick(this);
 
         // Strategy adaptation — evaluate every 5 seconds
         strategyEvalTimer++;
@@ -282,6 +313,9 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
 
         // Save spatial memory
         tag.put("SpatialMemory", spatialMemory.save());
+
+        // Save personality
+        tag.put("Personality", personality.save());
     }
 
     @Override
@@ -299,6 +333,12 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
         // Load spatial memory
         if (tag.contains("SpatialMemory")) {
             spatialMemory.load(tag.getCompound("SpatialMemory"));
+        }
+
+        // Load personality
+        if (tag.contains("Personality")) {
+            personality.load(tag.getCompound("Personality"));
+            reactionTimer.setPersonalityModifier(personality.getReactionModifier());
         }
     }
 }
