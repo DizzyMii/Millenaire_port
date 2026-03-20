@@ -37,6 +37,10 @@ import net.tslat.smartbrainlib.api.core.behaviour.custom.target.TargetOrRetaliat
 import net.tslat.smartbrainlib.api.core.sensor.ExtendedSensor;
 import net.tslat.smartbrainlib.api.core.sensor.vanilla.HurtBySensor;
 import net.tslat.smartbrainlib.util.BrainUtils;
+import org.dizzymii.sblpoc.ai.goap.PlanExecutor;
+import org.dizzymii.sblpoc.ai.world.GameClock;
+import org.dizzymii.sblpoc.ai.world.InventoryModel;
+import org.dizzymii.sblpoc.ai.world.SpatialMemory;
 import org.dizzymii.sblpoc.behaviour.DodgeProjectileBehaviour;
 import org.dizzymii.sblpoc.behaviour.DrinkPotionBehaviour;
 import org.dizzymii.sblpoc.behaviour.EatFoodBehaviour;
@@ -45,6 +49,7 @@ import org.dizzymii.sblpoc.behaviour.SeekCoverBehaviour;
 import org.dizzymii.sblpoc.behaviour.ShieldBlockBehaviour;
 import org.dizzymii.sblpoc.behaviour.SmartMeleeAttack;
 import org.dizzymii.sblpoc.behaviour.SmartRangedAttack;
+import org.dizzymii.sblpoc.sensor.BlockScanSensor;
 import org.dizzymii.sblpoc.sensor.IncomingDamageSensor;
 import org.dizzymii.sblpoc.sensor.NearbyThreatSensor;
 
@@ -65,11 +70,15 @@ import java.util.List;
 public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
 
     private final SimpleContainer inventory = new SimpleContainer(12);
+    private final SpatialMemory spatialMemory = new SpatialMemory();
+    private final InventoryModel inventoryModel = new InventoryModel(inventory);
+    private GameClock gameClock;
     private int strategyEvalTimer = 0;
 
     public PocNpc(EntityType<? extends PocNpc> type, Level level) {
         super(type, level);
         setPersistenceRequired();
+        this.gameClock = new GameClock(level);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -86,6 +95,19 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
         return inventory;
     }
 
+    public SpatialMemory getSpatialMemory() {
+        return spatialMemory;
+    }
+
+    public InventoryModel getInventoryModel() {
+        return inventoryModel;
+    }
+
+    public GameClock getGameClock() {
+        if (gameClock == null) gameClock = new GameClock(level());
+        return gameClock;
+    }
+
     // ========== SmartBrainOwner Implementation ==========
 
     @Override
@@ -98,7 +120,8 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
         return ObjectArrayList.of(
                 new NearbyThreatSensor(),     // Scans for hostiles every 10 ticks
                 new IncomingDamageSensor(),    // Detects incoming projectiles/melee every 5 ticks
-                new HurtBySensor<>()           // Tracks damage source every 20 ticks
+                new HurtBySensor<>(),          // Tracks damage source every 20 ticks
+                new BlockScanSensor()          // Scans blocks for spatial memory every 40 ticks
         );
     }
 
@@ -117,6 +140,7 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
                 new FirstApplicableBehaviour<PocNpc>(
                         new TargetOrRetaliate<PocNpc>()
                                 .useMemory(MemoryModuleType.NEAREST_HOSTILE),
+                        new PlanExecutor(),
                         new SetPlayerLookTarget<>(),
                         new SetRandomLookTarget<>()
                 ),
@@ -147,6 +171,10 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
     @Override
     protected void customServerAiStep() {
         tickBrain(this);
+
+        // Keep inventory model in sync
+        inventoryModel.updateHands(getMainHandItem(), getOffhandItem());
+        inventoryModel.markDirty();
 
         // Strategy adaptation — evaluate every 5 seconds
         strategyEvalTimer++;
@@ -251,6 +279,9 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
             items.set(i, inventory.getItem(i));
         }
         net.minecraft.world.ContainerHelper.saveAllItems(tag, items, this.registryAccess());
+
+        // Save spatial memory
+        tag.put("SpatialMemory", spatialMemory.save());
     }
 
     @Override
@@ -263,6 +294,11 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
         net.minecraft.world.ContainerHelper.loadAllItems(tag, items, this.registryAccess());
         for (int i = 0; i < items.size(); i++) {
             inventory.setItem(i, items.get(i));
+        }
+
+        // Load spatial memory
+        if (tag.contains("SpatialMemory")) {
+            spatialMemory.load(tag.getCompound("SpatialMemory"));
         }
     }
 }

@@ -9,6 +9,7 @@ import net.minecraft.world.entity.ai.sensing.SensorType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.dizzymii.millenaire2.Millenaire2;
+import org.dizzymii.sblpoc.sensor.BlockScanSensor;
 import org.dizzymii.sblpoc.sensor.IncomingDamageSensor;
 import org.dizzymii.sblpoc.sensor.NearbyThreatSensor;
 
@@ -29,6 +30,9 @@ public class SblPocSetup {
 
     public static final DeferredHolder<SensorType<?>, SensorType<IncomingDamageSensor>> INCOMING_DAMAGE =
             SENSOR_TYPES.register("poc_incoming_damage", () -> new SensorType<>(IncomingDamageSensor::new));
+
+    public static final DeferredHolder<SensorType<?>, SensorType<BlockScanSensor>> BLOCK_SCAN =
+            SENSOR_TYPES.register("poc_block_scan", () -> new SensorType<>(BlockScanSensor::new));
 
     // ========== Memory Types ==========
     public static final DeferredRegister<MemoryModuleType<?>> MEMORY_TYPES =
@@ -111,6 +115,18 @@ public class SblPocSetup {
     public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> HELP_CALLED =
             MEMORY_TYPES.register("poc_help_called",
                     () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    // --- GOAP / Utility AI ---
+
+    // Current high-level goal name (for debug/display)
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<String>> CURRENT_NPC_GOAL =
+            MEMORY_TYPES.register("poc_current_npc_goal",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.STRING)));
+
+    // Current GOAP action name being executed (for debug/display)
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<String>> CURRENT_GOAP_ACTION =
+            MEMORY_TYPES.register("poc_current_goap_action",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.STRING)));
 
     // ========== Entity Type ==========
     public static final DeferredHolder<EntityType<?>, EntityType<PocNpc>> POC_NPC =
