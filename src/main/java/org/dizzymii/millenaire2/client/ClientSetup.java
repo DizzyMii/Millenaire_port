@@ -14,6 +14,8 @@ import org.dizzymii.millenaire2.client.render.MillVillagerModel;
 import org.dizzymii.millenaire2.client.render.MillVillagerRenderer;
 import org.dizzymii.millenaire2.client.render.RenderWallDecoration;
 import org.dizzymii.millenaire2.entity.MillEntities;
+import org.dizzymii.sblpoc.SblPocSetup;
+import org.dizzymii.sblpoc.client.PocNpcRenderer;
 
 /**
  * Client-side setup: registers renderers, model layers, and keybindings.
@@ -46,5 +48,6 @@ public class ClientSetup {
         event.registerEntityRenderer(MillEntities.TARGETED_GHAST.get(),
                 net.minecraft.client.renderer.entity.GhastRenderer::new);
         event.registerEntityRenderer(MillEntities.WALL_DECORATION.get(), RenderWallDecoration::new);
+        event.registerEntityRenderer(SblPocSetup.POC_NPC.get(), PocNpcRenderer::new);
     }
 }
