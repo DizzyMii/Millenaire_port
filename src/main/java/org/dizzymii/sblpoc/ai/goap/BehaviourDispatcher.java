@@ -120,29 +120,48 @@ public class BehaviourDispatcher {
     // ========== Step Factories ==========
 
     /**
-     * Wraps an ExtendedBehaviour into an ActiveStep using estimated ticks as duration.
+     * Wraps an ExtendedBehaviour into an ActiveStep, driving it via Behavior's
+     * public API (tryStart / tickOrStop / doStop).
      */
     private static ActiveStep timedBehaviour(
             net.tslat.smartbrainlib.api.core.behaviour.ExtendedBehaviour<PocNpc> behaviour,
             ServerLevel level, PocNpc npc) {
         return new ActiveStep() {
-            private int ticks = 0;
             private boolean started = false;
+            private boolean finished = false;
 
             @Override
-            public boolean tick(ServerLevel level, PocNpc npc, long gameTime) {
+            public boolean tick(ServerLevel lvl, PocNpc entity, long gameTime) {
+                if (finished) return true;
+
                 if (!started) {
-                    started = true;
+                    // tryStart checks memory requirements + checkExtraStartConditions
+                    started = behaviour.tryStart(lvl, entity, gameTime);
+                    if (!started) {
+                        // Behaviour can't start (preconditions not met) — skip step
+                        finished = true;
+                        return true;
+                    }
+                    return false;
                 }
-                ticks++;
-                // The underlying behaviour runs via the brain tick loop;
-                // we just track progress here
-                return false; // Never self-completes; PlanExecutor uses estimatedTicks
+
+                // Drive the behaviour's tick + shouldKeepRunning logic
+                behaviour.tickOrStop(lvl, entity, gameTime);
+
+                // If behaviour stopped itself (shouldKeepRunning returned false),
+                // mark as complete
+                if (behaviour.getStatus() == net.minecraft.world.entity.ai.behavior.Behavior.Status.STOPPED) {
+                    finished = true;
+                    return true;
+                }
+                return false;
             }
 
             @Override
-            public void stop(ServerLevel level, PocNpc npc, long gameTime) {
-                // Cleanup handled by the behaviour's own stop()
+            public void stop(ServerLevel lvl, PocNpc entity, long gameTime) {
+                if (started && !finished) {
+                    behaviour.doStop(lvl, entity, gameTime);
+                }
             }
         };
     }

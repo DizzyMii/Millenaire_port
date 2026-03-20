@@ -13,6 +13,9 @@ import org.dizzymii.sblpoc.ai.world.GameClock;
 import org.dizzymii.sblpoc.ai.world.InventoryModel;
 import org.dizzymii.sblpoc.ai.world.SpatialMemory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.annotation.Nullable;
 import java.util.List;
 
@@ -31,6 +34,7 @@ import java.util.List;
  */
 public class PlanExecutor extends ExtendedBehaviour<PocNpc> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger("SblPocAI");
     private static final int EVAL_INTERVAL = 100; // 5 seconds
 
     private static final List<Pair<MemoryModuleType<?>, MemoryStatus>> MEMORY_REQUIREMENTS =
@@ -87,8 +91,15 @@ public class PlanExecutor extends ExtendedBehaviour<PocNpc> {
             BrainUtils.setMemory(npc, SblPocSetup.CURRENT_GOAP_ACTION.get(), currentAction.getName());
 
             // Launch real behaviour if not yet started
-            if (activeStep == null) {
+            if (activeStep == null && stepTicksElapsed == 1) {
+                LOGGER.debug("[NPC AI] Starting step {}/{}: {}", planStepIndex + 1,
+                        currentPlan.size(), currentAction.getName());
                 activeStep = BehaviourDispatcher.startAction(currentAction.getName(), level, npc);
+                if (activeStep == null) {
+                    LOGGER.warn("[NPC AI] No dispatcher for action '{}' — skipping", currentAction.getName());
+                    advancePlanStep(npc);
+                    return;
+                }
             }
 
             // Tick the active step; if it self-completes, advance immediately
@@ -99,6 +110,8 @@ public class PlanExecutor extends ExtendedBehaviour<PocNpc> {
 
             // Advance when the step completes OR the estimated duration elapses
             if (stepDone || stepTicksElapsed >= currentAction.getEstimatedTicks()) {
+                LOGGER.debug("[NPC AI] Step '{}' finished (done={}, ticks={}/{})",
+                        currentAction.getName(), stepDone, stepTicksElapsed, currentAction.getEstimatedTicks());
                 if (activeStep != null) {
                     activeStep.stop(level, npc, gameTime);
                     activeStep = null;
@@ -134,6 +147,7 @@ public class PlanExecutor extends ExtendedBehaviour<PocNpc> {
         NpcGoal bestGoal = utilityEvaluator.evaluate(state);
 
         if (bestGoal == null) {
+            LOGGER.debug("[NPC AI] No goal scored above threshold");
             currentGoal = null;
             currentPlan = null;
             return;
@@ -143,6 +157,7 @@ public class PlanExecutor extends ExtendedBehaviour<PocNpc> {
         if (bestGoal != previousGoal || currentPlan == null) {
             currentGoal = bestGoal;
             BrainUtils.setMemory(npc, SblPocSetup.CURRENT_NPC_GOAL.get(), bestGoal.name());
+            LOGGER.debug("[NPC AI] Selected goal: {} (score={})", bestGoal.name(), bestGoal.score(state));
 
             GoapPlanner.GoalCondition goalCondition = bestGoal.createGoalCondition(state);
             currentPlan = planner.plan(state, goalCondition);
@@ -150,8 +165,11 @@ public class PlanExecutor extends ExtendedBehaviour<PocNpc> {
             stepTicksElapsed = 0;
 
             if (currentPlan == null || currentPlan.isEmpty()) {
-                // Planner couldn't find a path — will retry next eval
+                LOGGER.debug("[NPC AI] Planner found no plan for goal {}", bestGoal.name());
                 currentPlan = null;
+            } else {
+                LOGGER.debug("[NPC AI] Plan ({} steps): {}", currentPlan.size(),
+                        currentPlan.stream().map(GoapAction::getName).toList());
             }
         }
     }
