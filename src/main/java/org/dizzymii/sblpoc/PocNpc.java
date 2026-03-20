@@ -8,6 +8,7 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.Brain;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
@@ -104,11 +105,12 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
     public BrainActivityGroup<? extends PocNpc> getIdleTasks() {
         return BrainActivityGroup.idleTasks(
                 new FirstApplicableBehaviour<PocNpc>(
-                        new TargetOrRetaliate<>(),
+                        new TargetOrRetaliate<PocNpc>()
+                                .useMemory(MemoryModuleType.NEAREST_HOSTILE),
                         new SetPlayerLookTarget<>(),
                         new SetRandomLookTarget<>()
                 ),
-                new OneRandomBehaviour<>(
+                new OneRandomBehaviour<PocNpc>(
                         new SetRandomWalkTarget<>(),
                         new Idle<>().runFor(entity -> entity.getRandom().nextInt(30, 60))
                 )
