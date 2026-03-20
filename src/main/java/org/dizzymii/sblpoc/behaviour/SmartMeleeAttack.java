@@ -18,25 +18,21 @@ import org.dizzymii.sblpoc.SblPocSetup;
 import java.util.List;
 
 /**
- * Intelligent melee attack behaviour with multiple combat phases.
+ * Player-like melee combat. Moves in committed arcs, not twitchy micro-adjustments.
  *
  * Phases:
- * - APPROACH: Sprint toward target, strafing slightly to avoid projectiles
- * - ENGAGE: Circle-strafe within melee range, attack on cooldown
- * - KITE: After landing a hit, retreat 3-4 blocks before re-engaging
- * - DISENGAGE: If target is far and NPC has a bow, stop to let ranged take over
- *
- * Always kites after hitting (not just when low HP). Strafes during approach
- * to make the NPC a harder target for skeletons.
+ * - APPROACH: Walk toward target. Only re-path every ~15 ticks.
+ * - ENGAGE: Stand and fight. Slight repositioning between swings, not constant strafing.
+ * - KITE: After landing a hit, commit to backing off in one direction, then pause and re-engage.
  */
 public class SmartMeleeAttack extends ExtendedBehaviour<PocNpc> {
 
-    private static final double MELEE_RANGE_SQ = 4.0;    // 2 blocks
-    private static final double APPROACH_RANGE_SQ = 36.0; // 6 blocks — within this, start circle-strafing
-    private static final int ATTACK_COOLDOWN = 16;
-    private static final float SPRINT_SPEED = 1.4f;
-    private static final float STRAFE_SPEED = 1.0f;
-    private static final double KITE_DISTANCE = 3.5;
+    private static final double MELEE_RANGE_SQ = 4.5;     // ~2.1 blocks
+    private static final double CLOSE_ENOUGH_SQ = 49.0;   // 7 blocks — start slowing down
+    private static final int ATTACK_COOLDOWN = 18;
+    private static final float WALK_SPEED = 1.0f;
+    private static final float RUN_SPEED = 1.25f;
+    private static final double KITE_DISTANCE = 4.0;
 
     private static final List<Pair<MemoryModuleType<?>, MemoryStatus>> MEMORY_REQUIREMENTS =
             ObjectArrayList.of(
@@ -44,16 +40,17 @@ public class SmartMeleeAttack extends ExtendedBehaviour<PocNpc> {
                     Pair.of(MemoryModuleType.WALK_TARGET, MemoryStatus.REGISTERED)
             );
 
-    private enum Phase { APPROACH, ENGAGE, KITE }
+    private enum Phase { APPROACH, ENGAGE, KITE, PAUSE }
 
     private long lastAttackTime = 0;
     private Phase phase = Phase.APPROACH;
-    private int kiteTimer = 0;
+    private int phaseTimer = 0;
+    private int repathCooldown = 0;
     private boolean strafingRight = true;
-    private int strafeToggle = 0;
+    private int hitsLanded = 0;
 
     public SmartMeleeAttack() {
-        runFor(entity -> 300); // Max 15 seconds per engagement cycle
+        runFor(entity -> 400);
     }
 
     @Override
@@ -67,23 +64,18 @@ public class SmartMeleeAttack extends ExtendedBehaviour<PocNpc> {
         if (target == null || !target.isAlive() || npc.isUsingItem()) return false;
 
         double distSq = npc.distanceToSqr(target);
-        // Only activate for melee range — let SmartRangedAttack handle distant targets
-        return distSq < APPROACH_RANGE_SQ || !hasRangedWeapon(npc);
+        return distSq < CLOSE_ENOUGH_SQ || !hasRangedWeapon(npc);
     }
 
     @Override
     protected void start(ServerLevel level, PocNpc npc, long gameTime) {
         phase = Phase.APPROACH;
-        kiteTimer = 0;
+        phaseTimer = 0;
+        repathCooldown = 0;
+        hitsLanded = 0;
         strafingRight = npc.getRandom().nextBoolean();
-        strafeToggle = 0;
 
         BrainUtils.setMemory(npc, SblPocSetup.COMBAT_STATE.get(), "melee");
-
-        LivingEntity target = BrainUtils.getMemory(npc, MemoryModuleType.ATTACK_TARGET);
-        if (target != null) {
-            BehaviorUtils.setWalkAndLookTargetMemories(npc, target, SPRINT_SPEED, 0);
-        }
     }
 
     @Override
@@ -99,105 +91,125 @@ public class SmartMeleeAttack extends ExtendedBehaviour<PocNpc> {
 
         double distSq = npc.distanceToSqr(target);
         BehaviorUtils.lookAtEntity(npc, target);
-
-        // Toggle strafe direction periodically
-        strafeToggle--;
-        if (strafeToggle <= 0) {
-            strafingRight = !strafingRight;
-            strafeToggle = 15 + npc.getRandom().nextInt(25);
-        }
+        repathCooldown--;
 
         switch (phase) {
-            case KITE -> tickKite(npc, target, distSq, gameTime);
+            case APPROACH -> tickApproach(npc, target, distSq);
             case ENGAGE -> tickEngage(npc, target, distSq, gameTime);
-            default -> tickApproach(npc, target, distSq);
+            case KITE -> tickKite(npc, target, distSq);
+            case PAUSE -> tickPause(npc, target, distSq);
         }
     }
 
     private void tickApproach(PocNpc npc, LivingEntity target, double distSq) {
         if (distSq <= MELEE_RANGE_SQ) {
             phase = Phase.ENGAGE;
+            phaseTimer = 0;
             return;
         }
 
-        // Approach with slight strafing to dodge projectiles
-        if (distSq < APPROACH_RANGE_SQ) {
-            // Close enough to circle-strafe toward target
-            Vec3 toTarget = target.position().subtract(npc.position()).normalize();
-            Vec3 perpendicular = strafingRight
-                    ? new Vec3(-toTarget.z, 0, toTarget.x)
-                    : new Vec3(toTarget.z, 0, -toTarget.x);
-            // Blend: 70% toward target, 30% strafe
-            Vec3 moveDir = toTarget.scale(0.7).add(perpendicular.scale(0.3)).normalize();
-            Vec3 movePos = npc.position().add(moveDir.scale(3.0));
-            BrainUtils.setMemory(npc, MemoryModuleType.WALK_TARGET,
-                    new WalkTarget(movePos, SPRINT_SPEED, 1));
-        } else {
-            // Far away — sprint straight
-            BehaviorUtils.setWalkAndLookTargetMemories(npc, target, SPRINT_SPEED, 0);
+        // Only re-path periodically — not every tick
+        if (repathCooldown <= 0) {
+            float speed = distSq > CLOSE_ENOUGH_SQ ? RUN_SPEED : WALK_SPEED;
+            BehaviorUtils.setWalkAndLookTargetMemories(npc, target, speed, 1);
+            repathCooldown = 12 + npc.getRandom().nextInt(8); // 12-20 ticks between re-paths
         }
     }
 
     private void tickEngage(PocNpc npc, LivingEntity target, double distSq, long gameTime) {
-        // If target moved out of range, re-approach
-        if (distSq > MELEE_RANGE_SQ * 2.25) { // ~3 blocks
+        // If target backed away, re-approach
+        if (distSq > MELEE_RANGE_SQ * 3.0) {
             phase = Phase.APPROACH;
+            repathCooldown = 0;
             return;
         }
 
-        // Circle-strafe around target while in melee range
-        if (distSq <= MELEE_RANGE_SQ * 2.25) {
-            Vec3 toTarget = target.position().subtract(npc.position()).normalize();
-            Vec3 perpendicular = strafingRight
-                    ? new Vec3(-toTarget.z, 0, toTarget.x)
-                    : new Vec3(toTarget.z, 0, -toTarget.x);
-            Vec3 strafePos = npc.position().add(perpendicular.scale(1.5));
-            BrainUtils.setMemory(npc, MemoryModuleType.WALK_TARGET,
-                    new WalkTarget(strafePos, STRAFE_SPEED, 0));
+        // Close the gap if slightly out of range — walk, don't sprint
+        if (distSq > MELEE_RANGE_SQ && repathCooldown <= 0) {
+            BehaviorUtils.setWalkAndLookTargetMemories(npc, target, WALK_SPEED, 0);
+            repathCooldown = 10;
         }
 
-        // Attack if in range and cooldown elapsed
+        // Attack when in range and cooldown elapsed
         if (distSq <= MELEE_RANGE_SQ && gameTime - lastAttackTime >= ATTACK_COOLDOWN) {
             npc.swing(InteractionHand.MAIN_HAND);
             npc.doHurtTarget(target);
             lastAttackTime = gameTime;
+            hitsLanded++;
 
-            // Always kite after hitting — duration scales with danger
-            phase = Phase.KITE;
+            // After 2-3 hits, kite back. A player doesn't just stand and spam.
             float hpPercent = npc.getHealth() / npc.getMaxHealth();
-            if (hpPercent < 0.3f) {
-                kiteTimer = 25; // Desperate — long retreat
-            } else if (hpPercent < 0.6f) {
-                kiteTimer = 18; // Cautious
-            } else {
-                kiteTimer = 10; // Confident — brief backstep
-            }
+            int hitsBeforeKite = hpPercent < 0.4f ? 1 : (hpPercent < 0.7f ? 2 : 3);
 
-            // Move away from target
-            Vec3 retreatDir = npc.position().subtract(target.position()).normalize();
-            // Add some randomness to retreat angle
-            double angle = (npc.getRandom().nextDouble() - 0.5) * 0.8;
-            Vec3 rotated = new Vec3(
-                    retreatDir.x * Math.cos(angle) - retreatDir.z * Math.sin(angle),
-                    0,
-                    retreatDir.x * Math.sin(angle) + retreatDir.z * Math.cos(angle)
-            );
-            Vec3 retreatPos = npc.position().add(rotated.scale(KITE_DISTANCE));
-            BrainUtils.setMemory(npc, MemoryModuleType.WALK_TARGET,
-                    new WalkTarget(retreatPos, SPRINT_SPEED, 1));
+            if (hitsLanded >= hitsBeforeKite) {
+                startKite(npc, target);
+            } else {
+                // Small reposition between swings — just a step to one side
+                if (npc.getRandom().nextFloat() < 0.4f) {
+                    repositionSlightly(npc, target);
+                }
+            }
         }
     }
 
-    private void tickKite(PocNpc npc, LivingEntity target, double distSq, long gameTime) {
-        kiteTimer--;
-        if (kiteTimer <= 0) {
-            // Kite complete — decide next phase
-            if (distSq > APPROACH_RANGE_SQ && hasRangedWeapon(npc)) {
-                // Far enough for ranged — let SmartRangedAttack take over
-                return;
+    private void startKite(PocNpc npc, LivingEntity target) {
+        phase = Phase.KITE;
+        hitsLanded = 0;
+
+        // Commit to a retreat direction — pick once, follow through
+        Vec3 retreatDir = npc.position().subtract(target.position()).normalize();
+        // Slight angle variation so it's not always straight back
+        double angle = (npc.getRandom().nextDouble() - 0.5) * 0.6;
+        Vec3 rotated = new Vec3(
+                retreatDir.x * Math.cos(angle) - retreatDir.z * Math.sin(angle),
+                0,
+                retreatDir.x * Math.sin(angle) + retreatDir.z * Math.cos(angle)
+        );
+        Vec3 retreatPos = npc.position().add(rotated.scale(KITE_DISTANCE));
+
+        BrainUtils.setMemory(npc, MemoryModuleType.WALK_TARGET,
+                new WalkTarget(retreatPos, RUN_SPEED, 1));
+
+        // Hold the kite for a set duration — don't re-path during it
+        float hpPercent = npc.getHealth() / npc.getMaxHealth();
+        phaseTimer = hpPercent < 0.3f ? 45 : (hpPercent < 0.6f ? 35 : 25);
+        repathCooldown = phaseTimer; // Don't interrupt the retreat
+    }
+
+    private void tickKite(PocNpc npc, LivingEntity target, double distSq) {
+        phaseTimer--;
+        if (phaseTimer <= 0) {
+            // Done retreating — brief pause before re-engaging (like a player reading the fight)
+            phase = Phase.PAUSE;
+            phaseTimer = 10 + npc.getRandom().nextInt(15); // 0.5-1.25 second pause
+        }
+    }
+
+    private void tickPause(PocNpc npc, LivingEntity target, double distSq) {
+        // Just stand still and look at target — deciding what to do next
+        phaseTimer--;
+        if (phaseTimer <= 0) {
+            // If far enough and we have a bow, let ranged behaviour take over
+            if (distSq > CLOSE_ENOUGH_SQ && hasRangedWeapon(npc)) {
+                return; // behaviour will end, ranged can start
             }
             phase = Phase.APPROACH;
-            BehaviorUtils.setWalkAndLookTargetMemories(npc, target, SPRINT_SPEED, 0);
+            repathCooldown = 0;
+        }
+    }
+
+    private void repositionSlightly(PocNpc npc, LivingEntity target) {
+        Vec3 toTarget = target.position().subtract(npc.position()).normalize();
+        Vec3 perpendicular = strafingRight
+                ? new Vec3(-toTarget.z, 0, toTarget.x)
+                : new Vec3(toTarget.z, 0, -toTarget.x);
+        Vec3 stepPos = npc.position().add(perpendicular.scale(1.2));
+        BrainUtils.setMemory(npc, MemoryModuleType.WALK_TARGET,
+                new WalkTarget(stepPos, WALK_SPEED, 0));
+
+        // Occasionally swap strafe direction — but not every time
+        if (npc.getRandom().nextFloat() < 0.3f) {
+            strafingRight = !strafingRight;
         }
     }
 
@@ -208,7 +220,8 @@ public class SmartMeleeAttack extends ExtendedBehaviour<PocNpc> {
             BrainUtils.clearMemory(npc, MemoryModuleType.ATTACK_TARGET);
         }
         phase = Phase.APPROACH;
-        kiteTimer = 0;
+        phaseTimer = 0;
+        hitsLanded = 0;
     }
 
     private boolean hasRangedWeapon(PocNpc npc) {

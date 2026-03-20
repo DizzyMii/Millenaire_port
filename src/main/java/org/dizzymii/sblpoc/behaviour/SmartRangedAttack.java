@@ -22,21 +22,21 @@ import org.dizzymii.sblpoc.SblPocSetup;
 import java.util.List;
 
 /**
- * Ranged attack behaviour using a bow.
+ * Player-like ranged attack using a bow.
  *
- * - Activates when target is > 6 blocks away and NPC has a bow + arrows
- * - Swaps sword to inventory, equips bow in main hand
- * - Draws bow for ~20 ticks, releases arrow at target
- * - Strafes left/right while drawing to be a harder target
- * - Switches back to sword when target closes in or out of arrows
+ * - Equips bow when target is 6-24 blocks away
+ * - Stands still to draw and aim (like a player would)
+ * - Commits to one strafe direction between shots, not constant toggling
+ * - Only repositions after firing, not during draw
+ * - Backs away deliberately if target approaches, not every tick
  */
 public class SmartRangedAttack extends ExtendedBehaviour<PocNpc> {
 
-    private static final double MIN_RANGE_SQ = 36.0;   // 6 blocks — switch to melee below this
-    private static final double MAX_RANGE_SQ = 576.0;  // 24 blocks — too far to shoot
-    private static final int DRAW_TICKS = 20;
-    private static final float STRAFE_SPEED = 0.4f;
-    private static final float APPROACH_SPEED = 0.8f;
+    private static final double MIN_RANGE_SQ = 36.0;   // 6 blocks
+    private static final double MAX_RANGE_SQ = 576.0;  // 24 blocks
+    private static final int DRAW_TICKS = 22;
+    private static final float STRAFE_SPEED = 0.6f;
+    private static final float BACKPEDAL_SPEED = 0.8f;
 
     private static final List<Pair<MemoryModuleType<?>, MemoryStatus>> MEMORY_REQUIREMENTS =
             ObjectArrayList.of(
@@ -44,13 +44,17 @@ public class SmartRangedAttack extends ExtendedBehaviour<PocNpc> {
                     Pair.of(MemoryModuleType.WALK_TARGET, MemoryStatus.REGISTERED)
             );
 
+    private enum Phase { AIM, REPOSITION, BACKPEDAL }
+
     private int drawTimer = 0;
-    private int strafeToggleCooldown = 0;
     private boolean strafingRight = true;
     private boolean hasBow = false;
+    private Phase phase = Phase.AIM;
+    private int repositionTimer = 0;
+    private int shotsFired = 0;
 
     public SmartRangedAttack() {
-        runFor(entity -> 300); // Max 15 seconds per ranged engagement
+        runFor(entity -> 400);
     }
 
     @Override
@@ -64,13 +68,10 @@ public class SmartRangedAttack extends ExtendedBehaviour<PocNpc> {
         if (target == null || !target.isAlive()) return false;
 
         double distSq = npc.distanceToSqr(target);
-        // Only use ranged when target is between 6-24 blocks
         if (distSq < MIN_RANGE_SQ || distSq > MAX_RANGE_SQ) return false;
 
-        // Must not be using shield
         if (npc.isUsingItem()) return false;
 
-        // Must have bow and arrows
         return hasBowInInventory(npc) && hasArrows(npc);
     }
 
@@ -78,12 +79,12 @@ public class SmartRangedAttack extends ExtendedBehaviour<PocNpc> {
     protected void start(ServerLevel level, PocNpc npc, long gameTime) {
         drawTimer = 0;
         hasBow = false;
+        phase = Phase.AIM;
+        repositionTimer = 0;
+        shotsFired = 0;
         strafingRight = npc.getRandom().nextBoolean();
-        strafeToggleCooldown = 0;
 
-        // Equip bow
         equipBow(npc);
-
         BrainUtils.setMemory(npc, SblPocSetup.COMBAT_STATE.get(), "ranged");
     }
 
@@ -93,8 +94,7 @@ public class SmartRangedAttack extends ExtendedBehaviour<PocNpc> {
         if (target == null || !target.isAlive() || !npc.isAlive()) return false;
 
         double distSq = npc.distanceToSqr(target);
-        // Abort ranged if target is too close — let melee take over
-        if (distSq < MIN_RANGE_SQ * 0.5) return false; // 4.2 blocks — hysteresis
+        if (distSq < MIN_RANGE_SQ * 0.5) return false;
 
         return hasBow && hasArrows(npc);
     }
@@ -107,23 +107,22 @@ public class SmartRangedAttack extends ExtendedBehaviour<PocNpc> {
         double distSq = npc.distanceToSqr(target);
         BehaviorUtils.lookAtEntity(npc, target);
 
-        // If target is getting close, back away while drawing
-        if (distSq < MIN_RANGE_SQ * 1.5) { // ~7.3 blocks — start backing up
-            Vec3 away = npc.position().subtract(target.position()).normalize();
-            Vec3 retreatPos = npc.position().add(away.scale(4.0));
-            BrainUtils.setMemory(npc, MemoryModuleType.WALK_TARGET,
-                    new WalkTarget(retreatPos, APPROACH_SPEED, 1));
+        switch (phase) {
+            case AIM -> tickAim(level, npc, target, distSq);
+            case REPOSITION -> tickReposition(npc, target);
+            case BACKPEDAL -> tickBackpedal(npc, target, distSq);
+        }
+    }
+
+    private void tickAim(ServerLevel level, PocNpc npc, LivingEntity target, double distSq) {
+        // If target is approaching, switch to backpedal
+        if (distSq < MIN_RANGE_SQ * 1.2) {
+            phase = Phase.BACKPEDAL;
+            commitBackpedal(npc, target);
+            return;
         }
 
-        // Strafe while drawing — toggle direction periodically
-        strafeToggleCooldown--;
-        if (strafeToggleCooldown <= 0) {
-            strafingRight = !strafingRight;
-            strafeToggleCooldown = 20 + npc.getRandom().nextInt(20);
-        }
-        applyStrafeMovement(npc, target, strafingRight);
-
-        // Draw bow
+        // Stand still and draw — a player stops moving to aim
         if (!npc.isUsingItem() && npc.getMainHandItem().getItem() instanceof BowItem) {
             npc.startUsingItem(InteractionHand.MAIN_HAND);
             drawTimer = 0;
@@ -132,37 +131,70 @@ public class SmartRangedAttack extends ExtendedBehaviour<PocNpc> {
         if (npc.isUsingItem()) {
             drawTimer++;
             if (drawTimer >= DRAW_TICKS) {
-                // Release arrow
                 shootArrow(level, npc, target);
                 npc.stopUsingItem();
                 drawTimer = 0;
-
-                // Consume an arrow from inventory
                 consumeArrow(npc);
+                shotsFired++;
+
+                // After shooting, reposition to a new spot (like a player peeks from different angles)
+                phase = Phase.REPOSITION;
+                repositionTimer = 15 + npc.getRandom().nextInt(10); // Brief move
+
+                // Pick a strafe direction — commit to it for the whole reposition
+                if (npc.getRandom().nextFloat() < 0.35f) {
+                    strafingRight = !strafingRight;
+                }
+                commitStrafe(npc, target);
             }
         }
+    }
+
+    private void tickReposition(PocNpc npc, LivingEntity target) {
+        repositionTimer--;
+        if (repositionTimer <= 0) {
+            // Done moving, aim again
+            phase = Phase.AIM;
+        }
+    }
+
+    private void tickBackpedal(PocNpc npc, LivingEntity target, double distSq) {
+        repositionTimer--;
+        // Once we've backed up enough or timer expired, aim again
+        if (distSq > MIN_RANGE_SQ * 1.5 || repositionTimer <= 0) {
+            phase = Phase.AIM;
+        }
+    }
+
+    private void commitStrafe(PocNpc npc, LivingEntity target) {
+        Vec3 toTarget = target.position().subtract(npc.position()).normalize();
+        Vec3 perpendicular = strafingRight
+                ? new Vec3(-toTarget.z, 0, toTarget.x)
+                : new Vec3(toTarget.z, 0, -toTarget.x);
+        Vec3 strafePos = npc.position().add(perpendicular.scale(3.0));
+        BrainUtils.setMemory(npc, MemoryModuleType.WALK_TARGET,
+                new WalkTarget(strafePos, STRAFE_SPEED, 1));
+    }
+
+    private void commitBackpedal(PocNpc npc, LivingEntity target) {
+        Vec3 away = npc.position().subtract(target.position()).normalize();
+        Vec3 retreatPos = npc.position().add(away.scale(5.0));
+        BrainUtils.setMemory(npc, MemoryModuleType.WALK_TARGET,
+                new WalkTarget(retreatPos, BACKPEDAL_SPEED, 1));
+        repositionTimer = 25;
     }
 
     @Override
     protected void stop(ServerLevel level, PocNpc npc, long gameTime) {
         npc.stopUsingItem();
-        // Re-equip sword + shield
         restoreMeleeLoadout(npc);
         drawTimer = 0;
         hasBow = false;
+        shotsFired = 0;
         BrainUtils.setMemory(npc, SblPocSetup.COMBAT_STATE.get(), "melee");
     }
 
     // ========== Helpers ==========
-
-    private void applyStrafeMovement(PocNpc npc, LivingEntity target, boolean right) {
-        Vec3 toTarget = target.position().subtract(npc.position()).normalize();
-        // Perpendicular vector for strafing
-        Vec3 strafe = right ? new Vec3(-toTarget.z, 0, toTarget.x) : new Vec3(toTarget.z, 0, -toTarget.x);
-        Vec3 strafePos = npc.position().add(strafe.scale(2.0));
-        BrainUtils.setMemory(npc, MemoryModuleType.WALK_TARGET,
-                new WalkTarget(strafePos, STRAFE_SPEED, 1));
-    }
 
     private void shootArrow(ServerLevel level, PocNpc npc, LivingEntity target) {
         ItemStack bowStack = npc.getMainHandItem();
