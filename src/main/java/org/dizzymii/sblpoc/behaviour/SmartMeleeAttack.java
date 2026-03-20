@@ -77,6 +77,14 @@ public class SmartMeleeAttack extends ExtendedBehaviour<PocNpc> {
         if (target == null || !target.isAlive() || npc.isUsingItem()) return false;
 
         double distSq = npc.distanceToSqr(target);
+
+        // Strategy adaptation: if preferred strategy is "ranged" and we have a bow,
+        // only engage melee if the target is already very close
+        String strategy = BrainUtils.getMemory(npc, SblPocSetup.PREFERRED_STRATEGY.get());
+        if ("ranged".equals(strategy) && hasRangedWeapon(npc) && distSq > MELEE_RANGE_SQ * 2) {
+            return false; // Let SmartRangedAttack handle it
+        }
+
         return distSq < CLOSE_ENOUGH_SQ || !hasRangedWeapon(npc);
     }
 

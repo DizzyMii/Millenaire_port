@@ -109,21 +109,20 @@ public class DrinkPotionBehaviour extends ExtendedBehaviour<PocNpc> {
     @Override
     protected void tick(ServerLevel level, PocNpc npc, long gameTime) {
         drinkTimer--;
-        if (drinkTimer <= 0) {
-            // Finish drinking — the item's finishUsingItem will apply the effect
-            npc.stopUsingItem();
-        }
+        // Don't call stopUsingItem() here — let vanilla's LivingEntity.tick()
+        // handle completeUsingItem() which actually applies the potion effect.
+        // When the item use finishes naturally, isUsingItem() becomes false,
+        // shouldKeepRunning() returns false, and the behaviour stops cleanly.
     }
 
     @Override
     protected void stop(ServerLevel level, PocNpc npc, long gameTime) {
         npc.stopUsingItem();
 
-        // The potion was consumed by finishUsingItem, leaving a glass bottle
-        // Restore sword to main hand
         ItemStack currentMain = npc.getMainHandItem();
-        // Find a slot for the bottle (or discard it)
+
         if (currentMain.is(Items.GLASS_BOTTLE)) {
+            // Potion was consumed normally — stash the bottle
             boolean stashed = false;
             for (int i = 0; i < npc.getInventory().getContainerSize(); i++) {
                 if (npc.getInventory().getItem(i).isEmpty()) {
@@ -132,20 +131,33 @@ public class DrinkPotionBehaviour extends ExtendedBehaviour<PocNpc> {
                     break;
                 }
             }
-            // If no room, just drop it
             if (!stashed) {
                 npc.spawnAtLocation(currentMain);
+            }
+        } else if (currentMain.is(Items.POTION)) {
+            // Drink was interrupted — put unconsumed potion back in inventory
+            for (int i = 0; i < npc.getInventory().getContainerSize(); i++) {
+                if (npc.getInventory().getItem(i).isEmpty()) {
+                    npc.getInventory().setItem(i, currentMain.copy());
+                    break;
+                }
             }
         }
 
         // Restore original weapon from inventory
+        boolean restored = false;
         for (int i = 0; i < npc.getInventory().getContainerSize(); i++) {
             ItemStack stack = npc.getInventory().getItem(i);
             if (ItemStack.isSameItemSameComponents(stack, savedMainHand)) {
                 npc.setItemInHand(InteractionHand.MAIN_HAND, stack.copy());
                 npc.getInventory().setItem(i, ItemStack.EMPTY);
+                restored = true;
                 break;
             }
+        }
+        // Fallback: if savedMainHand wasn't found (e.g., inventory full), clear hand
+        if (!restored && !savedMainHand.isEmpty()) {
+            npc.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         }
 
         savedMainHand = ItemStack.EMPTY;

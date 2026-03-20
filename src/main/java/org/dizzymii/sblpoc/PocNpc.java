@@ -161,8 +161,10 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
     @Override
     protected void hurtCurrentlyUsedShield(float damage) {
         super.hurtCurrentlyUsedShield(damage);
-        // Signal to ShieldBlockBehaviour that we just absorbed a hit
-        BrainUtils.setMemory(this, SblPocSetup.JUST_BLOCKED_HIT.get(), true);
+        // Signal to ShieldBlockBehaviour that we just absorbed a hit (server only)
+        if (!this.level().isClientSide()) {
+            BrainUtils.setMemory(this, SblPocSetup.JUST_BLOCKED_HIT.get(), true);
+        }
     }
 
     // ========== Strategy Adaptation ==========
