@@ -2,9 +2,12 @@ package org.dizzymii.sblpoc.behaviour;
 
 import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.behavior.BehaviorUtils;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
@@ -40,6 +43,8 @@ public class SmartMeleeAttack extends ExtendedBehaviour<PocNpc> {
                     Pair.of(MemoryModuleType.WALK_TARGET, MemoryStatus.REGISTERED)
             );
 
+    private static final int JUMP_LEAD_TICKS = 7; // Jump this many ticks before attack
+
     private enum Phase { APPROACH, ENGAGE, KITE, PAUSE }
 
     private long lastAttackTime = 0;
@@ -48,6 +53,7 @@ public class SmartMeleeAttack extends ExtendedBehaviour<PocNpc> {
     private int repathCooldown = 0;
     private boolean strafingRight = true;
     private int hitsLanded = 0;
+    private boolean jumpedForCrit = false;
 
     public SmartMeleeAttack() {
         runFor(entity -> 400);
@@ -73,6 +79,7 @@ public class SmartMeleeAttack extends ExtendedBehaviour<PocNpc> {
         phaseTimer = 0;
         repathCooldown = 0;
         hitsLanded = 0;
+        jumpedForCrit = false;
         strafingRight = npc.getRandom().nextBoolean();
 
         BrainUtils.setMemory(npc, SblPocSetup.COMBAT_STATE.get(), "melee");
@@ -130,11 +137,42 @@ public class SmartMeleeAttack extends ExtendedBehaviour<PocNpc> {
             repathCooldown = 10;
         }
 
+        long ticksSinceAttack = gameTime - lastAttackTime;
+
+        // Jump before attack lands — wind up for a crit
+        if (distSq <= MELEE_RANGE_SQ && ticksSinceAttack >= (ATTACK_COOLDOWN - JUMP_LEAD_TICKS)
+                && !jumpedForCrit && npc.onGround()) {
+            npc.getJumpControl().jump();
+            jumpedForCrit = true;
+        }
+
         // Attack when in range and cooldown elapsed
-        if (distSq <= MELEE_RANGE_SQ && gameTime - lastAttackTime >= ATTACK_COOLDOWN) {
-            npc.swing(InteractionHand.MAIN_HAND);
-            npc.doHurtTarget(target);
+        if (distSq <= MELEE_RANGE_SQ && ticksSinceAttack >= ATTACK_COOLDOWN) {
+            boolean isCrit = !npc.onGround() && npc.fallDistance > 0.0f;
+
+            // Boost damage for crit — temporarily modify attribute like vanilla Player.attack()
+            if (isCrit) {
+                AttributeInstance attackAttr = npc.getAttribute(Attributes.ATTACK_DAMAGE);
+                if (attackAttr != null) {
+                    double baseDmg = attackAttr.getBaseValue();
+                    attackAttr.setBaseValue(baseDmg * 1.5);
+                    npc.swing(InteractionHand.MAIN_HAND);
+                    npc.doHurtTarget(target);
+                    attackAttr.setBaseValue(baseDmg);
+
+                    // Send crit particles (animate packet ID 4 = critical hit)
+                    if (npc.level() instanceof ServerLevel serverLevel) {
+                        serverLevel.getChunkSource().broadcastAndSend(npc,
+                                new ClientboundAnimatePacket(target, 4));
+                    }
+                }
+            } else {
+                npc.swing(InteractionHand.MAIN_HAND);
+                npc.doHurtTarget(target);
+            }
+
             lastAttackTime = gameTime;
+            jumpedForCrit = false;
             hitsLanded++;
 
             // After 2-3 hits, kite back. A player doesn't just stand and spam.
