@@ -43,6 +43,7 @@ public class PlanExecutor extends ExtendedBehaviour<PocNpc> {
 
     @Nullable private NpcGoal currentGoal = null;
     @Nullable private List<GoapAction> currentPlan = null;
+    @Nullable private BehaviourDispatcher.ActiveStep activeStep = null;
     private int planStepIndex = 0;
     private int stepTicksElapsed = 0;
     private int evalCooldown = 0;
@@ -85,8 +86,23 @@ public class PlanExecutor extends ExtendedBehaviour<PocNpc> {
             // Log current action to memory for debug visibility
             BrainUtils.setMemory(npc, SblPocSetup.CURRENT_GOAP_ACTION.get(), currentAction.getName());
 
-            // Check if step should complete (estimated duration elapsed)
-            if (stepTicksElapsed >= currentAction.getEstimatedTicks()) {
+            // Launch real behaviour if not yet started
+            if (activeStep == null) {
+                activeStep = BehaviourDispatcher.startAction(currentAction.getName(), level, npc);
+            }
+
+            // Tick the active step; if it self-completes, advance immediately
+            boolean stepDone = false;
+            if (activeStep != null) {
+                stepDone = activeStep.tick(level, npc, gameTime);
+            }
+
+            // Advance when the step completes OR the estimated duration elapses
+            if (stepDone || stepTicksElapsed >= currentAction.getEstimatedTicks()) {
+                if (activeStep != null) {
+                    activeStep.stop(level, npc, gameTime);
+                    activeStep = null;
+                }
                 advancePlanStep(npc);
             }
         } else if (currentPlan != null && planStepIndex >= currentPlan.size()) {
@@ -103,6 +119,10 @@ public class PlanExecutor extends ExtendedBehaviour<PocNpc> {
 
     @Override
     protected void stop(ServerLevel level, PocNpc npc, long gameTime) {
+        if (activeStep != null) {
+            activeStep.stop(level, npc, gameTime);
+            activeStep = null;
+        }
         BrainUtils.clearMemory(npc, SblPocSetup.CURRENT_GOAP_ACTION.get());
     }
 

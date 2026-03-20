@@ -177,6 +177,17 @@ public class InventoryModel {
     }
 
     /**
+     * Check if we have a sword.
+     */
+    public boolean hasSword() {
+        if (mainHand.getItem() instanceof SwordItem) return true;
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            if (inventory.getItem(i).getItem() instanceof SwordItem) return true;
+        }
+        return false;
+    }
+
+    /**
      * Check if we have a pickaxe of at least a certain tier.
      */
     public boolean hasPickaxe() {

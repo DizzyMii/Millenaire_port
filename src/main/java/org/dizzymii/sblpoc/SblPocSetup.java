@@ -10,8 +10,12 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.dizzymii.millenaire2.Millenaire2;
 import org.dizzymii.sblpoc.sensor.BlockScanSensor;
+import org.dizzymii.sblpoc.sensor.DangerZoneSensor;
 import org.dizzymii.sblpoc.sensor.IncomingDamageSensor;
+import org.dizzymii.sblpoc.sensor.InventoryStateSensor;
 import org.dizzymii.sblpoc.sensor.NearbyThreatSensor;
+import org.dizzymii.sblpoc.sensor.ResourceSensor;
+import org.dizzymii.sblpoc.sensor.TimeSensor;
 
 import java.util.Optional;
 
@@ -33,6 +37,18 @@ public class SblPocSetup {
 
     public static final DeferredHolder<SensorType<?>, SensorType<BlockScanSensor>> BLOCK_SCAN =
             SENSOR_TYPES.register("poc_block_scan", () -> new SensorType<>(BlockScanSensor::new));
+
+    public static final DeferredHolder<SensorType<?>, SensorType<ResourceSensor>> RESOURCE_SENSOR =
+            SENSOR_TYPES.register("poc_resource", () -> new SensorType<>(ResourceSensor::new));
+
+    public static final DeferredHolder<SensorType<?>, SensorType<InventoryStateSensor>> INVENTORY_STATE_SENSOR =
+            SENSOR_TYPES.register("poc_inventory_state", () -> new SensorType<>(InventoryStateSensor::new));
+
+    public static final DeferredHolder<SensorType<?>, SensorType<TimeSensor>> TIME_SENSOR =
+            SENSOR_TYPES.register("poc_time", () -> new SensorType<>(TimeSensor::new));
+
+    public static final DeferredHolder<SensorType<?>, SensorType<DangerZoneSensor>> DANGER_ZONE_SENSOR =
+            SENSOR_TYPES.register("poc_danger_zone", () -> new SensorType<>(DangerZoneSensor::new));
 
     // ========== Memory Types ==========
     public static final DeferredRegister<MemoryModuleType<?>> MEMORY_TYPES =
@@ -114,6 +130,74 @@ public class SblPocSetup {
     // Whether this NPC has already called for help
     public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> HELP_CALLED =
             MEMORY_TYPES.register("poc_help_called",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    // --- Resource Awareness (ResourceSensor) ---
+
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> KNOWS_IRON =
+            MEMORY_TYPES.register("poc_knows_iron",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> KNOWS_DIAMOND =
+            MEMORY_TYPES.register("poc_knows_diamond",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> KNOWS_WATER =
+            MEMORY_TYPES.register("poc_knows_water",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> NEARBY_CRAFTING_TABLE =
+            MEMORY_TYPES.register("poc_nearby_crafting_table",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> NEARBY_FURNACE =
+            MEMORY_TYPES.register("poc_nearby_furnace",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    // --- Inventory State (InventoryStateSensor) ---
+
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Integer>> FOOD_LEVEL =
+            MEMORY_TYPES.register("poc_food_level",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.INT)));
+
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Integer>> TOOL_TIER =
+            MEMORY_TYPES.register("poc_tool_tier",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.INT)));
+
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> INVENTORY_FULL =
+            MEMORY_TYPES.register("poc_inventory_full",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> HAS_WEAPON =
+            MEMORY_TYPES.register("poc_has_weapon",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    // --- Time (TimeSensor) ---
+
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> IS_NIGHT =
+            MEMORY_TYPES.register("poc_is_night",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> IS_THUNDERING =
+            MEMORY_TYPES.register("poc_is_thundering",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Integer>> DAY_NUMBER =
+            MEMORY_TYPES.register("poc_day_number",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.INT)));
+
+    // --- Danger Zone (DangerZoneSensor) ---
+
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> NEAR_LAVA =
+            MEMORY_TYPES.register("poc_near_lava",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> NEAR_CLIFF =
+            MEMORY_TYPES.register("poc_near_cliff",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> IN_DARKNESS =
+            MEMORY_TYPES.register("poc_in_darkness",
                     () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
 
     // --- GOAP / Utility AI ---
