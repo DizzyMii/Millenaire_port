@@ -2,7 +2,9 @@ package org.dizzymii.sblpoc.behaviour;
 
 import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.behavior.BehaviorUtils;
@@ -172,6 +174,10 @@ public class SmartRangedAttack extends ExtendedBehaviour<PocNpc> {
                 ? new Vec3(-toTarget.z, 0, toTarget.x)
                 : new Vec3(toTarget.z, 0, -toTarget.x);
         Vec3 strafePos = npc.position().add(perpendicular.scale(3.0));
+
+        // Height advantage: prefer elevated positions for better line of sight
+        strafePos = seekHighGround(npc, strafePos);
+
         BrainUtils.setMemory(npc, MemoryModuleType.WALK_TARGET,
                 new WalkTarget(strafePos, STRAFE_SPEED, 1));
     }
@@ -179,9 +185,58 @@ public class SmartRangedAttack extends ExtendedBehaviour<PocNpc> {
     private void commitBackpedal(PocNpc npc, LivingEntity target) {
         Vec3 away = npc.position().subtract(target.position()).normalize();
         Vec3 retreatPos = npc.position().add(away.scale(5.0));
+
+        // Check for hazards before backing up
+        BlockPos checkPos = BlockPos.containing(retreatPos);
+        if (npc.level().getFluidState(checkPos).is(FluidTags.LAVA)
+                || isCliff(npc, checkPos)) {
+            retreatPos = npc.position(); // Stay put instead
+        }
+
         BrainUtils.setMemory(npc, MemoryModuleType.WALK_TARGET,
                 new WalkTarget(retreatPos, BACKPEDAL_SPEED, 1));
         repositionTimer = 25;
+    }
+
+    // ========== Environmental Intelligence ==========
+
+    private Vec3 seekHighGround(PocNpc npc, Vec3 basePos) {
+        BlockPos base = BlockPos.containing(basePos);
+        BlockPos best = base;
+        int bestY = base.getY();
+
+        // Scan a 5x5 area around the target position for higher ground
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                BlockPos candidate = base.offset(dx, 0, dz);
+                // Look up to 3 blocks higher
+                for (int dy = 0; dy <= 3; dy++) {
+                    BlockPos elevated = candidate.above(dy);
+                    if (!npc.level().getBlockState(elevated).isAir()) continue;
+                    if (!npc.level().getBlockState(elevated.above()).isAir()) continue;
+                    if (npc.level().getBlockState(elevated.below()).isAir()) continue; // Need ground
+                    if (elevated.getY() > bestY) {
+                        bestY = elevated.getY();
+                        best = elevated;
+                    }
+                    break; // Found ground at this column
+                }
+            }
+        }
+
+        if (bestY > base.getY()) {
+            return Vec3.atCenterOf(best);
+        }
+        return basePos;
+    }
+
+    private boolean isCliff(PocNpc npc, BlockPos pos) {
+        BlockPos ground = pos;
+        for (int y = 0; y < 4; y++) {
+            if (!npc.level().getBlockState(ground.below()).isAir()) break;
+            ground = ground.below();
+        }
+        return pos.getY() - ground.getY() >= 3;
     }
 
     @Override

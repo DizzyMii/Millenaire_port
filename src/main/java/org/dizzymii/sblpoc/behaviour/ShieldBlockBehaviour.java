@@ -119,12 +119,29 @@ public class ShieldBlockBehaviour extends ExtendedBehaviour<PocNpc> {
         if (target != null && target.isAlive()) {
             BehaviorUtils.lookAtEntity(npc, target);
         }
+
+        // Parry-riposte: if we just blocked a hit, drop shield and counter immediately
+        Boolean justBlocked = BrainUtils.getMemory(npc, SblPocSetup.JUST_BLOCKED_HIT.get());
+        if (justBlocked != null && justBlocked && target != null && target.isAlive()) {
+            double distSq = npc.distanceToSqr(target);
+            if (distSq <= 6.25) { // 2.5 blocks — close enough to counter
+                npc.stopUsingItem();
+                npc.swing(InteractionHand.MAIN_HAND);
+                npc.doHurtTarget(target);
+                BrainUtils.clearMemory(npc, SblPocSetup.JUST_BLOCKED_HIT.get());
+                // Short cooldown after riposte — don't re-shield instantly
+                BrainUtils.setMemory(npc, SblPocSetup.SHIELD_COOLDOWN.get(), gameTime + 15L);
+                return;
+            }
+            BrainUtils.clearMemory(npc, SblPocSetup.JUST_BLOCKED_HIT.get());
+        }
     }
 
     @Override
     protected void stop(ServerLevel level, PocNpc npc, long gameTime) {
         // Lower shield
         npc.stopUsingItem();
+        BrainUtils.clearMemory(npc, SblPocSetup.JUST_BLOCKED_HIT.get());
 
         // Set shield cooldown — 30 ticks before can shield again
         BrainUtils.setMemory(npc, SblPocSetup.SHIELD_COOLDOWN.get(), gameTime + 30L);

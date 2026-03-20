@@ -69,6 +69,49 @@ public class SblPocSetup {
             MEMORY_TYPES.register("poc_under_ranged_fire",
                     () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
 
+    // --- Tactical Awareness ---
+
+    // Number of nearby friendly PocNpc allies
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Integer>> ALLY_COUNT =
+            MEMORY_TYPES.register("poc_ally_count",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.INT)));
+
+    // --- Combat Mechanics ---
+
+    // Shield just absorbed a hit — trigger parry-riposte window
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> JUST_BLOCKED_HIT =
+            MEMORY_TYPES.register("poc_just_blocked_hit",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    // --- Environmental / Predictive ---
+
+    // An enemy is currently drawing a bow aimed at us
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> ENEMY_DRAWING_BOW =
+            MEMORY_TYPES.register("poc_enemy_drawing_bow",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    // --- Strategy Adaptation ---
+
+    // Preferred combat strategy: "melee" or "ranged" — adapts based on damage taken
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<String>> PREFERRED_STRATEGY =
+            MEMORY_TYPES.register("poc_preferred_strategy",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.STRING)));
+
+    // Cumulative damage taken while in melee range (resets periodically)
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Integer>> DAMAGE_TAKEN_MELEE =
+            MEMORY_TYPES.register("poc_damage_taken_melee",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.INT)));
+
+    // Cumulative damage taken while at range (resets periodically)
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Integer>> DAMAGE_TAKEN_RANGED =
+            MEMORY_TYPES.register("poc_damage_taken_ranged",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.INT)));
+
+    // Whether this NPC has already called for help
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>> HELP_CALLED =
+            MEMORY_TYPES.register("poc_help_called",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
     // ========== Entity Type ==========
     public static final DeferredHolder<EntityType<?>, EntityType<PocNpc>> POC_NPC =
             Millenaire2.ENTITY_TYPES.register("poc_npc",

@@ -2,6 +2,7 @@ package org.dizzymii.sblpoc;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.PathfinderMob;
@@ -13,6 +14,8 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.nbt.CompoundTag;
@@ -33,7 +36,11 @@ import net.tslat.smartbrainlib.api.core.behaviour.custom.target.SetRandomLookTar
 import net.tslat.smartbrainlib.api.core.behaviour.custom.target.TargetOrRetaliate;
 import net.tslat.smartbrainlib.api.core.sensor.ExtendedSensor;
 import net.tslat.smartbrainlib.api.core.sensor.vanilla.HurtBySensor;
+import net.tslat.smartbrainlib.util.BrainUtils;
+import org.dizzymii.sblpoc.behaviour.DodgeProjectileBehaviour;
+import org.dizzymii.sblpoc.behaviour.DrinkPotionBehaviour;
 import org.dizzymii.sblpoc.behaviour.EatFoodBehaviour;
+import org.dizzymii.sblpoc.behaviour.RetreatToAlliesBehaviour;
 import org.dizzymii.sblpoc.behaviour.SeekCoverBehaviour;
 import org.dizzymii.sblpoc.behaviour.ShieldBlockBehaviour;
 import org.dizzymii.sblpoc.behaviour.SmartMeleeAttack;
@@ -52,12 +59,13 @@ import java.util.List;
  * - Eats food from inventory when damaged and safe
  * - Smart melee combat with hit-and-kite pattern
  * 
- * Spawns with: Iron Sword, Shield, Bow, 32x Arrow, 8x Steak
+ * Spawns with: Iron Sword, Iron Axe, Shield, Bow, 32x Arrow, 8x Steak, 2x Healing Potion, 1x Strength Potion
  * Summon: /summon millenaire2:poc_npc ~ ~ ~
  */
 public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
 
-    private final SimpleContainer inventory = new SimpleContainer(9);
+    private final SimpleContainer inventory = new SimpleContainer(12);
+    private int strategyEvalTimer = 0;
 
     public PocNpc(EntityType<? extends PocNpc> type, Level level) {
         super(type, level);
@@ -124,11 +132,14 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
         return BrainActivityGroup.fightTasks(
                 new InvalidateAttackTarget<>(),
                 new FirstApplicableBehaviour<PocNpc>(
-                        new ShieldBlockBehaviour(),  // Priority 1: reactive shield blocking
-                        new SeekCoverBehaviour(),    // Priority 2: hide from ranged fire
-                        new EatFoodBehaviour(),      // Priority 3: eat food when safe
-                        new SmartRangedAttack(),     // Priority 4: bow at range (6-24 blocks)
-                        new SmartMeleeAttack()       // Priority 5: melee + strafe + kite
+                        new RetreatToAlliesBehaviour(), // Priority 1: flee to friends when critical HP
+                        new ShieldBlockBehaviour(),     // Priority 2: reactive shield blocking / parry-riposte
+                        new DodgeProjectileBehaviour(),  // Priority 3: sidestep incoming arrows
+                        new SeekCoverBehaviour(),        // Priority 4: hide from ranged fire
+                        new DrinkPotionBehaviour(),      // Priority 5: drink healing/strength potions
+                        new EatFoodBehaviour(),          // Priority 6: eat food when safe
+                        new SmartRangedAttack(),         // Priority 7: bow at range (6-24 blocks)
+                        new SmartMeleeAttack()           // Priority 8: melee + weapon switch + hazard kiting
                 )
         );
     }
@@ -136,6 +147,65 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
     @Override
     protected void customServerAiStep() {
         tickBrain(this);
+
+        // Strategy adaptation — evaluate every 5 seconds
+        strategyEvalTimer++;
+        if (strategyEvalTimer >= 100) {
+            strategyEvalTimer = 0;
+            evaluateStrategy();
+        }
+    }
+
+    // ========== Parry-Riposte Hook ==========
+
+    @Override
+    protected void hurtCurrentlyUsedShield(float damage) {
+        super.hurtCurrentlyUsedShield(damage);
+        // Signal to ShieldBlockBehaviour that we just absorbed a hit
+        BrainUtils.setMemory(this, SblPocSetup.JUST_BLOCKED_HIT.get(), true);
+    }
+
+    // ========== Strategy Adaptation ==========
+
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        boolean result = super.hurt(source, amount);
+        if (result && !this.level().isClientSide()) {
+            // Track damage taken while in melee vs ranged state
+            String state = BrainUtils.getMemory(this, SblPocSetup.COMBAT_STATE.get());
+            if ("melee".equals(state)) {
+                Integer dmg = BrainUtils.getMemory(this, SblPocSetup.DAMAGE_TAKEN_MELEE.get());
+                BrainUtils.setMemory(this, SblPocSetup.DAMAGE_TAKEN_MELEE.get(),
+                        (dmg != null ? dmg : 0) + (int) amount);
+            } else if ("ranged".equals(state)) {
+                Integer dmg = BrainUtils.getMemory(this, SblPocSetup.DAMAGE_TAKEN_RANGED.get());
+                BrainUtils.setMemory(this, SblPocSetup.DAMAGE_TAKEN_RANGED.get(),
+                        (dmg != null ? dmg : 0) + (int) amount);
+            }
+        }
+        return result;
+    }
+
+    private void evaluateStrategy() {
+        Integer meleeDmg = BrainUtils.getMemory(this, SblPocSetup.DAMAGE_TAKEN_MELEE.get());
+        Integer rangedDmg = BrainUtils.getMemory(this, SblPocSetup.DAMAGE_TAKEN_RANGED.get());
+        int m = meleeDmg != null ? meleeDmg : 0;
+        int r = rangedDmg != null ? rangedDmg : 0;
+
+        // If taking significantly more damage in melee, prefer ranged
+        if (m > r + 6) {
+            BrainUtils.setMemory(this, SblPocSetup.PREFERRED_STRATEGY.get(), "ranged");
+        } else if (r > m + 6) {
+            BrainUtils.setMemory(this, SblPocSetup.PREFERRED_STRATEGY.get(), "melee");
+        }
+        // else keep current — not enough data to switch
+
+        // Reset counters for next evaluation window
+        BrainUtils.setMemory(this, SblPocSetup.DAMAGE_TAKEN_MELEE.get(), 0);
+        BrainUtils.setMemory(this, SblPocSetup.DAMAGE_TAKEN_RANGED.get(), 0);
+
+        // Reset help-called flag so NPC can re-alert allies if needed
+        BrainUtils.clearMemory(this, SblPocSetup.HELP_CALLED.get());
     }
 
     // ========== Spawn Equipment ==========
@@ -150,10 +220,14 @@ public class PocNpc extends PathfinderMob implements SmartBrainOwner<PocNpc> {
         setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_SWORD));
         setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.SHIELD));
 
-        // Stock inventory: bow, arrows, food
+        // Stock inventory: bow, axe, arrows, food, potions
         inventory.setItem(0, new ItemStack(Items.BOW));
-        inventory.setItem(1, new ItemStack(Items.ARROW, 32));
-        inventory.setItem(2, new ItemStack(Items.COOKED_BEEF, 8));
+        inventory.setItem(1, new ItemStack(Items.IRON_AXE));
+        inventory.setItem(2, new ItemStack(Items.ARROW, 32));
+        inventory.setItem(3, new ItemStack(Items.COOKED_BEEF, 8));
+        inventory.setItem(4, PotionContents.createItemStack(Items.POTION, Potions.HEALING));
+        inventory.setItem(5, PotionContents.createItemStack(Items.POTION, Potions.HEALING));
+        inventory.setItem(6, PotionContents.createItemStack(Items.POTION, Potions.STRENGTH));
 
         // Don't drop equipment on death
         setDropChance(EquipmentSlot.MAINHAND, 0.0f);

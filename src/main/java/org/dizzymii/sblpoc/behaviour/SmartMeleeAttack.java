@@ -2,8 +2,10 @@ package org.dizzymii.sblpoc.behaviour;
 
 import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -12,6 +14,11 @@ import net.minecraft.world.entity.ai.behavior.BehaviorUtils;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
+import net.minecraft.world.item.AxeItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 import net.tslat.smartbrainlib.api.core.behaviour.ExtendedBehaviour;
 import net.tslat.smartbrainlib.util.BrainUtils;
@@ -81,6 +88,12 @@ public class SmartMeleeAttack extends ExtendedBehaviour<PocNpc> {
         hitsLanded = 0;
         jumpedForCrit = false;
         strafingRight = npc.getRandom().nextBoolean();
+
+        // Pick the right weapon for the target
+        chooseWeaponForTarget(npc);
+
+        // Call for help — share target with nearby allies (like wolves)
+        callForHelp(level, npc);
 
         BrainUtils.setMemory(npc, SblPocSetup.COMBAT_STATE.get(), "melee");
     }
@@ -205,6 +218,9 @@ public class SmartMeleeAttack extends ExtendedBehaviour<PocNpc> {
         );
         Vec3 retreatPos = npc.position().add(rotated.scale(KITE_DISTANCE));
 
+        // Hazard check — don't retreat into lava, deep water, or off a cliff
+        retreatPos = validateRetreatPosition(npc, retreatPos);
+
         BrainUtils.setMemory(npc, MemoryModuleType.WALK_TARGET,
                 new WalkTarget(retreatPos, RUN_SPEED, 1));
 
@@ -268,5 +284,92 @@ public class SmartMeleeAttack extends ExtendedBehaviour<PocNpc> {
             if (npc.getInventory().getItem(i).getItem() instanceof net.minecraft.world.item.BowItem) return true;
         }
         return false;
+    }
+
+    // ========== Weapon Switching ==========
+
+    private void chooseWeaponForTarget(PocNpc npc) {
+        LivingEntity target = BrainUtils.getMemory(npc, MemoryModuleType.ATTACK_TARGET);
+        if (target == null) return;
+
+        boolean targetShielding = target.isBlocking();
+        ItemStack mainHand = npc.getMainHandItem();
+
+        if (targetShielding && !(mainHand.getItem() instanceof AxeItem)) {
+            // Target is shielding — switch to axe (axes disable shields in vanilla)
+            swapToWeapon(npc, AxeItem.class);
+        } else if (!targetShielding && !(mainHand.getItem() instanceof SwordItem)) {
+            // Target not shielding — sword does more DPS
+            swapToWeapon(npc, SwordItem.class);
+        }
+    }
+
+    private void swapToWeapon(PocNpc npc, Class<?> weaponClass) {
+        ItemStack currentMain = npc.getMainHandItem();
+
+        for (int i = 0; i < npc.getInventory().getContainerSize(); i++) {
+            ItemStack stack = npc.getInventory().getItem(i);
+            if (weaponClass.isInstance(stack.getItem())) {
+                // Swap main hand with inventory slot
+                npc.setItemInHand(InteractionHand.MAIN_HAND, stack.copy());
+                npc.getInventory().setItem(i, currentMain.copy());
+                return;
+            }
+        }
+    }
+
+    // ========== Hazard Avoidance ==========
+
+    private Vec3 validateRetreatPosition(PocNpc npc, Vec3 proposed) {
+        BlockPos targetPos = BlockPos.containing(proposed);
+
+        // Check for lava
+        FluidState fluid = npc.level().getFluidState(targetPos);
+        if (fluid.is(FluidTags.LAVA)) {
+            return npc.position(); // Stay put rather than walk into lava
+        }
+
+        // Check for deep water (2+ blocks deep)
+        if (fluid.is(FluidTags.WATER)) {
+            FluidState below = npc.level().getFluidState(targetPos.below());
+            if (below.is(FluidTags.WATER)) {
+                return npc.position();
+            }
+        }
+
+        // Check for cliff (3+ block drop)
+        BlockPos ground = targetPos;
+        for (int y = 0; y < 4; y++) {
+            BlockState state = npc.level().getBlockState(ground.below());
+            if (!state.isAir()) break;
+            ground = ground.below();
+        }
+        if (targetPos.getY() - ground.getY() >= 3) {
+            return npc.position();
+        }
+
+        return proposed;
+    }
+
+    // ========== Call for Help ==========
+
+    private void callForHelp(ServerLevel level, PocNpc npc) {
+        Boolean helpCalled = BrainUtils.getMemory(npc, SblPocSetup.HELP_CALLED.get());
+        if (helpCalled != null && helpCalled) return; // Already called
+
+        LivingEntity myTarget = BrainUtils.getMemory(npc, MemoryModuleType.ATTACK_TARGET);
+        if (myTarget == null) return;
+
+        // Alert nearby allies within 16 blocks
+        for (PocNpc ally : level.getEntitiesOfClass(PocNpc.class,
+                npc.getBoundingBox().inflate(16.0),
+                a -> a != npc && a.isAlive())) {
+            LivingEntity allyTarget = BrainUtils.getMemory(ally, MemoryModuleType.ATTACK_TARGET);
+            if (allyTarget == null || !allyTarget.isAlive()) {
+                BrainUtils.setMemory(ally, MemoryModuleType.ATTACK_TARGET, myTarget);
+            }
+        }
+
+        BrainUtils.setMemory(npc, SblPocSetup.HELP_CALLED.get(), true);
     }
 }
