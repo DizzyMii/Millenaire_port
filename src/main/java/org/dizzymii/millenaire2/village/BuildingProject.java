@@ -12,6 +12,14 @@ import javax.annotation.Nullable;
  */
 public class BuildingProject {
 
+    // ========== NBT key constants ==========
+    private static final String NBT_KEY = "key";
+    private static final String NBT_CUSTOM = "custom";
+    private static final String NBT_TIER = "tier";
+    private static final String NBT_PRIORITY = "priority";
+    private static final String NBT_UPGRADE_LEVEL = "upgradeLevel";
+    private static final String NBT_LOC = "loc";
+
     public enum EnumProjects {
         CENTRE, START, CORE, SECONDARY, EXTRA, PLAYER
     }
@@ -67,27 +75,27 @@ public class BuildingProject {
 
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
-        if (key != null) tag.putString("key", key);
-        tag.putBoolean("custom", isCustomBuilding);
-        tag.putString("tier", projectTier.name());
-        tag.putInt("priority", priority);
-        tag.putInt("upgradeLevel", upgradeLevel);
-        if (location != null) location.save(tag, "loc");
+        if (key != null) tag.putString(NBT_KEY, key);
+        tag.putBoolean(NBT_CUSTOM, isCustomBuilding);
+        tag.putString(NBT_TIER, projectTier.name());
+        tag.putInt(NBT_PRIORITY, priority);
+        tag.putInt(NBT_UPGRADE_LEVEL, upgradeLevel);
+        if (location != null) location.save(tag, NBT_LOC);
         return tag;
     }
 
     public static BuildingProject load(CompoundTag tag) {
         BuildingProject bp = new BuildingProject();
-        if (tag.contains("key")) bp.key = tag.getString("key");
-        bp.isCustomBuilding = tag.getBoolean("custom");
+        if (tag.contains(NBT_KEY)) bp.key = tag.getString(NBT_KEY);
+        bp.isCustomBuilding = tag.getBoolean(NBT_CUSTOM);
         try {
-            bp.projectTier = EnumProjects.valueOf(tag.getString("tier"));
+            bp.projectTier = EnumProjects.valueOf(tag.getString(NBT_TIER));
         } catch (IllegalArgumentException e) {
             bp.projectTier = EnumProjects.EXTRA;
         }
-        bp.priority = tag.getInt("priority");
-        bp.upgradeLevel = tag.getInt("upgradeLevel");
-        bp.location = BuildingLocation.read(tag, "loc");
+        bp.priority = tag.getInt(NBT_PRIORITY);
+        bp.upgradeLevel = tag.getInt(NBT_UPGRADE_LEVEL);
+        bp.location = BuildingLocation.read(tag, NBT_LOC);
         return bp;
     }
 }

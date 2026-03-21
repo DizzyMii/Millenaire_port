@@ -18,6 +18,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class BuildingResManager {
 
+    // ========== NBT key constants ==========
+    private static final String NBT_SUFFIX_RESOURCES = "resources";
+    private static final String NBT_SUFFIX_STALLS = "stalls";
+    private static final String NBT_SUFFIX_SLEEPING = "sleeping";
+    private static final String NBT_RES_KEY = "key";
+    private static final String NBT_RES_COUNT = "count";
+    private static final String NBT_POINT = "p";
+
     private final Building building;
     public ConcurrentHashMap<InvItem, Integer> resources = new ConcurrentHashMap<>();
     public CopyOnWriteArrayList<Point> stalls = new CopyOnWriteArrayList<>();
@@ -56,29 +64,29 @@ public class BuildingResManager {
         ListTag resList = new ListTag();
         for (Map.Entry<InvItem, Integer> entry : resources.entrySet()) {
             CompoundTag t = new CompoundTag();
-            t.putString("key", entry.getKey().key);
-            t.putInt("count", entry.getValue());
+            t.putString(NBT_RES_KEY, entry.getKey().key);
+            t.putInt(NBT_RES_COUNT, entry.getValue());
             resList.add(t);
         }
-        parent.put(prefix + "resources", resList);
+        parent.put(prefix + NBT_SUFFIX_RESOURCES, resList);
 
         // Save stalls
         ListTag stallList = new ListTag();
         for (Point p : stalls) {
             CompoundTag t = new CompoundTag();
-            p.writeToNBT(t, "p");
+            p.writeToNBT(t, NBT_POINT);
             stallList.add(t);
         }
-        parent.put(prefix + "stalls", stallList);
+        parent.put(prefix + NBT_SUFFIX_STALLS, stallList);
 
         // Save sleeping positions
         ListTag sleepList = new ListTag();
         for (Point p : sleepingPositions) {
             CompoundTag t = new CompoundTag();
-            p.writeToNBT(t, "p");
+            p.writeToNBT(t, NBT_POINT);
             sleepList.add(t);
         }
-        parent.put(prefix + "sleeping", sleepList);
+        parent.put(prefix + NBT_SUFFIX_SLEEPING, sleepList);
     }
 
     public void load(CompoundTag parent, String prefix) {
@@ -87,12 +95,12 @@ public class BuildingResManager {
         sleepingPositions.clear();
 
         // Load resources
-        if (parent.contains(prefix + "resources", Tag.TAG_LIST)) {
-            ListTag resList = parent.getList(prefix + "resources", Tag.TAG_COMPOUND);
+        if (parent.contains(prefix + NBT_SUFFIX_RESOURCES, Tag.TAG_LIST)) {
+            ListTag resList = parent.getList(prefix + NBT_SUFFIX_RESOURCES, Tag.TAG_COMPOUND);
             for (int i = 0; i < resList.size(); i++) {
                 CompoundTag t = resList.getCompound(i);
-                String key = t.getString("key");
-                int count = t.getInt("count");
+                String key = t.getString(NBT_RES_KEY);
+                int count = t.getInt(NBT_RES_COUNT);
                 InvItem item = InvItem.get(key);
                 if (item != null && count > 0) {
                     resources.put(item, count);
@@ -101,19 +109,19 @@ public class BuildingResManager {
         }
 
         // Load stalls
-        if (parent.contains(prefix + "stalls", Tag.TAG_LIST)) {
-            ListTag stallList = parent.getList(prefix + "stalls", Tag.TAG_COMPOUND);
+        if (parent.contains(prefix + NBT_SUFFIX_STALLS, Tag.TAG_LIST)) {
+            ListTag stallList = parent.getList(prefix + NBT_SUFFIX_STALLS, Tag.TAG_COMPOUND);
             for (int i = 0; i < stallList.size(); i++) {
-                Point p = Point.readFromNBT(stallList.getCompound(i), "p");
+                Point p = Point.readFromNBT(stallList.getCompound(i), NBT_POINT);
                 if (p != null) stalls.add(p);
             }
         }
 
         // Load sleeping positions
-        if (parent.contains(prefix + "sleeping", Tag.TAG_LIST)) {
-            ListTag sleepList = parent.getList(prefix + "sleeping", Tag.TAG_COMPOUND);
+        if (parent.contains(prefix + NBT_SUFFIX_SLEEPING, Tag.TAG_LIST)) {
+            ListTag sleepList = parent.getList(prefix + NBT_SUFFIX_SLEEPING, Tag.TAG_COMPOUND);
             for (int i = 0; i < sleepList.size(); i++) {
-                Point p = Point.readFromNBT(sleepList.getCompound(i), "p");
+                Point p = Point.readFromNBT(sleepList.getCompound(i), NBT_POINT);
                 if (p != null) sleepingPositions.add(p);
             }
         }

@@ -48,110 +48,149 @@ public class BuildingLocation implements Cloneable {
     public int getVariation() { return variation; }
     public void setVariation(int v) { this.variation = v; }
 
+    // ========== NBT suffix constants ==========
+    private static final String S_KEY = "_key";
+    private static final String S_POS = "_pos";
+    private static final String S_IS_CUSTOM = "_isCustomBuilding";
+    private static final String S_CULTURE = "_culture";
+    private static final String S_ORIENTATION = "_orientation";
+    private static final String S_LENGTH = "_length";
+    private static final String S_WIDTH = "_width";
+    private static final String S_LEVEL = "_level";
+    private static final String S_VARIATION = "_variation";
+    private static final String S_REPUTATION = "_reputation";
+    private static final String S_PRICE = "_price";
+    private static final String S_VERSION = "_version";
+    private static final String S_PRIORITY_MOVE_IN = "_priorityMoveIn";
+    private static final String S_SHOP = "_shop";
+    private static final String S_UPGRADES_ALLOWED = "_upgradesAllowed";
+    private static final String S_BEDROCK_LEVEL = "_bedrocklevel";
+    private static final String S_SHOW_TH_SIGNS = "_showTownHallSigns";
+    private static final String S_IS_SUB_LOC = "_isSubBuildingLocation";
+    private static final String S_MINX_M = "_minxM";
+    private static final String S_MAXX_M = "_maxxM";
+    private static final String S_MINY_M = "_minyM";
+    private static final String S_MAXY_M = "_maxyM";
+    private static final String S_MINZ_M = "_minzM";
+    private static final String S_MAXZ_M = "_maxzM";
+    private static final String S_MINX = "_minx";
+    private static final String S_MAXX = "_maxx";
+    private static final String S_MINY = "_miny";
+    private static final String S_MAXY = "_maxy";
+    private static final String S_MINZ = "_minz";
+    private static final String S_MAXZ = "_maxz";
+    private static final String S_CHEST = "_chest";
+    private static final String S_SLEEP = "_sleep";
+    private static final String S_SELL = "_sell";
+    private static final String S_CRAFT = "_craft";
+    private static final String S_SHELTER = "_shelter";
+    private static final String S_DEFEND = "_defend";
+    private static final String S_SUBS = "_subs";
+
     // ========== NBT persistence ==========
 
     public void save(CompoundTag tag, String label) {
-        if (planKey != null) tag.putString(label + "_key", planKey);
-        if (pos != null) pos.write(tag, label + "_pos");
-        tag.putBoolean(label + "_isCustomBuilding", isCustomBuilding);
-        if (cultureKey != null) tag.putString(label + "_culture", cultureKey);
-        tag.putInt(label + "_orientation", orientation);
-        tag.putInt(label + "_length", length);
-        tag.putInt(label + "_width", width);
-        tag.putInt(label + "_level", level);
-        tag.putInt(label + "_variation", variation);
-        tag.putInt(label + "_reputation", reputation);
-        tag.putInt(label + "_price", price);
-        tag.putInt(label + "_version", version);
-        tag.putInt(label + "_priorityMoveIn", priorityMoveIn);
-        if (shop != null) tag.putString(label + "_shop", shop);
-        tag.putBoolean(label + "_upgradesAllowed", upgradesAllowed);
-        tag.putBoolean(label + "_bedrocklevel", bedrocklevel);
-        tag.putBoolean(label + "_showTownHallSigns", showTownHallSigns);
-        tag.putBoolean(label + "_isSubBuildingLocation", isSubBuildingLocation);
+        if (planKey != null) tag.putString(label + S_KEY, planKey);
+        if (pos != null) pos.write(tag, label + S_POS);
+        tag.putBoolean(label + S_IS_CUSTOM, isCustomBuilding);
+        if (cultureKey != null) tag.putString(label + S_CULTURE, cultureKey);
+        tag.putInt(label + S_ORIENTATION, orientation);
+        tag.putInt(label + S_LENGTH, length);
+        tag.putInt(label + S_WIDTH, width);
+        tag.putInt(label + S_LEVEL, level);
+        tag.putInt(label + S_VARIATION, variation);
+        tag.putInt(label + S_REPUTATION, reputation);
+        tag.putInt(label + S_PRICE, price);
+        tag.putInt(label + S_VERSION, version);
+        tag.putInt(label + S_PRIORITY_MOVE_IN, priorityMoveIn);
+        if (shop != null) tag.putString(label + S_SHOP, shop);
+        tag.putBoolean(label + S_UPGRADES_ALLOWED, upgradesAllowed);
+        tag.putBoolean(label + S_BEDROCK_LEVEL, bedrocklevel);
+        tag.putBoolean(label + S_SHOW_TH_SIGNS, showTownHallSigns);
+        tag.putBoolean(label + S_IS_SUB_LOC, isSubBuildingLocation);
 
         // Margins
-        tag.putInt(label + "_minxM", minxMargin);
-        tag.putInt(label + "_maxxM", maxxMargin);
-        tag.putInt(label + "_minyM", minyMargin);
-        tag.putInt(label + "_maxyM", maxyMargin);
-        tag.putInt(label + "_minzM", minzMargin);
-        tag.putInt(label + "_maxzM", maxzMargin);
+        tag.putInt(label + S_MINX_M, minxMargin);
+        tag.putInt(label + S_MAXX_M, maxxMargin);
+        tag.putInt(label + S_MINY_M, minyMargin);
+        tag.putInt(label + S_MAXY_M, maxyMargin);
+        tag.putInt(label + S_MINZ_M, minzMargin);
+        tag.putInt(label + S_MAXZ_M, maxzMargin);
 
         // Bounds
-        tag.putInt(label + "_minx", minx);
-        tag.putInt(label + "_maxx", maxx);
-        tag.putInt(label + "_miny", miny);
-        tag.putInt(label + "_maxy", maxy);
-        tag.putInt(label + "_minz", minz);
-        tag.putInt(label + "_maxz", maxz);
+        tag.putInt(label + S_MINX, minx);
+        tag.putInt(label + S_MAXX, maxx);
+        tag.putInt(label + S_MINY, miny);
+        tag.putInt(label + S_MAXY, maxy);
+        tag.putInt(label + S_MINZ, minz);
+        tag.putInt(label + S_MAXZ, maxz);
 
         // Special positions
-        if (chestPos != null) chestPos.write(tag, label + "_chest");
-        if (sleepingPos != null) sleepingPos.write(tag, label + "_sleep");
-        if (sellingPos != null) sellingPos.write(tag, label + "_sell");
-        if (craftingPos != null) craftingPos.write(tag, label + "_craft");
-        if (shelterPos != null) shelterPos.write(tag, label + "_shelter");
-        if (defendingPos != null) defendingPos.write(tag, label + "_defend");
+        if (chestPos != null) chestPos.write(tag, label + S_CHEST);
+        if (sleepingPos != null) sleepingPos.write(tag, label + S_SLEEP);
+        if (sellingPos != null) sellingPos.write(tag, label + S_SELL);
+        if (craftingPos != null) craftingPos.write(tag, label + S_CRAFT);
+        if (shelterPos != null) shelterPos.write(tag, label + S_SHELTER);
+        if (defendingPos != null) defendingPos.write(tag, label + S_DEFEND);
 
         // Sub-buildings
         ListTag subList = new ListTag();
         for (String sub : subBuildings) {
             subList.add(StringTag.valueOf(sub));
         }
-        tag.put(label + "_subs", subList);
+        tag.put(label + S_SUBS, subList);
     }
 
     @Nullable
     public static BuildingLocation read(CompoundTag tag, String label) {
-        if (!tag.contains(label + "_key")) return null;
+        if (!tag.contains(label + S_KEY)) return null;
         BuildingLocation bl = new BuildingLocation();
-        bl.planKey = tag.getString(label + "_key");
-        bl.pos = Point.read(tag, label + "_pos");
-        bl.isCustomBuilding = tag.getBoolean(label + "_isCustomBuilding");
-        bl.cultureKey = tag.contains(label + "_culture") ? tag.getString(label + "_culture") : null;
-        bl.orientation = tag.getInt(label + "_orientation");
-        bl.length = tag.getInt(label + "_length");
-        bl.width = tag.getInt(label + "_width");
-        bl.level = tag.getInt(label + "_level");
-        bl.variation = tag.getInt(label + "_variation");
-        bl.reputation = tag.getInt(label + "_reputation");
-        bl.price = tag.getInt(label + "_price");
-        bl.version = tag.getInt(label + "_version");
-        bl.priorityMoveIn = tag.getInt(label + "_priorityMoveIn");
-        if (tag.contains(label + "_shop")) bl.shop = tag.getString(label + "_shop");
-        bl.upgradesAllowed = tag.getBoolean(label + "_upgradesAllowed");
-        bl.bedrocklevel = tag.getBoolean(label + "_bedrocklevel");
-        bl.showTownHallSigns = tag.getBoolean(label + "_showTownHallSigns");
-        bl.isSubBuildingLocation = tag.getBoolean(label + "_isSubBuildingLocation");
+        bl.planKey = tag.getString(label + S_KEY);
+        bl.pos = Point.read(tag, label + S_POS);
+        bl.isCustomBuilding = tag.getBoolean(label + S_IS_CUSTOM);
+        bl.cultureKey = tag.contains(label + S_CULTURE) ? tag.getString(label + S_CULTURE) : null;
+        bl.orientation = tag.getInt(label + S_ORIENTATION);
+        bl.length = tag.getInt(label + S_LENGTH);
+        bl.width = tag.getInt(label + S_WIDTH);
+        bl.level = tag.getInt(label + S_LEVEL);
+        bl.variation = tag.getInt(label + S_VARIATION);
+        bl.reputation = tag.getInt(label + S_REPUTATION);
+        bl.price = tag.getInt(label + S_PRICE);
+        bl.version = tag.getInt(label + S_VERSION);
+        bl.priorityMoveIn = tag.getInt(label + S_PRIORITY_MOVE_IN);
+        if (tag.contains(label + S_SHOP)) bl.shop = tag.getString(label + S_SHOP);
+        bl.upgradesAllowed = tag.getBoolean(label + S_UPGRADES_ALLOWED);
+        bl.bedrocklevel = tag.getBoolean(label + S_BEDROCK_LEVEL);
+        bl.showTownHallSigns = tag.getBoolean(label + S_SHOW_TH_SIGNS);
+        bl.isSubBuildingLocation = tag.getBoolean(label + S_IS_SUB_LOC);
 
         // Margins
-        bl.minxMargin = tag.getInt(label + "_minxM");
-        bl.maxxMargin = tag.getInt(label + "_maxxM");
-        bl.minyMargin = tag.getInt(label + "_minyM");
-        bl.maxyMargin = tag.getInt(label + "_maxyM");
-        bl.minzMargin = tag.getInt(label + "_minzM");
-        bl.maxzMargin = tag.getInt(label + "_maxzM");
+        bl.minxMargin = tag.getInt(label + S_MINX_M);
+        bl.maxxMargin = tag.getInt(label + S_MAXX_M);
+        bl.minyMargin = tag.getInt(label + S_MINY_M);
+        bl.maxyMargin = tag.getInt(label + S_MAXY_M);
+        bl.minzMargin = tag.getInt(label + S_MINZ_M);
+        bl.maxzMargin = tag.getInt(label + S_MAXZ_M);
 
         // Bounds
-        bl.minx = tag.getInt(label + "_minx");
-        bl.maxx = tag.getInt(label + "_maxx");
-        bl.miny = tag.getInt(label + "_miny");
-        bl.maxy = tag.getInt(label + "_maxy");
-        bl.minz = tag.getInt(label + "_minz");
-        bl.maxz = tag.getInt(label + "_maxz");
+        bl.minx = tag.getInt(label + S_MINX);
+        bl.maxx = tag.getInt(label + S_MAXX);
+        bl.miny = tag.getInt(label + S_MINY);
+        bl.maxy = tag.getInt(label + S_MAXY);
+        bl.minz = tag.getInt(label + S_MINZ);
+        bl.maxz = tag.getInt(label + S_MAXZ);
 
         // Special positions
-        bl.chestPos = Point.read(tag, label + "_chest");
-        bl.sleepingPos = Point.read(tag, label + "_sleep");
-        bl.sellingPos = Point.read(tag, label + "_sell");
-        bl.craftingPos = Point.read(tag, label + "_craft");
-        bl.shelterPos = Point.read(tag, label + "_shelter");
-        bl.defendingPos = Point.read(tag, label + "_defend");
+        bl.chestPos = Point.read(tag, label + S_CHEST);
+        bl.sleepingPos = Point.read(tag, label + S_SLEEP);
+        bl.sellingPos = Point.read(tag, label + S_SELL);
+        bl.craftingPos = Point.read(tag, label + S_CRAFT);
+        bl.shelterPos = Point.read(tag, label + S_SHELTER);
+        bl.defendingPos = Point.read(tag, label + S_DEFEND);
 
         // Sub-buildings
-        if (tag.contains(label + "_subs", Tag.TAG_LIST)) {
-            ListTag subList = tag.getList(label + "_subs", Tag.TAG_STRING);
+        if (tag.contains(label + S_SUBS, Tag.TAG_LIST)) {
+            ListTag subList = tag.getList(label + S_SUBS, Tag.TAG_STRING);
             for (int i = 0; i < subList.size(); i++) {
                 bl.subBuildings.add(subList.getString(i));
             }

@@ -20,6 +20,20 @@ import java.util.List;
  */
 public class ConstructionIP {
 
+    // ========== NBT key constants ==========
+    private static final String NBT_DONE = "done";
+    private static final String NBT_TOTAL = "total";
+    private static final String NBT_ORIENTATION = "orientation";
+    private static final String NBT_FIRST_PASS_COMPLETE = "firstPassComplete";
+    private static final String NBT_LOC = "loc";
+    private static final String NBT_FIRST_PASS = "firstPass";
+    private static final String NBT_SECOND_PASS = "secondPass";
+    private static final String NBT_BB_X = "x";
+    private static final String NBT_BB_Y = "y";
+    private static final String NBT_BB_Z = "z";
+    private static final String NBT_BB_SECOND = "second";
+    private static final String NBT_BB_STATE = "state";
+
     @Nullable public BuildingLocation location;
     public int nbBlocksDone = 0;
     public int nbBlocksTotal = 0;
@@ -155,13 +169,13 @@ public class ConstructionIP {
 
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
-        tag.putInt("done", nbBlocksDone);
-        tag.putInt("total", nbBlocksTotal);
-        tag.putInt("orientation", orientation);
-        tag.putBoolean("firstPassComplete", firstPassComplete);
+        tag.putInt(NBT_DONE, nbBlocksDone);
+        tag.putInt(NBT_TOTAL, nbBlocksTotal);
+        tag.putInt(NBT_ORIENTATION, orientation);
+        tag.putBoolean(NBT_FIRST_PASS_COMPLETE, firstPassComplete);
 
         if (location != null) {
-            location.save(tag, "loc");
+            location.save(tag, NBT_LOC);
         }
 
         // Save remaining first-pass blocks with full BlockState
@@ -169,36 +183,36 @@ public class ConstructionIP {
         for (BuildingBlock bb : firstPassBlocks) {
             firstList.add(saveBuildingBlock(bb));
         }
-        tag.put("firstPass", firstList);
+        tag.put(NBT_FIRST_PASS, firstList);
 
         // Save remaining second-pass blocks with full BlockState
         ListTag secondList = new ListTag();
         for (BuildingBlock bb : secondPassBlocks) {
             secondList.add(saveBuildingBlock(bb));
         }
-        tag.put("secondPass", secondList);
+        tag.put(NBT_SECOND_PASS, secondList);
 
         return tag;
     }
 
     public static ConstructionIP load(CompoundTag tag) {
         ConstructionIP cip = new ConstructionIP();
-        cip.nbBlocksDone = tag.getInt("done");
-        cip.nbBlocksTotal = tag.getInt("total");
-        cip.orientation = tag.getInt("orientation");
-        cip.firstPassComplete = tag.getBoolean("firstPassComplete");
+        cip.nbBlocksDone = tag.getInt(NBT_DONE);
+        cip.nbBlocksTotal = tag.getInt(NBT_TOTAL);
+        cip.orientation = tag.getInt(NBT_ORIENTATION);
+        cip.firstPassComplete = tag.getBoolean(NBT_FIRST_PASS_COMPLETE);
 
-        cip.location = BuildingLocation.read(tag, "loc");
+        cip.location = BuildingLocation.read(tag, NBT_LOC);
 
-        if (tag.contains("firstPass", Tag.TAG_LIST)) {
-            ListTag firstList = tag.getList("firstPass", Tag.TAG_COMPOUND);
+        if (tag.contains(NBT_FIRST_PASS, Tag.TAG_LIST)) {
+            ListTag firstList = tag.getList(NBT_FIRST_PASS, Tag.TAG_COMPOUND);
             for (int i = 0; i < firstList.size(); i++) {
                 cip.firstPassBlocks.add(loadBuildingBlock(firstList.getCompound(i), false));
             }
         }
 
-        if (tag.contains("secondPass", Tag.TAG_LIST)) {
-            ListTag secondList = tag.getList("secondPass", Tag.TAG_COMPOUND);
+        if (tag.contains(NBT_SECOND_PASS, Tag.TAG_LIST)) {
+            ListTag secondList = tag.getList(NBT_SECOND_PASS, Tag.TAG_COMPOUND);
             for (int i = 0; i < secondList.size(); i++) {
                 cip.secondPassBlocks.add(loadBuildingBlock(secondList.getCompound(i), true));
             }
@@ -209,24 +223,24 @@ public class ConstructionIP {
 
     private static CompoundTag saveBuildingBlock(BuildingBlock bb) {
         CompoundTag bt = new CompoundTag();
-        bt.putInt("x", bb.x);
-        bt.putInt("y", bb.y);
-        bt.putInt("z", bb.z);
-        bt.putBoolean("second", bb.secondStep);
+        bt.putInt(NBT_BB_X, bb.x);
+        bt.putInt(NBT_BB_Y, bb.y);
+        bt.putInt(NBT_BB_Z, bb.z);
+        bt.putBoolean(NBT_BB_SECOND, bb.secondStep);
         if (bb.blockState != null) {
-            bt.put("state", NbtUtils.writeBlockState(bb.blockState));
+            bt.put(NBT_BB_STATE, NbtUtils.writeBlockState(bb.blockState));
         }
         return bt;
     }
 
     private static BuildingBlock loadBuildingBlock(CompoundTag bt, boolean defaultSecond) {
         BuildingBlock bb = new BuildingBlock();
-        bb.x = bt.getInt("x");
-        bb.y = bt.getInt("y");
-        bb.z = bt.getInt("z");
-        bb.secondStep = bt.contains("second") ? bt.getBoolean("second") : defaultSecond;
-        if (bt.contains("state", Tag.TAG_COMPOUND)) {
-            bb.blockState = NbtUtils.readBlockState(BuiltInRegistries.BLOCK.asLookup(), bt.getCompound("state"));
+        bb.x = bt.getInt(NBT_BB_X);
+        bb.y = bt.getInt(NBT_BB_Y);
+        bb.z = bt.getInt(NBT_BB_Z);
+        bb.secondStep = bt.contains(NBT_BB_SECOND) ? bt.getBoolean(NBT_BB_SECOND) : defaultSecond;
+        if (bt.contains(NBT_BB_STATE, Tag.TAG_COMPOUND)) {
+            bb.blockState = NbtUtils.readBlockState(BuiltInRegistries.BLOCK.asLookup(), bt.getCompound(NBT_BB_STATE));
         }
         return bb;
     }
