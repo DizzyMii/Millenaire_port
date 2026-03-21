@@ -2,12 +2,11 @@ package org.dizzymii.millenaire2.network;
 
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.dizzymii.millenaire2.Millenaire2;
-import org.dizzymii.millenaire2.network.payloads.MillGenericC2SPayload;
+import org.dizzymii.millenaire2.network.payloads.*;
 
 /**
  * Client-side utility for building and sending C2S packets.
- * Encodes data structures into byte arrays via PacketDataHelper.Writer
- * and wraps them in MillGenericC2SPayload for transmission.
+ * Constructs dedicated payload records and sends them via PacketDistributor.
  */
 public final class ClientPacketSender {
 
@@ -19,12 +18,7 @@ public final class ClientPacketSender {
      * Request interaction data for a villager (triggers sync + potential GUI open).
      */
     public static void sendVillagerInteractRequest(int entityId) {
-        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
-        w.writeInt(entityId);
-
-        MillGenericC2SPayload payload = new MillGenericC2SPayload(
-                MillPacketIds.PACKET_VILLAGERINTERACT_REQUEST, 0, w.toByteArray());
-        PacketDistributor.sendToServer(payload);
+        PacketDistributor.sendToServer(new VillagerInteractPayload(entityId));
     }
 
     // ========== Village list request ==========
@@ -33,9 +27,7 @@ public final class ClientPacketSender {
      * Request the list of known villages from the server.
      */
     public static void sendVillageListRequest() {
-        MillGenericC2SPayload payload = new MillGenericC2SPayload(
-                MillPacketIds.PACKET_VILLAGELIST_REQUEST, 0, new byte[0]);
-        PacketDistributor.sendToServer(payload);
+        PacketDistributor.sendToServer(new VillageListRequestPayload());
     }
 
     // ========== Release number declaration ==========
@@ -44,12 +36,7 @@ public final class ClientPacketSender {
      * Declare this client's mod version to the server on login.
      */
     public static void sendDeclareReleaseNumber() {
-        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
-        w.writeString(Millenaire2.VERSION);
-
-        MillGenericC2SPayload payload = new MillGenericC2SPayload(
-                MillPacketIds.PACKET_DECLARERELEASENUMBER, 0, w.toByteArray());
-        PacketDistributor.sendToServer(payload);
+        PacketDistributor.sendToServer(new DeclareReleasePayload(Millenaire2.VERSION));
     }
 
     // ========== GUI actions ==========
@@ -58,9 +45,7 @@ public final class ClientPacketSender {
      * Send a GUI action to the server (e.g. trade confirmation, hire, quest choice).
      */
     public static void sendGuiAction(int actionId, byte[] data) {
-        MillGenericC2SPayload payload = new MillGenericC2SPayload(
-                MillPacketIds.PACKET_GUIACTION, actionId, data);
-        PacketDistributor.sendToServer(payload);
+        PacketDistributor.sendToServer(new GuiActionPayload(actionId, data));
     }
 
     /**
@@ -76,9 +61,7 @@ public final class ClientPacketSender {
      * Send a dev/debug command to the server.
      */
     public static void sendDevCommand(int commandId) {
-        MillGenericC2SPayload payload = new MillGenericC2SPayload(
-                MillPacketIds.PACKET_DEVCOMMAND, commandId, new byte[0]);
-        PacketDistributor.sendToServer(payload);
+        PacketDistributor.sendToServer(new DevCommandPayload(commandId, new byte[0]));
     }
 
     // ========== Map info request ==========
@@ -87,8 +70,6 @@ public final class ClientPacketSender {
      * Request map information from the server.
      */
     public static void sendMapInfoRequest() {
-        MillGenericC2SPayload payload = new MillGenericC2SPayload(
-                MillPacketIds.PACKET_MAPINFO_REQUEST, 0, new byte[0]);
-        PacketDistributor.sendToServer(payload);
+        PacketDistributor.sendToServer(new MapInfoRequestPayload());
     }
 }

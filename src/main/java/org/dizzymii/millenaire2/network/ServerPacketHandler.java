@@ -4,96 +4,57 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.dizzymii.millenaire2.entity.MillVillager;
-import org.dizzymii.millenaire2.network.payloads.MillGenericC2SPayload;
+import org.dizzymii.millenaire2.network.payloads.*;
 import org.dizzymii.millenaire2.util.MillLog;
 
 /**
  * Server-side handler for client-to-server packets.
- * Dispatches incoming generic payloads to the appropriate handler based on packet type.
+ * Each public method handles a specific dedicated payload type.
  */
 public final class ServerPacketHandler {
 
     private ServerPacketHandler() {}
 
-    public static void handleGenericC2S(MillGenericC2SPayload payload, IPayloadContext context) {
-        int type = payload.packetType();
-        int subType = payload.subType();
-
-        switch (type) {
-            case MillPacketIds.PACKET_GUIACTION:
-                handleGuiAction(subType, payload.data(), context);
-                break;
-            case MillPacketIds.PACKET_VILLAGELIST_REQUEST:
-                handleVillageListRequest(context);
-                break;
-            case MillPacketIds.PACKET_DECLARERELEASENUMBER:
-                handleDeclareReleaseNumber(payload.data(), context);
-                break;
-            case MillPacketIds.PACKET_MAPINFO_REQUEST:
-                handleMapInfoRequest(context);
-                break;
-            case MillPacketIds.PACKET_VILLAGERINTERACT_REQUEST:
-                handleVillagerInteract(payload.data(), context);
-                break;
-            case MillPacketIds.PACKET_AVAILABLECONTENT:
-                handleAvailableContent(payload.data(), context);
-                break;
-            case MillPacketIds.PACKET_DEVCOMMAND:
-                handleDevCommand(subType, payload.data(), context);
-                break;
-            default:
-                MillLog.warn("ServerPacketHandler", "Unknown C2S packet type: " + type + "/" + subType);
-                break;
-        }
-    }
-
     // ========== Villager interaction ==========
 
-    private static void handleVillagerInteract(byte[] data, IPayloadContext context) {
-        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
-        try {
-            int entityId = r.readInt();
+    public static void handleVillagerInteract(VillagerInteractPayload payload, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) return;
 
-            if (!(context.player() instanceof ServerPlayer player)) return;
-            Entity entity = player.level().getEntity(entityId);
-            if (!(entity instanceof MillVillager villager)) {
-                MillLog.warn("ServerPacketHandler", "Villager interact: entity " + entityId + " not found");
-                return;
-            }
-
-            // Send full villager sync to the interacting player
-            ServerPacketSender.sendVillagerSync(player, villager);
-
-            // Resolve building trade goods and player profile
-            org.dizzymii.millenaire2.village.Building building = villager.getHomeBuilding();
-            if (building == null) building = villager.getTownHallBuilding();
-
-            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.world.MillWorldData.get(player.serverLevel());
-            if (mw != null && building != null) {
-                org.dizzymii.millenaire2.world.UserProfile profile =
-                        mw.getOrCreateProfile(player.getUUID(), player.getName().getString());
-                org.dizzymii.millenaire2.util.Point vPos =
-                        building.getTownHallPos() != null ? building.getTownHallPos() : building.getPos();
-                int rep = vPos != null ? profile.getVillageReputation(vPos) : 0;
-                String vName = villager.getFirstName() + " " + villager.getFamilyName();
-                ServerPacketSender.sendTradeData(player, villager.getId(),
-                        building.getTradeGoods(), profile.deniers, rep, vName);
-            }
-
-            // Open trade GUI for the villager
-            ServerPacketSender.sendOpenGui(player, MillPacketIds.GUI_TRADE, villager.getId(), villager.townHallPoint);
-            MillLog.minor("ServerPacketHandler", "Player " + player.getName().getString()
-                    + " interacted with villager " + villager.getFirstName());
-        } catch (Exception e) {
-            MillLog.error("ServerPacketHandler", "Error handling villager interact", e);
-        } finally {
-            r.release();
+        int entityId = payload.entityId();
+        Entity entity = player.level().getEntity(entityId);
+        if (!(entity instanceof MillVillager villager)) {
+            MillLog.warn("ServerPacketHandler", "Villager interact: entity " + entityId + " not found");
+            return;
         }
+
+        // Send full villager sync to the interacting player
+        ServerPacketSender.sendVillagerSync(player, villager);
+
+        // Resolve building trade goods and player profile
+        org.dizzymii.millenaire2.village.Building building = villager.getHomeBuilding();
+        if (building == null) building = villager.getTownHallBuilding();
+
+        org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.world.MillWorldData.get(player.serverLevel());
+        if (mw != null && building != null) {
+            org.dizzymii.millenaire2.world.UserProfile profile =
+                    mw.getOrCreateProfile(player.getUUID(), player.getName().getString());
+            org.dizzymii.millenaire2.util.Point vPos =
+                    building.getTownHallPos() != null ? building.getTownHallPos() : building.getPos();
+            int rep = vPos != null ? profile.getVillageReputation(vPos) : 0;
+            String vName = villager.getFirstName() + " " + villager.getFamilyName();
+            ServerPacketSender.sendTradeData(player, villager.getId(),
+                    building.getTradeGoods(), profile.deniers, rep, vName);
+        }
+
+        // Open trade GUI for the villager
+        ServerPacketSender.sendOpenGui(player, MillPacketIds.GUI_TRADE, villager.getId(), villager.townHallPoint);
+        MillLog.minor("ServerPacketHandler", "Player " + player.getName().getString()
+                + " interacted with villager " + villager.getFirstName());
     }
 
     // ========== Village list request ==========
 
-    private static void handleVillageListRequest(IPayloadContext context) {
+    public static void handleVillageListRequest(IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
 
         org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.world.MillWorldData.get(player.serverLevel());
@@ -119,21 +80,13 @@ public final class ServerPacketHandler {
 
     // ========== Release number declaration ==========
 
-    private static void handleDeclareReleaseNumber(byte[] data, IPayloadContext context) {
-        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
-        try {
-            String releaseNumber = r.readString();
-            MillLog.minor("ServerPacketHandler", "Client declared release: " + releaseNumber);
-        } catch (Exception e) {
-            MillLog.error("ServerPacketHandler", "Error handling release declaration", e);
-        } finally {
-            r.release();
-        }
+    public static void handleDeclareRelease(DeclareReleasePayload payload, IPayloadContext context) {
+        MillLog.minor("ServerPacketHandler", "Client declared release: " + payload.releaseNumber());
     }
 
     // ========== Dev commands ==========
 
-    private static void handleDevCommand(int commandId, byte[] data, IPayloadContext context) {
+    public static void handleDevCommand(DevCommandPayload payload, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
 
         // Only allow ops
@@ -142,6 +95,7 @@ public final class ServerPacketHandler {
             return;
         }
 
+        int commandId = payload.commandId();
         switch (commandId) {
             case MillPacketIds.DEV_COMMAND_TOGGLE_AUTO_MOVE:
                 MillLog.minor("ServerPacketHandler", "Toggle auto-move for " + player.getName().getString());
@@ -159,7 +113,11 @@ public final class ServerPacketHandler {
 
     // ========== GUI actions ==========
 
-    private static void handleGuiAction(int actionId, byte[] data, IPayloadContext context) {
+    public static void handleGuiAction(GuiActionPayload payload, IPayloadContext context) {
+        handleGuiActionInternal(payload.actionId(), payload.data(), context);
+    }
+
+    private static void handleGuiActionInternal(int actionId, byte[] data, IPayloadContext context) {
         switch (actionId) {
             case MillPacketIds.GUIACTION_CHIEF_BUILDING:
             case MillPacketIds.GUIACTION_CHIEF_CROP:
@@ -218,32 +176,18 @@ public final class ServerPacketHandler {
 
     // ========== Map info ==========
 
-    private static void handleMapInfoRequest(IPayloadContext context) {
+    public static void handleMapInfoRequest(IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
         MillLog.minor("ServerPacketHandler", "Map info requested by " + player.getName().getString());
         // Map info packet contains village positions and culture markers for the minimap
         // Currently sends empty data — will be populated when MillWorldData tracks village positions
-        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
-        w.writeInt(0); // village count
-        org.dizzymii.millenaire2.network.payloads.MillGenericS2CPayload payload =
-                new org.dizzymii.millenaire2.network.payloads.MillGenericS2CPayload(
-                        MillPacketIds.PACKET_MAPINFO, 0, w.toByteArray());
-        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, payload);
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, new MapInfoPayload(0));
     }
 
     // ========== Available content ==========
 
-    private static void handleAvailableContent(byte[] data, IPayloadContext context) {
-        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
-        try {
-            // Client declares what cultures/content packs it has available
-            int contentCount = r.hasRemaining() ? r.readInt() : 0;
-            MillLog.minor("ServerPacketHandler", "Client declared " + contentCount + " available content packs");
-        } catch (Exception e) {
-            MillLog.error("ServerPacketHandler", "Error handling available content", e);
-        } finally {
-            r.release();
-        }
+    public static void handleAvailableContent(AvailableContentPayload payload, IPayloadContext context) {
+        MillLog.minor("ServerPacketHandler", "Client declared " + payload.contentCount() + " available content packs");
     }
 
     // ========== Dev command helpers ==========

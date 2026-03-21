@@ -1,15 +1,10 @@
 package org.dizzymii.millenaire2.network;
 
 /**
- * Handles incoming network packets on the client side.
- * Ported from org.millenaire.network.ClientReceiver (Forge 1.12.2).
+ * Legacy entry point — no longer used.
+ * All S2C payload handling is now registered directly in {@link MillNetworking}
+ * with dedicated payload types routed to {@link ClientPacketHandler}.
  */
 public class ClientReceiver {
-    /**
-     * Delegates to ClientPacketHandler which handles all S2C packet dispatching.
-     * This class provides a legacy entry point matching the original mod's structure.
-     */
-    public static void onPacketReceived(org.dizzymii.millenaire2.network.payloads.MillGenericS2CPayload payload) {
-        ClientPacketHandler.handleGenericS2C(payload);
-    }
+    private ClientReceiver() {}
 }
