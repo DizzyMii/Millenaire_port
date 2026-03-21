@@ -30,6 +30,16 @@ public class MillWorldData extends SavedData {
 
     private static final String DATA_NAME = Millenaire2.MODID + "_world";
 
+    // ========== NBT key constants ==========
+    private static final String NBT_ENABLED = "enabled";
+    private static final String NBT_GENERATE_VILLAGES = "generateVillages";
+    private static final String NBT_LAST_UPDATE = "lastUpdate";
+    private static final String NBT_BUILDINGS = "buildings";
+    private static final String NBT_WORLD_POS = "worldPos";
+    private static final String NBT_GLOBAL_TAGS = "globalTags";
+    private static final String NBT_TAG = "tag";
+    private static final String NBT_PROFILES = "profiles";
+
     // ========== Fields ==========
     private final HashMap<Point, Building> buildings = new HashMap<>();
     private final HashMap<Long, VillagerRecord> villagerRecords = new HashMap<>();
@@ -171,27 +181,27 @@ public class MillWorldData extends SavedData {
 
     @Override
     public CompoundTag save(CompoundTag root, HolderLookup.Provider registries) {
-        root.putBoolean("enabled", millenaireEnabled);
-        root.putBoolean("generateVillages", generateVillages);
-        root.putLong("lastUpdate", lastWorldUpdate);
+        root.putBoolean(NBT_ENABLED, millenaireEnabled);
+        root.putBoolean(NBT_GENERATE_VILLAGES, generateVillages);
+        root.putLong(NBT_LAST_UPDATE, lastWorldUpdate);
 
         // Save buildings
         ListTag buildingList = new ListTag();
         for (Map.Entry<Point, Building> entry : buildings.entrySet()) {
             CompoundTag bTag = entry.getValue().save();
-            entry.getKey().writeToNBT(bTag, "worldPos");
+            entry.getKey().writeToNBT(bTag, NBT_WORLD_POS);
             buildingList.add(bTag);
         }
-        root.put("buildings", buildingList);
+        root.put(NBT_BUILDINGS, buildingList);
 
         // Save global tags
         ListTag tagList = new ListTag();
         for (String tag : globalTags) {
             CompoundTag t = new CompoundTag();
-            t.putString("tag", tag);
+            t.putString(NBT_TAG, tag);
             tagList.add(t);
         }
-        root.put("globalTags", tagList);
+        root.put(NBT_GLOBAL_TAGS, tagList);
 
         // Save player profiles
         ListTag profileList = new ListTag();
@@ -199,7 +209,7 @@ public class MillWorldData extends SavedData {
             CompoundTag pTag = entry.getValue().save();
             profileList.add(pTag);
         }
-        root.put("profiles", profileList);
+        root.put(NBT_PROFILES, profileList);
 
         MillLog.minor("MillWorldData", "Saved " + buildings.size() + " buildings, " + profiles.size() + " profiles.");
         return root;
@@ -207,16 +217,16 @@ public class MillWorldData extends SavedData {
 
     public static MillWorldData load(CompoundTag root, HolderLookup.Provider registries) {
         MillWorldData data = new MillWorldData();
-        data.millenaireEnabled = root.contains("enabled") ? root.getBoolean("enabled") : true;
-        data.generateVillages = root.contains("generateVillages") ? root.getBoolean("generateVillages") : true;
-        data.lastWorldUpdate = root.getLong("lastUpdate");
+        data.millenaireEnabled = root.contains(NBT_ENABLED) ? root.getBoolean(NBT_ENABLED) : true;
+        data.generateVillages = root.contains(NBT_GENERATE_VILLAGES) ? root.getBoolean(NBT_GENERATE_VILLAGES) : true;
+        data.lastWorldUpdate = root.getLong(NBT_LAST_UPDATE);
 
         // Load buildings
-        if (root.contains("buildings", Tag.TAG_LIST)) {
-            ListTag buildingList = root.getList("buildings", Tag.TAG_COMPOUND);
+        if (root.contains(NBT_BUILDINGS, Tag.TAG_LIST)) {
+            ListTag buildingList = root.getList(NBT_BUILDINGS, Tag.TAG_COMPOUND);
             for (int i = 0; i < buildingList.size(); i++) {
                 CompoundTag bTag = buildingList.getCompound(i);
-                Point pos = Point.readFromNBT(bTag, "worldPos");
+                Point pos = Point.readFromNBT(bTag, NBT_WORLD_POS);
                 if (pos != null) {
                     Building b = Building.load(bTag);
                     data.buildings.put(pos, b);
@@ -225,16 +235,16 @@ public class MillWorldData extends SavedData {
         }
 
         // Load global tags
-        if (root.contains("globalTags", Tag.TAG_LIST)) {
-            ListTag tagList = root.getList("globalTags", Tag.TAG_COMPOUND);
+        if (root.contains(NBT_GLOBAL_TAGS, Tag.TAG_LIST)) {
+            ListTag tagList = root.getList(NBT_GLOBAL_TAGS, Tag.TAG_COMPOUND);
             for (int i = 0; i < tagList.size(); i++) {
-                data.globalTags.add(tagList.getCompound(i).getString("tag"));
+                data.globalTags.add(tagList.getCompound(i).getString(NBT_TAG));
             }
         }
 
         // Load player profiles
-        if (root.contains("profiles", Tag.TAG_LIST)) {
-            ListTag profileList = root.getList("profiles", Tag.TAG_COMPOUND);
+        if (root.contains(NBT_PROFILES, Tag.TAG_LIST)) {
+            ListTag profileList = root.getList(NBT_PROFILES, Tag.TAG_COMPOUND);
             for (int i = 0; i < profileList.size(); i++) {
                 UserProfile p = UserProfile.load(profileList.getCompound(i));
                 if (p.uuid != null) {

@@ -50,6 +50,24 @@ public abstract class MillVillager extends PathfinderMob {
     private static final EntityDataAccessor<String> DATA_GOAL_KEY =
             SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.STRING);
 
+    // --- NBT key constants ---
+    private static final String NBT_FIRST_NAME = "firstName";
+    private static final String NBT_FAMILY_NAME = "familyName";
+    private static final String NBT_GENDER = "gender";
+    private static final String NBT_CULTURE_KEY = "cultureKey";
+    private static final String NBT_VILLAGER_ID = "villagerId";
+    private static final String NBT_IS_RAIDER = "isRaider";
+    private static final String NBT_AGGRESSIVE_STANCE = "aggressiveStance";
+    private static final String NBT_HOUSE = "house";
+    private static final String NBT_TH = "th";
+    private static final String NBT_GOAL_KEY = "goalKey";
+    private static final String NBT_HIRED_BY = "hiredBy";
+    private static final String NBT_HIRED_UNTIL = "hiredUntil";
+    private static final String NBT_VILLAGER_TYPE = "villagerType";
+    private static final String NBT_INVENTORY = "millInventory";
+    private static final String NBT_INV_KEY = "key";
+    private static final String NBT_INV_COUNT = "count";
+
     // --- Constants ---
     public static final int MALE = 1;
     public static final int FEMALE = 2;
@@ -547,80 +565,80 @@ public abstract class MillVillager extends PathfinderMob {
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        tag.putString("firstName", getFirstName());
-        tag.putString("familyName", getFamilyName());
-        tag.putInt("gender", getGender());
-        tag.putString("cultureKey", getCultureKey());
-        tag.putLong("villagerId", villagerId);
-        tag.putBoolean("isRaider", isRaider);
-        tag.putBoolean("aggressiveStance", aggressiveStance);
+        tag.putString(NBT_FIRST_NAME, getFirstName());
+        tag.putString(NBT_FAMILY_NAME, getFamilyName());
+        tag.putInt(NBT_GENDER, getGender());
+        tag.putString(NBT_CULTURE_KEY, getCultureKey());
+        tag.putLong(NBT_VILLAGER_ID, villagerId);
+        tag.putBoolean(NBT_IS_RAIDER, isRaider);
+        tag.putBoolean(NBT_AGGRESSIVE_STANCE, aggressiveStance);
         if (housePoint != null) {
-            housePoint.writeToNBT(tag, "house");
+            housePoint.writeToNBT(tag, NBT_HOUSE);
         }
         if (townHallPoint != null) {
-            townHallPoint.writeToNBT(tag, "th");
+            townHallPoint.writeToNBT(tag, NBT_TH);
         }
         if (goalKey != null) {
-            tag.putString("goalKey", goalKey);
+            tag.putString(NBT_GOAL_KEY, goalKey);
         }
         if (hiredBy != null) {
-            tag.putString("hiredBy", hiredBy);
-            tag.putLong("hiredUntil", hiredUntil);
+            tag.putString(NBT_HIRED_BY, hiredBy);
+            tag.putLong(NBT_HIRED_UNTIL, hiredUntil);
         }
         if (vtypeKey != null) {
-            tag.putString("villagerType", vtypeKey);
+            tag.putString(NBT_VILLAGER_TYPE, vtypeKey);
         } else if (vtype != null) {
-            tag.putString("villagerType", vtype.key);
+            tag.putString(NBT_VILLAGER_TYPE, vtype.key);
         }
         // Save inventory
         ListTag invList = new ListTag();
         for (Map.Entry<InvItem, Integer> entry : inventory.entrySet()) {
             CompoundTag itemTag = new CompoundTag();
-            itemTag.putString("key", entry.getKey().key);
-            itemTag.putInt("count", entry.getValue());
+            itemTag.putString(NBT_INV_KEY, entry.getKey().key);
+            itemTag.putInt(NBT_INV_COUNT, entry.getValue());
             invList.add(itemTag);
         }
-        tag.put("millInventory", invList);
+        tag.put(NBT_INVENTORY, invList);
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        setFirstName(tag.getString("firstName"));
-        setFamilyName(tag.getString("familyName"));
-        setGender(tag.getInt("gender"));
-        setCultureKey(tag.getString("cultureKey"));
-        villagerId = tag.getLong("villagerId");
-        isRaider = tag.getBoolean("isRaider");
-        aggressiveStance = tag.getBoolean("aggressiveStance");
-        housePoint = Point.readFromNBT(tag, "house");
-        townHallPoint = Point.readFromNBT(tag, "th");
-        if (tag.contains("goalKey")) {
-            goalKey = tag.getString("goalKey");
+        setFirstName(tag.getString(NBT_FIRST_NAME));
+        setFamilyName(tag.getString(NBT_FAMILY_NAME));
+        setGender(tag.getInt(NBT_GENDER));
+        setCultureKey(tag.getString(NBT_CULTURE_KEY));
+        villagerId = tag.getLong(NBT_VILLAGER_ID);
+        isRaider = tag.getBoolean(NBT_IS_RAIDER);
+        aggressiveStance = tag.getBoolean(NBT_AGGRESSIVE_STANCE);
+        housePoint = Point.readFromNBT(tag, NBT_HOUSE);
+        townHallPoint = Point.readFromNBT(tag, NBT_TH);
+        if (tag.contains(NBT_GOAL_KEY)) {
+            goalKey = tag.getString(NBT_GOAL_KEY);
             if (Goal.goals != null) {
                 currentGoal = Goal.goals.get(goalKey);
             }
         }
-        if (tag.contains("hiredBy")) {
-            hiredBy = tag.getString("hiredBy");
-            hiredUntil = tag.getLong("hiredUntil");
+        if (tag.contains(NBT_HIRED_BY)) {
+            hiredBy = tag.getString(NBT_HIRED_BY);
+            hiredUntil = tag.getLong(NBT_HIRED_UNTIL);
         }
         // Load inventory
         inventory.clear();
-        if (tag.contains("millInventory", Tag.TAG_LIST)) {
-            ListTag invList = tag.getList("millInventory", Tag.TAG_COMPOUND);
+        if (tag.contains(NBT_INVENTORY, Tag.TAG_LIST)) {
+            ListTag invList = tag.getList(NBT_INVENTORY, Tag.TAG_COMPOUND);
             for (int i = 0; i < invList.size(); i++) {
                 CompoundTag itemTag = invList.getCompound(i);
-                String key = itemTag.getString("key");
-                int count = itemTag.getInt("count");
+                String key = itemTag.getString(NBT_INV_KEY);
+                int count = itemTag.getInt(NBT_INV_COUNT);
                 InvItem invItem = InvItem.get(key);
                 if (invItem != null && count > 0) {
                     inventory.put(invItem, count);
                 }
             }
         }
-        if (tag.contains("villagerType")) {
-            setVillagerTypeKey(tag.getString("villagerType"));
+        if (tag.contains(NBT_VILLAGER_TYPE)) {
+            setVillagerTypeKey(tag.getString(NBT_VILLAGER_TYPE));
         }
     }
 

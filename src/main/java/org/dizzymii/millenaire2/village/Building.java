@@ -52,6 +52,45 @@ public class Building {
     public static final int MIN_REPUTATION_FOR_TRADE = -1024;
     public static final int MAX_REPUTATION = 32768;
 
+    // ========== NBT key constants ==========
+    private static final String NBT_ACTIVE = "active";
+    private static final String NBT_TOWNHALL = "townhall";
+    private static final String NBT_INN = "inn";
+    private static final String NBT_MARKET = "market";
+    private static final String NBT_CHEST_LOCKED = "chestLocked";
+    private static final String NBT_HAS_AUTO_SPAWN = "hasAutoSpawn";
+    private static final String NBT_UNDER_ATTACK = "underAttack";
+    private static final String NBT_CULTURE = "culture";
+    private static final String NBT_PLAN_SET_KEY = "planSetKey";
+    private static final String NBT_VILLAGE_TYPE_KEY = "villageTypeKey";
+    private static final String NBT_BUILDING_LEVEL = "buildingLevel";
+    private static final String NBT_NAME = "name";
+    private static final String NBT_QUALIFIER = "qualifier";
+    private static final String NBT_POS = "pos";
+    private static final String NBT_TH = "th";
+    private static final String NBT_LOC = "loc";
+    private static final String NBT_CONTROLLED_BY = "controlledBy";
+    private static final String NBT_CONTROLLED_BY_NAME = "controlledByName";
+    private static final String NBT_RAID_TARGET = "raidTarget";
+    private static final String NBT_ACTIVE_RAID_START_TICK = "activeRaidStartTick";
+    private static final String NBT_LAST_RAID_GAME_TIME = "lastRaidGameTime";
+    private static final String NBT_RAIDS_PERFORMED = "raidsPerformed";
+    private static final String NBT_RAIDS_SUFFERED = "raidsSuffered";
+    private static final String NBT_VILLAGERS = "villagers";
+    private static final String NBT_RELATIONS = "relations";
+    private static final String NBT_VR_ID = "id";
+    private static final String NBT_VR_GENDER = "gender";
+    private static final String NBT_VR_FIRST_NAME = "firstName";
+    private static final String NBT_VR_FAMILY_NAME = "familyName";
+    private static final String NBT_VR_TYPE = "type";
+    private static final String NBT_VR_KILLED = "killed";
+    private static final String NBT_VR_AWAY_RAIDING = "awayraiding";
+    private static final String NBT_VR_AWAY_HIRED = "awayhired";
+    private static final String NBT_VR_SCALE = "scale";
+    private static final String NBT_VR_HOUSE = "house";
+    private static final String NBT_REL_POINT = "p";
+    private static final String NBT_REL_VAL = "val";
+
     // ========== Key fields ==========
     @Nullable public String cultureKey;
     @Nullable public String planSetKey;
@@ -597,158 +636,158 @@ public class Building {
 
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
-        tag.putBoolean("active", isActive);
-        tag.putBoolean("townhall", isTownhall);
-        tag.putBoolean("inn", isInn);
-        tag.putBoolean("market", isMarket);
-        tag.putBoolean("chestLocked", chestLocked);
-        tag.putBoolean("hasAutoSpawn", hasAutoSpawn);
-        tag.putBoolean("underAttack", underAttack);
-        if (cultureKey != null) tag.putString("culture", cultureKey);
-        if (planSetKey != null) tag.putString("planSetKey", planSetKey);
-        if (villageTypeKey != null) tag.putString("villageTypeKey", villageTypeKey);
-        tag.putInt("buildingLevel", buildingLevel);
-        if (name != null) tag.putString("name", name);
-        tag.putString("qualifier", qualifier);
+        tag.putBoolean(NBT_ACTIVE, isActive);
+        tag.putBoolean(NBT_TOWNHALL, isTownhall);
+        tag.putBoolean(NBT_INN, isInn);
+        tag.putBoolean(NBT_MARKET, isMarket);
+        tag.putBoolean(NBT_CHEST_LOCKED, chestLocked);
+        tag.putBoolean(NBT_HAS_AUTO_SPAWN, hasAutoSpawn);
+        tag.putBoolean(NBT_UNDER_ATTACK, underAttack);
+        if (cultureKey != null) tag.putString(NBT_CULTURE, cultureKey);
+        if (planSetKey != null) tag.putString(NBT_PLAN_SET_KEY, planSetKey);
+        if (villageTypeKey != null) tag.putString(NBT_VILLAGE_TYPE_KEY, villageTypeKey);
+        tag.putInt(NBT_BUILDING_LEVEL, buildingLevel);
+        if (name != null) tag.putString(NBT_NAME, name);
+        tag.putString(NBT_QUALIFIER, qualifier);
 
-        if (pos != null) pos.writeToNBT(tag, "pos");
-        if (townHallPos != null) townHallPos.writeToNBT(tag, "th");
+        if (pos != null) pos.writeToNBT(tag, NBT_POS);
+        if (townHallPos != null) townHallPos.writeToNBT(tag, NBT_TH);
 
-        if (location != null) location.save(tag, "loc");
+        if (location != null) location.save(tag, NBT_LOC);
 
         if (controlledBy != null) {
-            tag.putUUID("controlledBy", controlledBy);
-            if (controlledByName != null) tag.putString("controlledByName", controlledByName);
+            tag.putUUID(NBT_CONTROLLED_BY, controlledBy);
+            if (controlledByName != null) tag.putString(NBT_CONTROLLED_BY_NAME, controlledByName);
         }
 
         if (raidTarget != null) {
-            raidTarget.writeToNBT(tag, "raidTarget");
+            raidTarget.writeToNBT(tag, NBT_RAID_TARGET);
         }
-        tag.putLong("activeRaidStartTick", activeRaidStartTick);
-        tag.putLong("lastRaidGameTime", lastRaidGameTime);
+        tag.putLong(NBT_ACTIVE_RAID_START_TICK, activeRaidStartTick);
+        tag.putLong(NBT_LAST_RAID_GAME_TIME, lastRaidGameTime);
 
         ListTag raidsPerformedTag = new ListTag();
         for (String name : raidsPerformed) {
             CompoundTag rt = new CompoundTag();
-            rt.putString("name", name);
+            rt.putString(NBT_NAME, name);
             raidsPerformedTag.add(rt);
         }
-        tag.put("raidsPerformed", raidsPerformedTag);
+        tag.put(NBT_RAIDS_PERFORMED, raidsPerformedTag);
 
         ListTag raidsSufferedTag = new ListTag();
         for (String name : raidsSuffered) {
             CompoundTag rt = new CompoundTag();
-            rt.putString("name", name);
+            rt.putString(NBT_NAME, name);
             raidsSufferedTag.add(rt);
         }
-        tag.put("raidsSuffered", raidsSufferedTag);
+        tag.put(NBT_RAIDS_SUFFERED, raidsSufferedTag);
 
         // Save villager records
         ListTag vrList = new ListTag();
         for (VillagerRecord vr : vrecords.values()) {
             CompoundTag vrTag = new CompoundTag();
-            vrTag.putLong("id", vr.getVillagerId());
-            vrTag.putInt("gender", vr.gender);
-            if (vr.firstName != null) vrTag.putString("firstName", vr.firstName);
-            if (vr.familyName != null) vrTag.putString("familyName", vr.familyName);
-            if (vr.type != null) vrTag.putString("type", vr.type);
-            if (vr.getCultureKey() != null) vrTag.putString("culture", vr.getCultureKey());
-            vrTag.putBoolean("killed", vr.killed);
-            vrTag.putBoolean("awayraiding", vr.awayraiding);
-            vrTag.putBoolean("awayhired", vr.awayhired);
-            vrTag.putFloat("scale", vr.scale);
-            if (vr.getHousePos() != null) vr.getHousePos().writeToNBT(vrTag, "house");
-            if (vr.getTownHallPos() != null) vr.getTownHallPos().writeToNBT(vrTag, "th");
+            vrTag.putLong(NBT_VR_ID, vr.getVillagerId());
+            vrTag.putInt(NBT_VR_GENDER, vr.gender);
+            if (vr.firstName != null) vrTag.putString(NBT_VR_FIRST_NAME, vr.firstName);
+            if (vr.familyName != null) vrTag.putString(NBT_VR_FAMILY_NAME, vr.familyName);
+            if (vr.type != null) vrTag.putString(NBT_VR_TYPE, vr.type);
+            if (vr.getCultureKey() != null) vrTag.putString(NBT_CULTURE, vr.getCultureKey());
+            vrTag.putBoolean(NBT_VR_KILLED, vr.killed);
+            vrTag.putBoolean(NBT_VR_AWAY_RAIDING, vr.awayraiding);
+            vrTag.putBoolean(NBT_VR_AWAY_HIRED, vr.awayhired);
+            vrTag.putFloat(NBT_VR_SCALE, vr.scale);
+            if (vr.getHousePos() != null) vr.getHousePos().writeToNBT(vrTag, NBT_VR_HOUSE);
+            if (vr.getTownHallPos() != null) vr.getTownHallPos().writeToNBT(vrTag, NBT_TH);
             vrList.add(vrTag);
         }
-        tag.put("villagers", vrList);
+        tag.put(NBT_VILLAGERS, vrList);
 
         // Save relations
         ListTag relList = new ListTag();
         for (var entry : relations.entrySet()) {
             CompoundTag relTag = new CompoundTag();
-            entry.getKey().writeToNBT(relTag, "p");
-            relTag.putInt("val", entry.getValue());
+            entry.getKey().writeToNBT(relTag, NBT_REL_POINT);
+            relTag.putInt(NBT_REL_VAL, entry.getValue());
             relList.add(relTag);
         }
-        tag.put("relations", relList);
+        tag.put(NBT_RELATIONS, relList);
 
         return tag;
     }
 
     public static Building load(CompoundTag tag) {
         Building b = new Building();
-        b.isActive = tag.getBoolean("active");
-        b.isTownhall = tag.getBoolean("townhall");
-        b.isInn = tag.getBoolean("inn");
-        b.isMarket = tag.getBoolean("market");
-        b.chestLocked = tag.getBoolean("chestLocked");
-        b.hasAutoSpawn = tag.getBoolean("hasAutoSpawn");
-        b.underAttack = tag.getBoolean("underAttack");
-        if (tag.contains("culture")) b.cultureKey = tag.getString("culture");
-        if (tag.contains("planSetKey")) b.planSetKey = tag.getString("planSetKey");
-        if (tag.contains("villageTypeKey")) b.villageTypeKey = tag.getString("villageTypeKey");
-        b.buildingLevel = tag.getInt("buildingLevel");
-        if (tag.contains("name")) b.name = tag.getString("name");
-        b.qualifier = tag.getString("qualifier");
+        b.isActive = tag.getBoolean(NBT_ACTIVE);
+        b.isTownhall = tag.getBoolean(NBT_TOWNHALL);
+        b.isInn = tag.getBoolean(NBT_INN);
+        b.isMarket = tag.getBoolean(NBT_MARKET);
+        b.chestLocked = tag.getBoolean(NBT_CHEST_LOCKED);
+        b.hasAutoSpawn = tag.getBoolean(NBT_HAS_AUTO_SPAWN);
+        b.underAttack = tag.getBoolean(NBT_UNDER_ATTACK);
+        if (tag.contains(NBT_CULTURE)) b.cultureKey = tag.getString(NBT_CULTURE);
+        if (tag.contains(NBT_PLAN_SET_KEY)) b.planSetKey = tag.getString(NBT_PLAN_SET_KEY);
+        if (tag.contains(NBT_VILLAGE_TYPE_KEY)) b.villageTypeKey = tag.getString(NBT_VILLAGE_TYPE_KEY);
+        b.buildingLevel = tag.getInt(NBT_BUILDING_LEVEL);
+        if (tag.contains(NBT_NAME)) b.name = tag.getString(NBT_NAME);
+        b.qualifier = tag.getString(NBT_QUALIFIER);
 
-        b.pos = Point.readFromNBT(tag, "pos");
-        b.townHallPos = Point.readFromNBT(tag, "th");
+        b.pos = Point.readFromNBT(tag, NBT_POS);
+        b.townHallPos = Point.readFromNBT(tag, NBT_TH);
 
-        b.location = BuildingLocation.read(tag, "loc");
+        b.location = BuildingLocation.read(tag, NBT_LOC);
 
-        if (tag.hasUUID("controlledBy")) {
-            b.controlledBy = tag.getUUID("controlledBy");
-            if (tag.contains("controlledByName")) b.controlledByName = tag.getString("controlledByName");
+        if (tag.hasUUID(NBT_CONTROLLED_BY)) {
+            b.controlledBy = tag.getUUID(NBT_CONTROLLED_BY);
+            if (tag.contains(NBT_CONTROLLED_BY_NAME)) b.controlledByName = tag.getString(NBT_CONTROLLED_BY_NAME);
         }
 
-        b.raidTarget = Point.readFromNBT(tag, "raidTarget");
-        b.activeRaidStartTick = tag.contains("activeRaidStartTick") ? tag.getLong("activeRaidStartTick") : -1L;
-        b.lastRaidGameTime = tag.contains("lastRaidGameTime") ? tag.getLong("lastRaidGameTime") : -1L;
+        b.raidTarget = Point.readFromNBT(tag, NBT_RAID_TARGET);
+        b.activeRaidStartTick = tag.contains(NBT_ACTIVE_RAID_START_TICK) ? tag.getLong(NBT_ACTIVE_RAID_START_TICK) : -1L;
+        b.lastRaidGameTime = tag.contains(NBT_LAST_RAID_GAME_TIME) ? tag.getLong(NBT_LAST_RAID_GAME_TIME) : -1L;
 
-        if (tag.contains("raidsPerformed", Tag.TAG_LIST)) {
-            ListTag rp = tag.getList("raidsPerformed", Tag.TAG_COMPOUND);
+        if (tag.contains(NBT_RAIDS_PERFORMED, Tag.TAG_LIST)) {
+            ListTag rp = tag.getList(NBT_RAIDS_PERFORMED, Tag.TAG_COMPOUND);
             for (int i = 0; i < rp.size(); i++) {
-                b.raidsPerformed.add(rp.getCompound(i).getString("name"));
+                b.raidsPerformed.add(rp.getCompound(i).getString(NBT_NAME));
             }
         }
-        if (tag.contains("raidsSuffered", Tag.TAG_LIST)) {
-            ListTag rs = tag.getList("raidsSuffered", Tag.TAG_COMPOUND);
+        if (tag.contains(NBT_RAIDS_SUFFERED, Tag.TAG_LIST)) {
+            ListTag rs = tag.getList(NBT_RAIDS_SUFFERED, Tag.TAG_COMPOUND);
             for (int i = 0; i < rs.size(); i++) {
-                b.raidsSuffered.add(rs.getCompound(i).getString("name"));
+                b.raidsSuffered.add(rs.getCompound(i).getString(NBT_NAME));
             }
         }
 
         // Load villager records
-        if (tag.contains("villagers", Tag.TAG_LIST)) {
-            ListTag vrList = tag.getList("villagers", Tag.TAG_COMPOUND);
+        if (tag.contains(NBT_VILLAGERS, Tag.TAG_LIST)) {
+            ListTag vrList = tag.getList(NBT_VILLAGERS, Tag.TAG_COMPOUND);
             for (int i = 0; i < vrList.size(); i++) {
                 CompoundTag vrTag = vrList.getCompound(i);
                 VillagerRecord vr = new VillagerRecord();
-                vr.setVillagerId(vrTag.getLong("id"));
-                vr.gender = vrTag.getInt("gender");
-                if (vrTag.contains("firstName")) vr.firstName = vrTag.getString("firstName");
-                if (vrTag.contains("familyName")) vr.familyName = vrTag.getString("familyName");
-                if (vrTag.contains("type")) vr.type = vrTag.getString("type");
-                if (vrTag.contains("culture")) vr.setCultureKey(vrTag.getString("culture"));
-                vr.killed = vrTag.getBoolean("killed");
-                vr.awayraiding = vrTag.getBoolean("awayraiding");
-                vr.awayhired = vrTag.getBoolean("awayhired");
-                vr.scale = vrTag.getFloat("scale");
-                vr.setHousePos(Point.readFromNBT(vrTag, "house"));
-                vr.setTownHallPos(Point.readFromNBT(vrTag, "th"));
+                vr.setVillagerId(vrTag.getLong(NBT_VR_ID));
+                vr.gender = vrTag.getInt(NBT_VR_GENDER);
+                if (vrTag.contains(NBT_VR_FIRST_NAME)) vr.firstName = vrTag.getString(NBT_VR_FIRST_NAME);
+                if (vrTag.contains(NBT_VR_FAMILY_NAME)) vr.familyName = vrTag.getString(NBT_VR_FAMILY_NAME);
+                if (vrTag.contains(NBT_VR_TYPE)) vr.type = vrTag.getString(NBT_VR_TYPE);
+                if (vrTag.contains(NBT_CULTURE)) vr.setCultureKey(vrTag.getString(NBT_CULTURE));
+                vr.killed = vrTag.getBoolean(NBT_VR_KILLED);
+                vr.awayraiding = vrTag.getBoolean(NBT_VR_AWAY_RAIDING);
+                vr.awayhired = vrTag.getBoolean(NBT_VR_AWAY_HIRED);
+                vr.scale = vrTag.getFloat(NBT_VR_SCALE);
+                vr.setHousePos(Point.readFromNBT(vrTag, NBT_VR_HOUSE));
+                vr.setTownHallPos(Point.readFromNBT(vrTag, NBT_TH));
                 b.addVillagerRecord(vr);
             }
         }
 
         // Load relations
-        if (tag.contains("relations", Tag.TAG_LIST)) {
-            ListTag relList = tag.getList("relations", Tag.TAG_COMPOUND);
+        if (tag.contains(NBT_RELATIONS, Tag.TAG_LIST)) {
+            ListTag relList = tag.getList(NBT_RELATIONS, Tag.TAG_COMPOUND);
             for (int i = 0; i < relList.size(); i++) {
                 CompoundTag relTag = relList.getCompound(i);
-                Point p = Point.readFromNBT(relTag, "p");
+                Point p = Point.readFromNBT(relTag, NBT_REL_POINT);
                 if (p != null) {
-                    b.relations.put(p, relTag.getInt("val"));
+                    b.relations.put(p, relTag.getInt(NBT_REL_VAL));
                 }
             }
         }

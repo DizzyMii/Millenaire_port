@@ -40,6 +40,24 @@ public class UserProfile {
     public static final int FRIEND_OF_THE_VILLAGE = 8192;
     public static final int ONE_OF_US = 32768;
 
+    // ========== NBT key constants ==========
+    private static final String NBT_UUID = "uuid";
+    private static final String NBT_PLAYER_NAME = "playerName";
+    private static final String NBT_DONATION = "donation";
+    private static final String NBT_DENIERS = "deniers";
+    private static final String NBT_VILLAGE_REP = "villageRep";
+    private static final String NBT_VILLAGE_DIP = "villageDip";
+    private static final String NBT_CULTURE_REP = "cultureRep";
+    private static final String NBT_CULTURE_LANG = "cultureLang";
+    private static final String NBT_TAGS = "tags";
+    private static final String NBT_UNLOCKED_VILLAGERS = "unlockedVillagers";
+    private static final String NBT_UNLOCKED_VILLAGES = "unlockedVillages";
+    private static final String NBT_UNLOCKED_BUILDINGS = "unlockedBuildings";
+    private static final String NBT_UNLOCKED_TRADE_GOODS = "unlockedTradeGoods";
+    private static final String NBT_POINT = "p";
+    private static final String NBT_REP = "rep";
+    private static final String NBT_DIP = "dip";
+
     // ========== Fields ==========
     private final Set<String> unlockedVillagers = new HashSet<>();
     private final Set<String> unlockedVillages = new HashSet<>();
@@ -119,117 +137,117 @@ public class UserProfile {
 
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
-        if (uuid != null) tag.putUUID("uuid", uuid);
-        if (playerName != null) tag.putString("playerName", playerName);
-        tag.putBoolean("donation", donationActivated);
-        tag.putInt("deniers", deniers);
+        if (uuid != null) tag.putUUID(NBT_UUID, uuid);
+        if (playerName != null) tag.putString(NBT_PLAYER_NAME, playerName);
+        tag.putBoolean(NBT_DONATION, donationActivated);
+        tag.putInt(NBT_DENIERS, deniers);
 
         // Village reputations
         ListTag repList = new ListTag();
         for (Map.Entry<Point, Integer> entry : villageReputations.entrySet()) {
             CompoundTag e = new CompoundTag();
-            entry.getKey().writeToNBT(e, "p");
-            e.putInt("rep", entry.getValue());
+            entry.getKey().writeToNBT(e, NBT_POINT);
+            e.putInt(NBT_REP, entry.getValue());
             repList.add(e);
         }
-        tag.put("villageRep", repList);
+        tag.put(NBT_VILLAGE_REP, repList);
 
         // Village diplomacy
         ListTag dipList = new ListTag();
         for (Map.Entry<Point, Byte> entry : villageDiplomacy.entrySet()) {
             CompoundTag e = new CompoundTag();
-            entry.getKey().writeToNBT(e, "p");
-            e.putByte("dip", entry.getValue());
+            entry.getKey().writeToNBT(e, NBT_POINT);
+            e.putByte(NBT_DIP, entry.getValue());
             dipList.add(e);
         }
-        tag.put("villageDip", dipList);
+        tag.put(NBT_VILLAGE_DIP, dipList);
 
         // Culture reputations
         CompoundTag cultureRepTag = new CompoundTag();
         for (Map.Entry<String, Integer> entry : cultureReputations.entrySet()) {
             cultureRepTag.putInt(entry.getKey(), entry.getValue());
         }
-        tag.put("cultureRep", cultureRepTag);
+        tag.put(NBT_CULTURE_REP, cultureRepTag);
 
         // Culture languages
         CompoundTag cultureLangTag = new CompoundTag();
         for (Map.Entry<String, Integer> entry : cultureLanguages.entrySet()) {
             cultureLangTag.putInt(entry.getKey(), entry.getValue());
         }
-        tag.put("cultureLang", cultureLangTag);
+        tag.put(NBT_CULTURE_LANG, cultureLangTag);
 
         // Tags
         ListTag tagList = new ListTag();
         for (String t : profileTags) {
             tagList.add(StringTag.valueOf(t));
         }
-        tag.put("tags", tagList);
+        tag.put(NBT_TAGS, tagList);
 
         // Unlocked content
-        tag.put("unlockedVillagers", saveStringSet(unlockedVillagers));
-        tag.put("unlockedVillages", saveStringSet(unlockedVillages));
-        tag.put("unlockedBuildings", saveStringSet(unlockedBuildings));
-        tag.put("unlockedTradeGoods", saveStringSet(unlockedTradeGoods));
+        tag.put(NBT_UNLOCKED_VILLAGERS, saveStringSet(unlockedVillagers));
+        tag.put(NBT_UNLOCKED_VILLAGES, saveStringSet(unlockedVillages));
+        tag.put(NBT_UNLOCKED_BUILDINGS, saveStringSet(unlockedBuildings));
+        tag.put(NBT_UNLOCKED_TRADE_GOODS, saveStringSet(unlockedTradeGoods));
 
         return tag;
     }
 
     public static UserProfile load(CompoundTag tag) {
         UserProfile p = new UserProfile();
-        if (tag.hasUUID("uuid")) p.uuid = tag.getUUID("uuid");
-        if (tag.contains("playerName")) p.playerName = tag.getString("playerName");
-        p.donationActivated = tag.getBoolean("donation");
-        p.deniers = tag.getInt("deniers");
+        if (tag.hasUUID(NBT_UUID)) p.uuid = tag.getUUID(NBT_UUID);
+        if (tag.contains(NBT_PLAYER_NAME)) p.playerName = tag.getString(NBT_PLAYER_NAME);
+        p.donationActivated = tag.getBoolean(NBT_DONATION);
+        p.deniers = tag.getInt(NBT_DENIERS);
 
         // Village reputations
-        if (tag.contains("villageRep", Tag.TAG_LIST)) {
-            ListTag repList = tag.getList("villageRep", Tag.TAG_COMPOUND);
+        if (tag.contains(NBT_VILLAGE_REP, Tag.TAG_LIST)) {
+            ListTag repList = tag.getList(NBT_VILLAGE_REP, Tag.TAG_COMPOUND);
             for (int i = 0; i < repList.size(); i++) {
                 CompoundTag e = repList.getCompound(i);
-                Point pt = Point.readFromNBT(e, "p");
-                if (pt != null) p.villageReputations.put(pt, e.getInt("rep"));
+                Point pt = Point.readFromNBT(e, NBT_POINT);
+                if (pt != null) p.villageReputations.put(pt, e.getInt(NBT_REP));
             }
         }
 
         // Village diplomacy
-        if (tag.contains("villageDip", Tag.TAG_LIST)) {
-            ListTag dipList = tag.getList("villageDip", Tag.TAG_COMPOUND);
+        if (tag.contains(NBT_VILLAGE_DIP, Tag.TAG_LIST)) {
+            ListTag dipList = tag.getList(NBT_VILLAGE_DIP, Tag.TAG_COMPOUND);
             for (int i = 0; i < dipList.size(); i++) {
                 CompoundTag e = dipList.getCompound(i);
-                Point pt = Point.readFromNBT(e, "p");
-                if (pt != null) p.villageDiplomacy.put(pt, e.getByte("dip"));
+                Point pt = Point.readFromNBT(e, NBT_POINT);
+                if (pt != null) p.villageDiplomacy.put(pt, e.getByte(NBT_DIP));
             }
         }
 
         // Culture reputations
-        if (tag.contains("cultureRep", Tag.TAG_COMPOUND)) {
-            CompoundTag cr = tag.getCompound("cultureRep");
+        if (tag.contains(NBT_CULTURE_REP, Tag.TAG_COMPOUND)) {
+            CompoundTag cr = tag.getCompound(NBT_CULTURE_REP);
             for (String key : cr.getAllKeys()) {
                 p.cultureReputations.put(key, cr.getInt(key));
             }
         }
 
         // Culture languages
-        if (tag.contains("cultureLang", Tag.TAG_COMPOUND)) {
-            CompoundTag cl = tag.getCompound("cultureLang");
+        if (tag.contains(NBT_CULTURE_LANG, Tag.TAG_COMPOUND)) {
+            CompoundTag cl = tag.getCompound(NBT_CULTURE_LANG);
             for (String key : cl.getAllKeys()) {
                 p.cultureLanguages.put(key, cl.getInt(key));
             }
         }
 
         // Tags
-        if (tag.contains("tags", Tag.TAG_LIST)) {
-            ListTag tagList = tag.getList("tags", Tag.TAG_STRING);
+        if (tag.contains(NBT_TAGS, Tag.TAG_LIST)) {
+            ListTag tagList = tag.getList(NBT_TAGS, Tag.TAG_STRING);
             for (int i = 0; i < tagList.size(); i++) {
                 p.profileTags.add(tagList.getString(i));
             }
         }
 
         // Unlocked content
-        loadStringSet(tag, "unlockedVillagers", p.unlockedVillagers);
-        loadStringSet(tag, "unlockedVillages", p.unlockedVillages);
-        loadStringSet(tag, "unlockedBuildings", p.unlockedBuildings);
-        loadStringSet(tag, "unlockedTradeGoods", p.unlockedTradeGoods);
+        loadStringSet(tag, NBT_UNLOCKED_VILLAGERS, p.unlockedVillagers);
+        loadStringSet(tag, NBT_UNLOCKED_VILLAGES, p.unlockedVillages);
+        loadStringSet(tag, NBT_UNLOCKED_BUILDINGS, p.unlockedBuildings);
+        loadStringSet(tag, NBT_UNLOCKED_TRADE_GOODS, p.unlockedTradeGoods);
 
         return p;
     }
