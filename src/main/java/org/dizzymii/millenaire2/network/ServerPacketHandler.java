@@ -939,9 +939,9 @@ public final class ServerPacketHandler {
             int reputation = villagePos != null ? profile.getVillageReputation(villagePos) : 0;
 
             if (actionId == MillPacketIds.GUIACTION_TRADE_BUY) {
-                executeBuy(player, profile, good, reputation, villagePos, mw);
+                executeBuy(player, profile, good, reputation, villagePos, mw, building);
             } else {
-                executeSell(player, profile, good, reputation, villagePos, mw);
+                executeSell(player, profile, good, reputation, villagePos, mw, building);
             }
         } catch (Exception e) {
             MillLog.error("ServerPacketHandler", "Error handling trade action", e);
@@ -955,9 +955,13 @@ public final class ServerPacketHandler {
                                     org.dizzymii.millenaire2.item.TradeGood good,
                                     int reputation,
                                     @javax.annotation.Nullable org.dizzymii.millenaire2.util.Point villagePos,
-                                    org.dizzymii.millenaire2.world.MillWorldData mw) {
-        int price = good.getAdjustedBuyPrice(reputation);
-        if (price <= 0 || good.item.isEmpty()) return;
+                                    org.dizzymii.millenaire2.world.MillWorldData mw,
+                                    org.dizzymii.millenaire2.village.Building building) {
+        if (good.buyPrice <= 0 || good.item.isEmpty()) return;
+
+        // Use supply-adjusted price based on building stock
+        int stock = building.getBuildingStock(good);
+        int price = good.getSupplyAdjustedBuyPrice(reputation, stock);
 
         if (profile.deniers < price) {
             player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
@@ -965,12 +969,26 @@ public final class ServerPacketHandler {
             return;
         }
 
+        // Check building has stock (if inventory-tracked)
+        if (stock >= 0 && stock < good.quantity) {
+            player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                    "§c[Millénaire]§r Out of stock!"));
+            return;
+        }
+
+        // Create the item stack with the correct quantity
+        net.minecraft.world.item.ItemStack giveStack = good.item.copy();
+        giveStack.setCount(good.quantity);
+
         // Give item to player
-        if (!player.getInventory().add(good.item.copy())) {
+        if (!player.getInventory().add(giveStack)) {
             player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
                     "§c[Millénaire]§r Inventory full!"));
             return;
         }
+
+        // Deduct from building inventory
+        building.executeBuyFromBuilding(good, good.quantity);
 
         profile.deniers -= price;
         // Reputation gain from buying
@@ -980,10 +998,10 @@ public final class ServerPacketHandler {
         mw.setDirty();
 
         player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                "§6[Millénaire]§r Bought " + good.item.getHoverName().getString()
+                "§6[Millénaire]§r Bought " + good.quantity + "x " + good.item.getHoverName().getString()
                         + " for " + price + " deniers"));
         MillLog.minor("ServerPacketHandler", "Trade buy: " + player.getName().getString()
-                + " bought " + good.item.getHoverName().getString() + " for " + price + "d");
+                + " bought " + good.quantity + "x " + good.item.getHoverName().getString() + " for " + price + "d");
     }
 
     private static void executeSell(ServerPlayer player,
@@ -991,24 +1009,43 @@ public final class ServerPacketHandler {
                                      org.dizzymii.millenaire2.item.TradeGood good,
                                      int reputation,
                                      @javax.annotation.Nullable org.dizzymii.millenaire2.util.Point villagePos,
-                                     org.dizzymii.millenaire2.world.MillWorldData mw) {
-        int price = good.getAdjustedSellPrice(reputation);
-        if (price <= 0 || good.item.isEmpty()) return;
+                                     org.dizzymii.millenaire2.world.MillWorldData mw,
+                                     org.dizzymii.millenaire2.village.Building building) {
+        if (good.sellPrice <= 0 || good.item.isEmpty()) return;
 
-        // Check player has the item
-        int slot = findItemSlot(player, good.item);
-        if (slot < 0) {
+        // Use supply-adjusted price based on building stock
+        int stock = building.getBuildingStock(good);
+        int price = good.getSupplyAdjustedSellPrice(reputation, stock);
+        if (price <= 0) {
             player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                    "§c[Millénaire]§r You don't have that item!"));
+                    "§c[Millénaire]§r This item has no value here right now."));
             return;
         }
 
-        // Remove one item from player inventory
-        net.minecraft.world.item.ItemStack slotStack = player.getInventory().getItem(slot);
-        slotStack.shrink(1);
-        if (slotStack.isEmpty()) {
-            player.getInventory().setItem(slot, net.minecraft.world.item.ItemStack.EMPTY);
+        // Check player has enough of the item
+        int totalInInventory = countPlayerItem(player, good.item);
+        if (totalInInventory < good.quantity) {
+            player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                    "§c[Millénaire]§r You don't have enough! Need " + good.quantity + "."));
+            return;
         }
+
+        // Remove quantity items from player inventory
+        int remaining = good.quantity;
+        for (int i = 0; i < player.getInventory().getContainerSize() && remaining > 0; i++) {
+            net.minecraft.world.item.ItemStack slotStack = player.getInventory().getItem(i);
+            if (net.minecraft.world.item.ItemStack.isSameItemSameComponents(slotStack, good.item) && !slotStack.isEmpty()) {
+                int take = Math.min(remaining, slotStack.getCount());
+                slotStack.shrink(take);
+                if (slotStack.isEmpty()) {
+                    player.getInventory().setItem(i, net.minecraft.world.item.ItemStack.EMPTY);
+                }
+                remaining -= take;
+            }
+        }
+
+        // Add to building inventory
+        building.executeSellToBuilding(good, good.quantity);
 
         profile.deniers += price;
         // Reputation gain from selling
@@ -1018,10 +1055,10 @@ public final class ServerPacketHandler {
         mw.setDirty();
 
         player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                "§6[Millénaire]§r Sold " + good.item.getHoverName().getString()
+                "§6[Millénaire]§r Sold " + good.quantity + "x " + good.item.getHoverName().getString()
                         + " for " + price + " deniers"));
         MillLog.minor("ServerPacketHandler", "Trade sell: " + player.getName().getString()
-                + " sold " + good.item.getHoverName().getString() + " for " + price + "d");
+                + " sold " + good.quantity + "x " + good.item.getHoverName().getString() + " for " + price + "d");
     }
 
     private static int findItemSlot(ServerPlayer player, net.minecraft.world.item.ItemStack target) {
@@ -1032,5 +1069,16 @@ public final class ServerPacketHandler {
             }
         }
         return -1;
+    }
+
+    private static int countPlayerItem(ServerPlayer player, net.minecraft.world.item.ItemStack target) {
+        int count = 0;
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            net.minecraft.world.item.ItemStack stack = player.getInventory().getItem(i);
+            if (net.minecraft.world.item.ItemStack.isSameItemSameComponents(stack, target) && !stack.isEmpty()) {
+                count += stack.getCount();
+            }
+        }
+        return count;
     }
 }

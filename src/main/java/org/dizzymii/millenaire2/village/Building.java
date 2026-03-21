@@ -377,15 +377,23 @@ public class Building {
     // ========== Trade goods ==========
 
     public final List<TradeGood> tradeGoods = new ArrayList<>();
+    private List<TradeGood> cachedResolvedGoods = null;
+    private long tradeGoodsCacheTime = -1;
+    private static final long TRADE_CACHE_DURATION = 200;
 
     /**
      * Get trade goods for this building. If the static list is empty,
      * resolve from the data-driven TradeGoodLoader based on villager types present.
+     * Results are cached for TRADE_CACHE_DURATION ticks to avoid re-resolution every access.
      */
     public List<TradeGood> getTradeGoods() {
         if (!tradeGoods.isEmpty()) return tradeGoods;
 
-        // Resolve from data-driven trade goods based on villager types in this building
+        long gameTime = world != null ? world.getGameTime() : 0;
+        if (cachedResolvedGoods != null && (gameTime - tradeGoodsCacheTime) < TRADE_CACHE_DURATION) {
+            return cachedResolvedGoods;
+        }
+
         java.util.Set<String> vtypes = new java.util.HashSet<>();
         for (VillagerRecord vr : getVillagerRecords()) {
             if (vr.type != null) vtypes.add(vr.type);
@@ -394,7 +402,95 @@ public class Building {
         for (String vt : vtypes) {
             resolved.addAll(org.dizzymii.millenaire2.item.TradeGoodLoader.getTradeGoods(vt));
         }
-        return resolved.isEmpty() ? tradeGoods : resolved;
+        cachedResolvedGoods = resolved.isEmpty() ? tradeGoods : resolved;
+        tradeGoodsCacheTime = gameTime;
+        return cachedResolvedGoods;
+    }
+
+    /**
+     * Get the building's stock level for a given trade good.
+     * Checks the building's resManager inventory.
+     * Returns -1 if no InvItem can be resolved (skip supply adjustment).
+     */
+    public int getBuildingStock(TradeGood good) {
+        InvItem inv = good.resolveInvItem();
+        if (inv == null) return -1;
+        return resManager.countGoods(inv);
+    }
+
+    /**
+     * Calculate what this building can sell to a player.
+     * Filters trade goods to only those with buyPrice > 0 and sufficient building stock.
+     * Returns goods with current supply-adjusted prices.
+     */
+    public List<TradeGood> calculateSellingGoods(int reputation) {
+        List<TradeGood> result = new ArrayList<>();
+        for (TradeGood good : getTradeGoods()) {
+            if (good.buyPrice <= 0) continue;
+            int stock = getBuildingStock(good);
+            // If we can resolve stock and it's insufficient, skip
+            if (stock >= 0 && stock < good.quantity) continue;
+            result.add(good);
+        }
+        return result;
+    }
+
+    /**
+     * Calculate what this building wants to buy from a player.
+     * Filters trade goods to only those with sellPrice > 0.
+     * Building will buy even at full stock but at reduced prices.
+     */
+    public List<TradeGood> calculateBuyingGoods(int reputation) {
+        List<TradeGood> result = new ArrayList<>();
+        for (TradeGood good : getTradeGoods()) {
+            if (good.sellPrice <= 0) continue;
+            result.add(good);
+        }
+        return result;
+    }
+
+    /**
+     * Execute a buy transaction: player buys from building.
+     * Removes items from building inventory if tracked.
+     * @return true if transaction succeeded
+     */
+    public boolean executeBuyFromBuilding(TradeGood good, int quantity) {
+        InvItem inv = good.resolveInvItem();
+        if (inv != null) {
+            int stock = resManager.countGoods(inv);
+            if (stock < quantity) return false;
+            resManager.takeGoods(inv, quantity);
+            if (mw != null) mw.setDirty();
+        }
+        return true;
+    }
+
+    /**
+     * Execute a sell transaction: player sells to building.
+     * Adds items to building inventory if tracked.
+     * @return true if transaction succeeded
+     */
+    public boolean executeSellToBuilding(TradeGood good, int quantity) {
+        InvItem inv = good.resolveInvItem();
+        if (inv != null) {
+            int cap = org.dizzymii.millenaire2.village.VillageEconomyLoader.getCapacity(
+                    planSetKey != null ? planSetKey : "");
+            int current = resManager.countGoods(inv);
+            int toAdd = Math.min(quantity, cap - current);
+            if (toAdd > 0) {
+                resManager.storeGoods(inv, toAdd);
+            }
+            if (mw != null) mw.setDirty();
+        }
+        return true;
+    }
+
+    /**
+     * Invalidate the trade goods cache (e.g. after villager changes).
+     */
+    public void invalidateTradeCache() {
+        cachedResolvedGoods = null;
+        tradeGoodsCacheTime = -1;
     }
 
     // ========== Upgrade ==========

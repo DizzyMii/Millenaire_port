@@ -118,9 +118,84 @@ public class VisitorManager {
         vr.gender = MillVillager.MALE;
         merchant.setVillagerId(vr.getVillagerId());
 
+        // Give merchant some trade inventory from a foreign village or random goods
+        populateMerchantInventory(merchant);
+
         level.addFreshEntity(merchant);
         building.merchantRecord = vr;
         MillLog.minor("VisitorManager", "Spawned merchant at " + pos);
+    }
+
+    /**
+     * Populate a foreign merchant's inventory with goods.
+     * If a neighbouring village exists (via DiplomacyManager), take surplus goods from it.
+     * Otherwise, give the merchant a random selection of common trade items.
+     */
+    private void populateMerchantInventory(MillVillager merchant) {
+        org.dizzymii.millenaire2.world.MillWorldData mw = building.mw;
+        if (mw == null) return;
+
+        // Try to find a foreign village's townhall to source goods from
+        Building foreignTownhall = findForeignVillage(mw);
+        if (foreignTownhall != null) {
+            // Take surplus goods from the foreign village
+            int itemsTaken = 0;
+            for (java.util.Map.Entry<org.dizzymii.millenaire2.item.InvItem, Integer> entry :
+                    new java.util.ArrayList<>(foreignTownhall.resManager.resources.entrySet())) {
+                if (itemsTaken >= 5) break;
+                int surplus = entry.getValue() - 16;
+                if (surplus > 0) {
+                    int take = Math.min(surplus, 8);
+                    if (foreignTownhall.resManager.takeGoods(entry.getKey(), take)) {
+                        merchant.addToInv(entry.getKey(), take);
+                        itemsTaken++;
+                    }
+                }
+            }
+            if (itemsTaken > 0) {
+                MillLog.minor("VisitorManager", "Merchant loaded " + itemsTaken
+                        + " item types from foreign village at " + foreignTownhall.getPos());
+                return;
+            }
+        }
+
+        // Fallback: give random common goods
+        String[] commonGoods = {"wheat", "wool", "leather", "iron_ingot", "plank"};
+        for (String key : commonGoods) {
+            org.dizzymii.millenaire2.item.InvItem inv = org.dizzymii.millenaire2.item.InvItem.get(key);
+            if (inv != null && random.nextInt(3) == 0) {
+                merchant.addToInv(inv, 4 + random.nextInt(8));
+            }
+        }
+    }
+
+    /**
+     * Find a foreign village's townhall from known diplomacy relations.
+     * Returns null if no suitable foreign village is found.
+     */
+    @javax.annotation.Nullable
+    private Building findForeignVillage(org.dizzymii.millenaire2.world.MillWorldData mw) {
+        Point myPos = building.getTownHallPos();
+        if (myPos == null) myPos = building.getPos();
+        if (myPos == null) return null;
+
+        Building bestForeign = null;
+        double bestDist = Double.MAX_VALUE;
+
+        for (Building b : mw.allBuildings()) {
+            if (!b.isTownhall) continue;
+            if (b == building) continue;
+            Point bPos = b.getPos();
+            if (bPos == null) continue;
+            // Check it's actually a different village (different townhall)
+            if (myPos.equals(bPos)) continue;
+            double dist = myPos.distanceTo(bPos);
+            if (dist < bestDist && dist < 500) {
+                bestDist = dist;
+                bestForeign = b;
+            }
+        }
+        return bestForeign;
     }
 
     private void spawnVisitor(ServerLevel level, Point pos) {

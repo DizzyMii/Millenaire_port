@@ -33,6 +33,7 @@ public class TradeGoodLoader {
 
     private static final Map<String, List<TradeGood>> SELL_GOODS = new HashMap<>();
     private static final Map<String, List<TradeGood>> BUY_GOODS = new HashMap<>();
+    private static final Map<String, List<TradeGood>> CULTURE_GOODS = new HashMap<>();
     private static List<TradeGood> DEFAULT_SELLS = new ArrayList<>();
     private static List<TradeGood> DEFAULT_BUYS = new ArrayList<>();
     private static boolean loaded = false;
@@ -43,6 +44,7 @@ public class TradeGoodLoader {
     public static void loadFromServer(@Nullable MinecraftServer server) {
         SELL_GOODS.clear();
         BUY_GOODS.clear();
+        CULTURE_GOODS.clear();
         DEFAULT_SELLS.clear();
         DEFAULT_BUYS.clear();
         loaded = false;
@@ -102,6 +104,8 @@ public class TradeGoodLoader {
             String itemId = obj.get("item").getAsString();
             int count = obj.has("count") ? obj.get("count").getAsInt() : 1;
             int price = obj.has("price") ? obj.get("price").getAsInt() : 1;
+            int quantity = obj.has("quantity") ? obj.get("quantity").getAsInt() : 1;
+            String invItemKey = obj.has("invItemKey") ? obj.get("invItemKey").getAsString() : null;
 
             ResourceLocation rl = ResourceLocation.parse(itemId);
             Item item = BuiltInRegistries.ITEM.get(rl);
@@ -113,9 +117,9 @@ public class TradeGoodLoader {
             ItemStack stack = new ItemStack(item, count);
             TradeGood good;
             if (isSell) {
-                good = new TradeGood(stack, price, 0);
+                good = new TradeGood(stack, price, 0, quantity, invItemKey);
             } else {
-                good = new TradeGood(stack, 0, price);
+                good = new TradeGood(stack, 0, price, quantity, invItemKey);
             }
             list.add(good);
         }
@@ -129,11 +133,19 @@ public class TradeGoodLoader {
     public static List<TradeGood> getTradeGoods(String villagerTypeKey) {
         List<TradeGood> result = new ArrayList<>();
 
+        // Datapack-level goods take priority
         List<TradeGood> sells = SELL_GOODS.getOrDefault(villagerTypeKey, DEFAULT_SELLS);
         List<TradeGood> buys = BUY_GOODS.getOrDefault(villagerTypeKey, DEFAULT_BUYS);
-
         result.addAll(sells);
         result.addAll(buys);
+
+        // Culture-level goods supplement if no datapack overrides exist
+        if (!SELL_GOODS.containsKey(villagerTypeKey) && !BUY_GOODS.containsKey(villagerTypeKey)) {
+            List<TradeGood> cultureGoods = CULTURE_GOODS.get(villagerTypeKey);
+            if (cultureGoods != null && !cultureGoods.isEmpty()) {
+                result.addAll(cultureGoods);
+            }
+        }
         return result;
     }
 
@@ -149,6 +161,22 @@ public class TradeGoodLoader {
      */
     public static List<TradeGood> getBuyGoods(String villagerTypeKey) {
         return BUY_GOODS.getOrDefault(villagerTypeKey, DEFAULT_BUYS);
+    }
+
+    /**
+     * Register trade goods from a culture for a specific villager type key.
+     * Called during culture loading to populate culture-level shop goods.
+     */
+    public static void registerCultureGoods(String villagerTypeKey, List<TradeGood> goods) {
+        if (goods == null || goods.isEmpty()) return;
+        CULTURE_GOODS.computeIfAbsent(villagerTypeKey, k -> new ArrayList<>()).addAll(goods);
+    }
+
+    /**
+     * Get culture-registered goods for a villager type.
+     */
+    public static List<TradeGood> getCultureGoods(String villagerTypeKey) {
+        return CULTURE_GOODS.getOrDefault(villagerTypeKey, List.of());
     }
 
     public static boolean isLoaded() {

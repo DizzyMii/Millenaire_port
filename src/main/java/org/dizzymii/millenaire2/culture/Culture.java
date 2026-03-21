@@ -83,6 +83,9 @@ public class Culture {
 
     public final Map<String, List<String>> nameLists = new HashMap<>();
 
+    /** Culture-level shop goods: villagerTypeKey -> list of TradeGood. */
+    public final Map<String, List<org.dizzymii.millenaire2.item.TradeGood>> shopGoods = new HashMap<>();
+
     // --- Static methods ---
 
     public static Culture getCultureByName(String name) {
@@ -189,6 +192,9 @@ public class Culture {
 
         // Load lone building types
         loadLoneBuildingTypes(cultureDir);
+
+        // Load shop goods and register with TradeGoodLoader
+        loadShopGoods(cultureDir);
     }
 
     private void loadNameLists(VirtualDir cultureDir) {
@@ -285,6 +291,102 @@ public class Culture {
                 listLoneBuildingTypes.add(vt);
             }
         }
+    }
+
+    /**
+     * Load shop goods from the culture's "shopgoods" directory.
+     * Each file is named after a villager type key and contains lines like:
+     *   sell;item_id;buyPrice;quantity;invItemKey
+     *   buy;item_id;sellPrice;quantity;invItemKey
+     * If no shopgoods directory exists, auto-generate from villager types with canSell=true.
+     */
+    private void loadShopGoods(VirtualDir cultureDir) {
+        VirtualDir shopDir = cultureDir.getChildDirectory("shopgoods");
+        if (shopDir != null && shopDir.exists()) {
+            for (File file : shopDir.listFiles()) {
+                if (!file.getName().endsWith(".txt")) continue;
+                String vtKey = file.getName().replace(".txt", "");
+                List<org.dizzymii.millenaire2.item.TradeGood> goods = parseShopGoodsFile(file);
+                if (!goods.isEmpty()) {
+                    shopGoods.put(vtKey, goods);
+                    org.dizzymii.millenaire2.item.TradeGoodLoader.registerCultureGoods(vtKey, goods);
+                }
+            }
+        }
+
+        if (shopGoods.isEmpty()) {
+            // Auto-generate basic shop goods for seller villager types
+            for (VillagerType vt : listVillagerTypes) {
+                if (vt.canSell) {
+                    List<org.dizzymii.millenaire2.item.TradeGood> generated = generateDefaultShopGoods(vt);
+                    if (!generated.isEmpty()) {
+                        shopGoods.put(vt.key, generated);
+                        org.dizzymii.millenaire2.item.TradeGoodLoader.registerCultureGoods(vt.key, generated);
+                    }
+                }
+            }
+        }
+
+        if (!shopGoods.isEmpty()) {
+            MillLog.minor(this, "Loaded shop goods for " + shopGoods.size() + " villager types");
+        }
+    }
+
+    private List<org.dizzymii.millenaire2.item.TradeGood> parseShopGoodsFile(File file) {
+        List<org.dizzymii.millenaire2.item.TradeGood> goods = new ArrayList<>();
+        try (var reader = MillCommonUtilities.getReader(file)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("//")) continue;
+                String[] parts = line.split(";");
+                if (parts.length < 3) continue;
+
+                String type = parts[0].trim().toLowerCase();
+                String itemId = parts[1].trim();
+                int price;
+                try { price = Integer.parseInt(parts[2].trim()); } catch (NumberFormatException e) { continue; }
+                int quantity = parts.length > 3 ? parseIntSafe(parts[3].trim(), 1) : 1;
+                String invItemKey = parts.length > 4 ? parts[4].trim() : null;
+                if (invItemKey != null && invItemKey.isEmpty()) invItemKey = null;
+
+                net.minecraft.resources.ResourceLocation rl = net.minecraft.resources.ResourceLocation.parse(itemId);
+                net.minecraft.world.item.Item item = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(rl);
+                if (item == net.minecraft.world.item.Items.AIR && !"minecraft:air".equals(itemId)) continue;
+
+                net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(item, 1);
+                if ("sell".equals(type)) {
+                    goods.add(new org.dizzymii.millenaire2.item.TradeGood(stack, price, 0, quantity, invItemKey));
+                } else if ("buy".equals(type)) {
+                    goods.add(new org.dizzymii.millenaire2.item.TradeGood(stack, 0, price, quantity, invItemKey));
+                }
+            }
+        } catch (Exception e) {
+            MillLog.error(this, "Error loading shop goods: " + file.getName(), e);
+        }
+        return goods;
+    }
+
+    private static int parseIntSafe(String s, int fallback) {
+        try { return Integer.parseInt(s); } catch (NumberFormatException e) { return fallback; }
+    }
+
+    /**
+     * Generate default shop goods for a seller villager type based on their production tags.
+     */
+    private List<org.dizzymii.millenaire2.item.TradeGood> generateDefaultShopGoods(VillagerType vt) {
+        List<org.dizzymii.millenaire2.item.TradeGood> goods = new ArrayList<>();
+        // For seller types, expose their culture's known crops as buyable goods
+        for (String crop : knownCrops) {
+            org.dizzymii.millenaire2.item.InvItem inv = org.dizzymii.millenaire2.item.InvItem.get(crop);
+            if (inv != null) {
+                net.minecraft.world.item.ItemStack stack = inv.getItemStack(1);
+                if (!stack.isEmpty()) {
+                    goods.add(new org.dizzymii.millenaire2.item.TradeGood(stack, 4, 2, 1, crop));
+                }
+            }
+        }
+        return goods;
     }
 
     public String getRandomName(String listName) {

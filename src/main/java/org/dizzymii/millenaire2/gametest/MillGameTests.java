@@ -303,6 +303,101 @@ public class MillGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testTradeGoodSupplyAdjustedPricing(GameTestHelper helper) {
+        org.dizzymii.millenaire2.item.TradeGood good = new org.dizzymii.millenaire2.item.TradeGood(
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.WHEAT),
+                100,
+                80,
+                4,
+                "wheat"
+        );
+
+        int buyLowStock = good.getSupplyAdjustedBuyPrice(0, 0);
+        int buyHighStock = good.getSupplyAdjustedBuyPrice(0, 128);
+        helper.assertTrue(buyLowStock > buyHighStock,
+                "Buy price should be higher at low stock, got low=" + buyLowStock + ", high=" + buyHighStock);
+
+        int sellLowStock = good.getSupplyAdjustedSellPrice(0, 0);
+        int sellHighStock = good.getSupplyAdjustedSellPrice(0, 128);
+        helper.assertTrue(sellLowStock > sellHighStock,
+                "Sell price should be higher at low stock, got low=" + sellLowStock + ", high=" + sellHighStock);
+
+        helper.assertTrue(good.quantity == 4, "Trade quantity should be 4");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testBuildingTradeStockAndExecution(GameTestHelper helper) {
+        Building b = new Building();
+        org.dizzymii.millenaire2.item.InvItem wheat = org.dizzymii.millenaire2.item.InvItem.get("wheat");
+        if (wheat == null) {
+            helper.succeed();
+            return;
+        }
+
+        org.dizzymii.millenaire2.item.TradeGood good = new org.dizzymii.millenaire2.item.TradeGood(
+                wheat.getItemStack(1),
+                5,
+                3,
+                4,
+                "wheat"
+        );
+        b.tradeGoods.add(good);
+
+        b.resManager.storeGoods(wheat, 3);
+        helper.assertTrue(b.calculateSellingGoods(0).isEmpty(),
+                "Building should not sell when stock is below required quantity");
+
+        b.resManager.storeGoods(wheat, 2);
+        helper.assertTrue(b.calculateSellingGoods(0).size() == 1,
+                "Building should sell once stock reaches required quantity");
+
+        boolean buyOk = b.executeBuyFromBuilding(good, 4);
+        helper.assertTrue(buyOk, "executeBuyFromBuilding should succeed with enough stock");
+        helper.assertTrue(b.resManager.countGoods(wheat) == 1,
+                "Expected stock 1 after selling 4 from stock 5");
+
+        boolean buyFail = b.executeBuyFromBuilding(good, 4);
+        helper.assertFalse(buyFail, "executeBuyFromBuilding should fail with insufficient stock");
+
+        boolean sellOk = b.executeSellToBuilding(good, 2);
+        helper.assertTrue(sellOk, "executeSellToBuilding should succeed");
+        helper.assertTrue(b.resManager.countGoods(wheat) >= 2,
+                "Stock should increase after executeSellToBuilding");
+
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testTradeGoodLoaderCultureGoodsFallback(GameTestHelper helper) {
+        String villagerTypeKey = "gametest_trade_vtype";
+        java.util.List<org.dizzymii.millenaire2.item.TradeGood> cultureGoods = new java.util.ArrayList<>();
+        cultureGoods.add(new org.dizzymii.millenaire2.item.TradeGood(
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD),
+                7,
+                0,
+                2,
+                "bread"
+        ));
+
+        org.dizzymii.millenaire2.item.TradeGoodLoader.registerCultureGoods(villagerTypeKey, cultureGoods);
+        java.util.List<org.dizzymii.millenaire2.item.TradeGood> resolved =
+                org.dizzymii.millenaire2.item.TradeGoodLoader.getTradeGoods(villagerTypeKey);
+
+        helper.assertTrue(!resolved.isEmpty(), "Expected culture goods fallback to return at least one trade good");
+        boolean hasBread = false;
+        for (org.dizzymii.millenaire2.item.TradeGood tg : resolved) {
+            if (!tg.item.isEmpty() && tg.item.is(net.minecraft.world.item.Items.BREAD) && tg.quantity == 2) {
+                hasBread = true;
+                break;
+            }
+        }
+        helper.assertTrue(hasBread, "Expected registered BREAD trade good with quantity 2");
+
+        helper.succeed();
+    }
+
     // ==================== Village Expansion Logic ====================
 
     @GameTest(template = "empty", timeoutTicks = 40)

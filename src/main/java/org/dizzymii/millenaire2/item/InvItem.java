@@ -125,6 +125,19 @@ public class InvItem {
     }
 
     /**
+     * Find an InvItem whose resolved Item matches the given Item instance.
+     * Returns null if no match found.
+     */
+    @javax.annotation.Nullable
+    public static InvItem findByItem(Item target) {
+        if (target == null || target == Items.AIR) return null;
+        for (InvItem inv : ITEMS.values()) {
+            if (inv.getItem() == target) return inv;
+        }
+        return null;
+    }
+
+    /**
      * Get all registered InvItems.
      */
     public static Map<String, InvItem> getAll() {
