@@ -58,6 +58,26 @@ public class QuestInstance {
         QuestStep step = getCurrentStep();
         if (step == null || quest == null || profile == null || mw == null) return false;
 
+        String lacks = step.lackingConditions(profile, mw);
+        if (lacks != null) {
+            MillLog.minor("QuestInstance", "Cannot complete step " + currentStep + " for '" + quest.key + "': " + lacks);
+            return false;
+        }
+
+        if (step.villager != null && !step.villager.isEmpty() && villagers != null) {
+            QuestInstanceVillager qiv = villagers.get(step.villager);
+            if (qiv != null && mw.world instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                org.dizzymii.millenaire2.entity.MillVillager mv = qiv.getVillager(serverLevel);
+                if (mv != null) {
+                    String actionKey = step.getStringKey() + SpecialQuestActions.COMPLETE;
+                    net.minecraft.server.level.ServerPlayer player = findPlayer(serverLevel);
+                    if (player != null && !SpecialQuestActions.checkAction(actionKey, this, player)) {
+                        return false;
+                    }
+                }
+            }
+        }
+
         // Apply success tags
         for (String tag : step.setGlobalTagsSuccess) mw.addGlobalTag(tag);
         for (String tag : step.clearGlobalTagsSuccess) mw.removeGlobalTag(tag);
@@ -70,6 +90,10 @@ public class QuestInstance {
             Point villagePos = findVillagePos();
             if (villagePos != null) {
                 profile.adjustVillageReputation(villagePos, step.rewardReputation);
+                org.dizzymii.millenaire2.village.Building th = mw.getBuilding(villagePos);
+                if (th != null && th.cultureKey != null) {
+                    profile.adjustCultureLanguage(th.cultureKey, QUEST_LANGUAGE_BONUS);
+                }
             }
         }
 
@@ -121,6 +145,12 @@ public class QuestInstance {
             if (qiv.townHall != null) return qiv.townHall;
         }
         return null;
+    }
+
+    @Nullable
+    private net.minecraft.server.level.ServerPlayer findPlayer(net.minecraft.server.level.ServerLevel level) {
+        if (profile == null || profile.uuid == null) return null;
+        return level.getServer().getPlayerList().getPlayer(profile.uuid);
     }
 
     // ========== String serialization ==========

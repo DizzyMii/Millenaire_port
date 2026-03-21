@@ -571,4 +571,46 @@ public class MillGameTests {
 
         helper.succeed();
     }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testUserProfileQuestAndActionDataRoundTrip(GameTestHelper helper) {
+        org.dizzymii.millenaire2.world.MillWorldData mw = new org.dizzymii.millenaire2.world.MillWorldData();
+        UserProfile original = new UserProfile();
+        original.uuid = java.util.UUID.randomUUID();
+        original.playerName = "GameTest";
+
+        original.setActionData("quest.progress", "stage2");
+        original.adjustVillageDiplomacy(new Point(10, 64, 10), 5);
+        original.adjustCultureLanguage("norman", 120);
+
+        org.dizzymii.millenaire2.quest.Quest q = new org.dizzymii.millenaire2.quest.Quest();
+        q.key = "gametest_quest";
+        q.steps.add(new org.dizzymii.millenaire2.quest.QuestStep(q, 0));
+        org.dizzymii.millenaire2.quest.Quest.quests.put(q.key, q);
+
+        java.util.HashMap<String, org.dizzymii.millenaire2.quest.QuestInstanceVillager> vils = new java.util.HashMap<>();
+        vils.put("questgiver", new org.dizzymii.millenaire2.quest.QuestInstanceVillager(mw, new Point(10, 64, 10), 1L));
+        original.addQuestInstance(new org.dizzymii.millenaire2.quest.QuestInstance(
+                mw,
+                q,
+                original,
+                vils,
+                System.currentTimeMillis()
+        ));
+
+        CompoundTag tag = original.save();
+        UserProfile loaded = UserProfile.load(tag);
+        loaded.resolvePendingQuestInstances(mw);
+
+        helper.assertTrue("stage2".equals(loaded.getActionData("quest.progress")),
+                "Action data not persisted");
+        helper.assertTrue(loaded.getVillageDiplomacy(new Point(10, 64, 10)) == 5,
+                "Village diplomacy not persisted");
+        helper.assertTrue(loaded.getCultureLanguage("norman") == 120,
+                "Culture language not persisted");
+        helper.assertTrue(loaded.questInstances.size() == 1,
+                "Quest instances not restored from serialized profile");
+
+        helper.succeed();
+    }
 }

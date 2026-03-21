@@ -50,7 +50,9 @@ public class UserProfile {
     private final HashMap<Point, Byte> villageDiplomacy = new HashMap<>();
     private final HashMap<String, Integer> cultureReputations = new HashMap<>();
     private final HashMap<String, Integer> cultureLanguages = new HashMap<>();
+    private final HashMap<String, String> actionData = new HashMap<>();
     private final List<String> profileTags = new ArrayList<>();
+    private final List<String> pendingQuestData = new ArrayList<>();
 
     @Nullable public UUID uuid;
     @Nullable public String playerName;
@@ -90,6 +92,44 @@ public class UserProfile {
         cultureLanguages.put(cultureKey, level);
     }
 
+    public int adjustCultureLanguage(String cultureKey, int delta) {
+        int next = Math.max(0, getCultureLanguage(cultureKey) + delta);
+        setCultureLanguage(cultureKey, next);
+        return next;
+    }
+
+    public byte getVillageDiplomacy(Point villagePos) {
+        return villageDiplomacy.getOrDefault(villagePos, (byte) 0);
+    }
+
+    public void setVillageDiplomacy(Point villagePos, byte value) {
+        villageDiplomacy.put(villagePos, value);
+    }
+
+    public byte adjustVillageDiplomacy(Point villagePos, int delta) {
+        int current = getVillageDiplomacy(villagePos);
+        int next = Math.max(-128, Math.min(127, current + delta));
+        villageDiplomacy.put(villagePos, (byte) next);
+        return (byte) next;
+    }
+
+    public void setActionData(String key, String value) {
+        actionData.put(key, value);
+    }
+
+    @Nullable
+    public String getActionData(String key) {
+        return actionData.get(key);
+    }
+
+    public void clearActionData(String key) {
+        actionData.remove(key);
+    }
+
+    public Map<String, String> getAllActionData() {
+        return actionData;
+    }
+
     // ========== Unlocked content ==========
 
     public boolean hasUnlockedVillager(String key) { return unlockedVillagers.contains(key); }
@@ -111,9 +151,20 @@ public class UserProfile {
     public void addTag(String tag) { if (!profileTags.contains(tag)) profileTags.add(tag); }
     public void removeTag(String tag) { profileTags.remove(tag); }
 
+    public void addQuestInstance(org.dizzymii.millenaire2.quest.QuestInstance qi) {
+        if (qi != null && !questInstances.contains(qi)) {
+            questInstances.add(qi);
+        }
+    }
+
+    public void removeQuestInstance(org.dizzymii.millenaire2.quest.QuestInstance qi) {
+        questInstances.remove(qi);
+    }
+
     // ========== NBT persistence ==========
 
     public Map<Point, Integer> getVillageReputations() { return villageReputations; }
+    public Map<Point, Byte> getVillageDiplomacy() { return villageDiplomacy; }
     public Map<String, Integer> getCultureReputations() { return cultureReputations; }
     public Map<String, Integer> getCultureLanguages() { return cultureLanguages; }
 
@@ -158,6 +209,12 @@ public class UserProfile {
         }
         tag.put("cultureLang", cultureLangTag);
 
+        CompoundTag actionDataTag = new CompoundTag();
+        for (Map.Entry<String, String> entry : actionData.entrySet()) {
+            actionDataTag.putString(entry.getKey(), entry.getValue());
+        }
+        tag.put("actionData", actionDataTag);
+
         // Tags
         ListTag tagList = new ListTag();
         for (String t : profileTags) {
@@ -170,6 +227,12 @@ public class UserProfile {
         tag.put("unlockedVillages", saveStringSet(unlockedVillages));
         tag.put("unlockedBuildings", saveStringSet(unlockedBuildings));
         tag.put("unlockedTradeGoods", saveStringSet(unlockedTradeGoods));
+
+        ListTag quests = new ListTag();
+        for (org.dizzymii.millenaire2.quest.QuestInstance qi : questInstances) {
+            quests.add(StringTag.valueOf(qi.saveToString()));
+        }
+        tag.put("questInstances", quests);
 
         return tag;
     }
@@ -217,6 +280,13 @@ public class UserProfile {
             }
         }
 
+        if (tag.contains("actionData", Tag.TAG_COMPOUND)) {
+            CompoundTag ad = tag.getCompound("actionData");
+            for (String key : ad.getAllKeys()) {
+                p.actionData.put(key, ad.getString(key));
+            }
+        }
+
         // Tags
         if (tag.contains("tags", Tag.TAG_LIST)) {
             ListTag tagList = tag.getList("tags", Tag.TAG_STRING);
@@ -231,7 +301,26 @@ public class UserProfile {
         loadStringSet(tag, "unlockedBuildings", p.unlockedBuildings);
         loadStringSet(tag, "unlockedTradeGoods", p.unlockedTradeGoods);
 
+        if (tag.contains("questInstances", Tag.TAG_LIST)) {
+            ListTag q = tag.getList("questInstances", Tag.TAG_STRING);
+            for (int i = 0; i < q.size(); i++) {
+                p.pendingQuestData.add(q.getString(i));
+            }
+        }
+
         return p;
+    }
+
+    public void resolvePendingQuestInstances(MillWorldData mw) {
+        if (pendingQuestData.isEmpty()) return;
+        for (String encoded : pendingQuestData) {
+            org.dizzymii.millenaire2.quest.QuestInstance qi =
+                    org.dizzymii.millenaire2.quest.QuestInstance.loadFromString(encoded, mw, this);
+            if (qi != null) {
+                questInstances.add(qi);
+            }
+        }
+        pendingQuestData.clear();
     }
 
     // ========== Packet serialization ==========

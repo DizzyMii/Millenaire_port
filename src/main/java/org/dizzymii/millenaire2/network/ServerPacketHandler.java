@@ -74,6 +74,29 @@ public final class ServerPacketHandler {
                         mw.getOrCreateProfile(player.getUUID(), player.getName().getString());
                 org.dizzymii.millenaire2.util.Point vPos =
                         building.getTownHallPos() != null ? building.getTownHallPos() : building.getPos();
+
+                ServerPacketSender.sendProfile(player, profile, org.dizzymii.millenaire2.world.UserProfile.UPDATE_ALL);
+
+                org.dizzymii.millenaire2.quest.Quest offeredQuest = pickQuestForInteraction(player, profile, mw, vPos);
+                if (offeredQuest != null) {
+                    java.util.HashMap<String, org.dizzymii.millenaire2.quest.QuestInstanceVillager> qVillagers = new java.util.HashMap<>();
+                    qVillagers.put("questgiver", new org.dizzymii.millenaire2.quest.QuestInstanceVillager(
+                            mw,
+                            vPos,
+                            villager.getVillagerId()
+                    ));
+                    org.dizzymii.millenaire2.quest.QuestInstance preview = new org.dizzymii.millenaire2.quest.QuestInstance(
+                            mw,
+                            offeredQuest,
+                            profile,
+                            qVillagers,
+                            System.currentTimeMillis()
+                    );
+                    ServerPacketSender.sendQuestInstance(player, preview, villager.getId(), true);
+                    ServerPacketSender.sendOpenGui(player, MillPacketIds.GUI_QUEST, villager.getId(), villager.townHallPoint);
+                    return;
+                }
+
                 int rep = vPos != null ? profile.getVillageReputation(vPos) : 0;
                 String vName = villager.getFirstName() + " " + villager.getFamilyName();
                 ServerPacketSender.sendTradeData(player, villager.getId(),
@@ -286,7 +309,9 @@ public final class ServerPacketHandler {
             int villagerEntityId = r.readInt();
 
             org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
-            org.dizzymii.millenaire2.world.UserProfile profile = mw.getProfile(player.getUUID());
+            if (mw == null) return;
+            org.dizzymii.millenaire2.world.UserProfile profile =
+                    mw.getOrCreateProfile(player.getUUID(), player.getName().getString());
 
             if (actionId == MillPacketIds.GUIACTION_QUEST_COMPLETESTEP) {
                 // Find the active quest instance for this player
@@ -307,8 +332,21 @@ public final class ServerPacketHandler {
                     }
                     // Create new quest instance
                     java.util.HashMap<String, org.dizzymii.millenaire2.quest.QuestInstanceVillager> vils = new java.util.HashMap<>();
+                    Entity qEntity = player.level().getEntity(villagerEntityId);
+                    if (qEntity instanceof MillVillager qVillager) {
+                        org.dizzymii.millenaire2.village.Building qBuilding = qVillager.getHomeBuilding();
+                        if (qBuilding == null) qBuilding = qVillager.getTownHallBuilding();
+                        org.dizzymii.millenaire2.util.Point qPos = qBuilding != null
+                                ? (qBuilding.getTownHallPos() != null ? qBuilding.getTownHallPos() : qBuilding.getPos())
+                                : null;
+                        vils.put("questgiver", new org.dizzymii.millenaire2.quest.QuestInstanceVillager(
+                                mw,
+                                qPos,
+                                qVillager.getVillagerId()
+                        ));
+                    }
                     active = new org.dizzymii.millenaire2.quest.QuestInstance(mw, quest, profile, vils, System.currentTimeMillis());
-                    profile.questInstances.add(active);
+                    profile.addQuestInstance(active);
                     MillLog.minor("ServerPacketHandler", "Quest '" + questKey + "' accepted by " + player.getName().getString());
                 }
 
@@ -320,18 +358,23 @@ public final class ServerPacketHandler {
                     if (lastStep != null && lastStep.rewardMoney > 0) {
                         profile.deniers += lastStep.rewardMoney;
                     }
-                    profile.questInstances.remove(active);
+                    profile.removeQuestInstance(active);
+                    org.dizzymii.millenaire2.advancement.MillAdvancements.THE_QUEST.grant(player);
+                    ServerPacketSender.sendQuestInstanceDestroy(player, questKey);
                     player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
                             "\u00a76[Mill\u00e9naire]\u00a7r Quest '" + questKey + "' completed!"));
                 } else {
+                    ServerPacketSender.sendQuestInstance(player, active, villagerEntityId, false);
                     player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
                             "\u00a76[Mill\u00e9naire]\u00a7r Quest step completed."));
                 }
+                ServerPacketSender.sendProfile(player, profile, org.dizzymii.millenaire2.world.UserProfile.UPDATE_ALL);
                 mw.setDirty();
 
             } else if (actionId == MillPacketIds.GUIACTION_QUEST_REFUSE) {
                 // Remove quest instance if it exists
                 profile.questInstances.removeIf(qi -> qi.quest != null && questKey.equals(qi.quest.key));
+                ServerPacketSender.sendQuestInstanceDestroy(player, questKey);
                 player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
                         "\u00a76[Mill\u00e9naire]\u00a7r Quest declined."));
                 mw.setDirty();
@@ -647,5 +690,45 @@ public final class ServerPacketHandler {
             }
         }
         return -1;
+    }
+
+    private static org.dizzymii.millenaire2.quest.Quest pickQuestForInteraction(
+            ServerPlayer player,
+            org.dizzymii.millenaire2.world.UserProfile profile,
+            org.dizzymii.millenaire2.world.MillWorldData mw,
+            @javax.annotation.Nullable org.dizzymii.millenaire2.util.Point villagePos) {
+        if (org.dizzymii.millenaire2.quest.Quest.quests.isEmpty()) return null;
+
+        for (org.dizzymii.millenaire2.quest.Quest quest : org.dizzymii.millenaire2.quest.Quest.quests.values()) {
+            if (quest == null || quest.key == null) continue;
+            String questKey = quest.key;
+            if (!quest.canStart(profile, mw, villagePos)) continue;
+
+            boolean alreadyActive = false;
+            for (org.dizzymii.millenaire2.quest.QuestInstance qi : profile.questInstances) {
+                if (qi.quest != null && questKey.equals(qi.quest.key)) {
+                    alreadyActive = true;
+                    break;
+                }
+            }
+            if (alreadyActive) continue;
+
+            int globalActive = 0;
+            for (org.dizzymii.millenaire2.world.UserProfile p : mw.profiles.values()) {
+                for (org.dizzymii.millenaire2.quest.QuestInstance qi : p.questInstances) {
+                    if (qi.quest != null && questKey.equals(qi.quest.key)) {
+                        globalActive++;
+                    }
+                }
+            }
+            if (globalActive >= quest.maxsimultaneous) continue;
+
+            double chancePerInteract = quest.chanceperhour <= 0 ? 1.0 : Math.min(1.0, quest.chanceperhour / 24.0);
+            if (player.getRandom().nextDouble() > chancePerInteract) continue;
+
+            return quest;
+        }
+
+        return null;
     }
 }

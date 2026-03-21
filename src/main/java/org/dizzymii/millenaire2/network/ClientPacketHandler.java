@@ -32,6 +32,11 @@ public final class ClientPacketHandler {
     @Nullable public static QuestClientEntry cachedQuest = null;
     public static int cachedQuestVillagerEntityId = -1;
 
+    // Client-side cache of profile values
+    public static final java.util.Map<Point, Integer> cachedVillageReputation = new java.util.HashMap<>();
+    public static final java.util.Map<String, Integer> cachedCultureReputation = new java.util.HashMap<>();
+    public static final java.util.Map<String, Integer> cachedCultureLanguage = new java.util.HashMap<>();
+
     private ClientPacketHandler() {}
 
     public static void handleGenericS2C(MillGenericS2CPayload payload) {
@@ -68,6 +73,9 @@ public final class ClientPacketHandler {
                 break;
             case MillPacketIds.PACKET_QUESTINSTANCE:
                 handleQuestInstance(payload.data());
+                break;
+            case MillPacketIds.PACKET_QUESTINSTANCE_DESTROY:
+                handleQuestInstanceDestroy(payload.data());
                 break;
             case MillPacketIds.PACKET_VILLAGER_SENTENCE:
                 handleVillagerSentence(payload.data());
@@ -128,6 +136,21 @@ public final class ClientPacketHandler {
             }
         } catch (Exception e) {
             MillLog.error("ClientPacketHandler", "Error handling villager sync", e);
+        } finally {
+            r.release();
+        }
+    }
+
+    private static void handleQuestInstanceDestroy(byte[] data) {
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            String questKey = r.readString();
+            if (cachedQuest != null && cachedQuest.questKey.equals(questKey)) {
+                cachedQuest = null;
+                cachedQuestVillagerEntityId = -1;
+            }
+        } catch (Exception e) {
+            MillLog.error("ClientPacketHandler", "Error handling quest destroy", e);
         } finally {
             r.release();
         }
@@ -218,9 +241,43 @@ public final class ClientPacketHandler {
         PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
         try {
             int readUpdateType = r.readInt();
-            // Apply reputation/language data to client-side profile cache
-            MillLog.minor("ClientPacketHandler", "Received profile update type: " + readUpdateType);
-            // Profile data is logged; full client-side caching will use a mirror of UserProfile
+
+            if (readUpdateType == org.dizzymii.millenaire2.world.UserProfile.UPDATE_ALL
+                    || readUpdateType == org.dizzymii.millenaire2.world.UserProfile.UPDATE_REPUTATION) {
+                cachedVillageReputation.clear();
+                cachedCultureReputation.clear();
+
+                int villageCount = r.readInt();
+                for (int i = 0; i < villageCount; i++) {
+                    int x = r.readInt();
+                    int y = r.readInt();
+                    int z = r.readInt();
+                    int rep = r.readInt();
+                    cachedVillageReputation.put(new Point(x, y, z), rep);
+                }
+
+                int cultureRepCount = r.readInt();
+                for (int i = 0; i < cultureRepCount; i++) {
+                    String key = r.readString();
+                    int rep = r.readInt();
+                    cachedCultureReputation.put(key, rep);
+                }
+            }
+
+            if (readUpdateType == org.dizzymii.millenaire2.world.UserProfile.UPDATE_ALL
+                    || readUpdateType == org.dizzymii.millenaire2.world.UserProfile.UPDATE_LANGUAGE) {
+                cachedCultureLanguage.clear();
+                int languageCount = r.readInt();
+                for (int i = 0; i < languageCount; i++) {
+                    String key = r.readString();
+                    int level = r.readInt();
+                    cachedCultureLanguage.put(key, level);
+                }
+            }
+
+            MillLog.minor("ClientPacketHandler", "Received profile update type: " + readUpdateType
+                    + ", villages=" + cachedVillageReputation.size()
+                    + ", cultureLang=" + cachedCultureLanguage.size());
         } catch (Exception e) {
             MillLog.error("ClientPacketHandler", "Error handling profile sync", e);
         } finally {

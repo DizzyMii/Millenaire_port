@@ -3,6 +3,8 @@ package org.dizzymii.millenaire2.network;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.quest.QuestInstance;
+import org.dizzymii.millenaire2.quest.QuestStep;
 import org.dizzymii.millenaire2.network.payloads.MillGenericS2CPayload;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.world.UserProfile;
@@ -56,6 +58,36 @@ public final class ServerPacketSender {
 
         MillGenericS2CPayload payload = new MillGenericS2CPayload(
                 MillPacketIds.PACKET_VILLAGER, 0, w.toByteArray());
+        PacketDistributor.sendToPlayer(target, payload);
+    }
+
+    public static void sendQuestInstance(ServerPlayer target, QuestInstance qi, int villagerEntityId, boolean isOffer) {
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        QuestStep step = qi.getCurrentStep();
+        org.dizzymii.millenaire2.quest.Quest quest = qi.quest;
+        String questKey = quest != null && quest.key != null ? quest.key : "";
+        int totalSteps = quest != null ? quest.steps.size() : 0;
+
+        w.writeString(questKey);
+        w.writeInt(qi.currentStep);
+        w.writeInt(totalSteps);
+        w.writeString(step != null ? step.getDescription("en") : "");
+        w.writeString(step != null ? step.getLabel("en") : "");
+        w.writeInt(step != null ? step.rewardMoney : 0);
+        w.writeInt(step != null ? step.rewardReputation : 0);
+        w.writeInt(villagerEntityId);
+        w.writeBoolean(isOffer);
+
+        MillGenericS2CPayload payload = new MillGenericS2CPayload(
+                MillPacketIds.PACKET_QUESTINSTANCE, 0, w.toByteArray());
+        PacketDistributor.sendToPlayer(target, payload);
+    }
+
+    public static void sendQuestInstanceDestroy(ServerPlayer target, String questKey) {
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeString(questKey);
+        MillGenericS2CPayload payload = new MillGenericS2CPayload(
+                MillPacketIds.PACKET_QUESTINSTANCE_DESTROY, 0, w.toByteArray());
         PacketDistributor.sendToPlayer(target, payload);
     }
 
@@ -203,14 +235,32 @@ public final class ServerPacketSender {
     }
 
     private static void writeReputations(PacketDataHelper.Writer w, UserProfile profile) {
-        // Culture reputations — write count then key/value pairs
-        // Profile doesn't expose its maps directly, so we write what's accessible
-        // For now write an empty count — will be filled when profile maps are exposed
-        w.writeInt(0);
+        java.util.Map<Point, Integer> villages = profile.getVillageReputations();
+        java.util.Map<String, Integer> cultures = profile.getCultureReputations();
+
+        w.writeInt(villages.size());
+        for (java.util.Map.Entry<Point, Integer> entry : villages.entrySet()) {
+            Point p = entry.getKey();
+            w.writeInt(p.x);
+            w.writeInt(p.y);
+            w.writeInt(p.z);
+            w.writeInt(entry.getValue());
+        }
+
+        w.writeInt(cultures.size());
+        for (java.util.Map.Entry<String, Integer> entry : cultures.entrySet()) {
+            w.writeString(entry.getKey());
+            w.writeInt(entry.getValue());
+        }
     }
 
     private static void writeLanguages(PacketDataHelper.Writer w, UserProfile profile) {
-        w.writeInt(0);
+        java.util.Map<String, Integer> langs = profile.getCultureLanguages();
+        w.writeInt(langs.size());
+        for (java.util.Map.Entry<String, Integer> entry : langs.entrySet()) {
+            w.writeString(entry.getKey());
+            w.writeInt(entry.getValue());
+        }
     }
 
     // ========== Data classes ==========

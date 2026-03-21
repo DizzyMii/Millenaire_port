@@ -241,6 +241,9 @@ public class MillWorldData extends SavedData {
                     data.profiles.put(p.uuid, p);
                 }
             }
+            for (UserProfile p : data.profiles.values()) {
+                p.resolvePendingQuestInstances(data);
+            }
         }
 
         MillLog.minor("MillWorldData", "Loaded " + data.buildings.size() + " buildings, " + data.profiles.size() + " profiles.");
