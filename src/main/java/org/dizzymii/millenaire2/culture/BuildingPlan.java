@@ -308,6 +308,7 @@ public class BuildingPlan {
     public Map<String, Integer> computeResourceCost() {
         Map<String, Integer> costs = new HashMap<>();
         for (BuildingBlock bb : resolveBuildingBlocks()) {
+            if (bb.freePlacement) continue;
             BlockState state = bb.blockState;
             if (state == null || state.is(Blocks.AIR)) {
                 continue;
@@ -329,11 +330,14 @@ public class BuildingPlan {
         bb.y = y;
         bb.z = z;
 
+        // --- Agriculture soil types ---
         if (specialType.equals(SpecialPointTypeList.bsoil)
                 || specialType.equals(SpecialPointTypeList.bmaizesoil)
                 || specialType.equals(SpecialPointTypeList.bcarrotsoil)
                 || specialType.equals(SpecialPointTypeList.bpotatosoil)
-                || specialType.equals(SpecialPointTypeList.bflowersoil)) {
+                || specialType.equals(SpecialPointTypeList.bflowersoil)
+                || specialType.equals(SpecialPointTypeList.bturmericsoil)
+                || specialType.equals(SpecialPointTypeList.bcottonsoil)) {
             bb.blockState = Blocks.FARMLAND.defaultBlockState();
             return bb;
         }
@@ -344,8 +348,127 @@ public class BuildingPlan {
             return bb;
         }
 
+        if (specialType.equals(SpecialPointTypeList.bnetherwartsoil)) {
+            bb.blockState = Blocks.SOUL_SAND.defaultBlockState();
+            return bb;
+        }
+
+        if (specialType.equals(SpecialPointTypeList.bvinesoil)) {
+            bb.blockState = Blocks.DIRT.defaultBlockState();
+            return bb;
+        }
+
+        if (specialType.equals(SpecialPointTypeList.bcacaospot)) {
+            bb.blockState = Blocks.JUNGLE_LOG.defaultBlockState();
+            return bb;
+        }
+
         if (specialType.equals(SpecialPointTypeList.bgrass)) {
             bb.blockState = Blocks.GRASS_BLOCK.defaultBlockState();
+            return bb;
+        }
+
+        // --- Guessed blocks (orientation-sensitive, placed second pass) ---
+        if (specialType.equals(SpecialPointTypeList.btorchGuess)) {
+            bb.blockState = Blocks.TORCH.defaultBlockState();
+            bb.secondStep = true;
+            return bb;
+        }
+
+        if (specialType.equals(SpecialPointTypeList.bladderGuess)) {
+            bb.blockState = Blocks.LADDER.defaultBlockState();
+            bb.secondStep = true;
+            return bb;
+        }
+
+        if (specialType.equals(SpecialPointTypeList.bsignwallGuess)) {
+            bb.blockState = Blocks.OAK_WALL_SIGN.defaultBlockState();
+            bb.secondStep = true;
+            return bb;
+        }
+
+        if (specialType.equals(SpecialPointTypeList.bfurnaceGuess)) {
+            bb.blockState = Blocks.FURNACE.defaultBlockState();
+            return bb;
+        }
+
+        // --- Chest positions → actual chest blocks ---
+        if (specialType.startsWith("mainchest") || specialType.startsWith("lockedchest")) {
+            bb.blockState = Blocks.CHEST.defaultBlockState();
+            bb.secondStep = true;
+            return bb;
+        }
+
+        // --- Free blocks (no resource cost — map to real block for placement) ---
+        if (specialType.equals(SpecialPointTypeList.bfreestone)) {
+            bb.blockState = Blocks.STONE.defaultBlockState();
+            bb.freePlacement = true;
+            return bb;
+        }
+        if (specialType.equals(SpecialPointTypeList.bfreesand)) {
+            bb.blockState = Blocks.SAND.defaultBlockState();
+            bb.freePlacement = true;
+            return bb;
+        }
+        if (specialType.equals(SpecialPointTypeList.bfreesandstone)) {
+            bb.blockState = Blocks.SANDSTONE.defaultBlockState();
+            bb.freePlacement = true;
+            return bb;
+        }
+        if (specialType.equals(SpecialPointTypeList.bfreegravel)) {
+            bb.blockState = Blocks.GRAVEL.defaultBlockState();
+            bb.freePlacement = true;
+            return bb;
+        }
+        if (specialType.equals(SpecialPointTypeList.bfreewool)) {
+            bb.blockState = Blocks.WHITE_WOOL.defaultBlockState();
+            bb.freePlacement = true;
+            return bb;
+        }
+        if (specialType.equals(SpecialPointTypeList.bfreecobblestone)) {
+            bb.blockState = Blocks.COBBLESTONE.defaultBlockState();
+            bb.freePlacement = true;
+            return bb;
+        }
+        if (specialType.equals(SpecialPointTypeList.bfreestonebrick)) {
+            bb.blockState = Blocks.STONE_BRICKS.defaultBlockState();
+            bb.freePlacement = true;
+            return bb;
+        }
+        if (specialType.equals(SpecialPointTypeList.bfreepaintedbrick)) {
+            bb.blockState = Blocks.BRICKS.defaultBlockState();
+            bb.freePlacement = true;
+            return bb;
+        }
+        if (specialType.equals(SpecialPointTypeList.bfreegrass_block)) {
+            bb.blockState = Blocks.GRASS_BLOCK.defaultBlockState();
+            bb.freePlacement = true;
+            return bb;
+        }
+
+        // --- Terrain specials that don't place blocks ---
+        if (specialType.equals(SpecialPointTypeList.bempty)
+                || specialType.equals(SpecialPointTypeList.bpreserveground)
+                || specialType.equals(SpecialPointTypeList.ballbuttrees)) {
+            return null;
+        }
+
+        // --- Functional position markers (no block, just position tracking) ---
+        if (specialType.equals(SpecialPointTypeList.bsleepingPos)
+                || specialType.equals(SpecialPointTypeList.bsellingPos)
+                || specialType.equals(SpecialPointTypeList.bcraftingPos)
+                || specialType.equals(SpecialPointTypeList.bdefendingPos)
+                || specialType.equals(SpecialPointTypeList.bshelterPos)
+                || specialType.equals(SpecialPointTypeList.bpathStartPos)
+                || specialType.equals(SpecialPointTypeList.bleasurePos)
+                || specialType.equals(SpecialPointTypeList.bstall)) {
+            return null;
+        }
+
+        // --- Mod-specific agriculture that needs special handling ---
+        if (specialType.equals(SpecialPointTypeList.bsilkwormblock)
+                || specialType.equals(SpecialPointTypeList.bsnailsoilblock)) {
+            bb.blockState = Blocks.DIRT.defaultBlockState();
             return bb;
         }
 

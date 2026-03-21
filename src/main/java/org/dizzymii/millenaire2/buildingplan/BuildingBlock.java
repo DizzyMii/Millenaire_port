@@ -18,6 +18,7 @@ public class BuildingBlock {
     @Nullable public BlockState blockState;
     public int x, y, z;
     public boolean secondStep = false;
+    public boolean freePlacement = false;
 
     public BuildingBlock() {}
 

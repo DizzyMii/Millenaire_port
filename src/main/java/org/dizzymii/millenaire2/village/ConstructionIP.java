@@ -206,6 +206,7 @@ public class ConstructionIP {
         bt.putInt("y", bb.y);
         bt.putInt("z", bb.z);
         bt.putBoolean("second", bb.secondStep);
+        bt.putBoolean("free", bb.freePlacement);
         if (bb.blockState != null) {
             bt.put("state", NbtUtils.writeBlockState(bb.blockState));
         }
@@ -218,6 +219,7 @@ public class ConstructionIP {
         bb.y = bt.getInt("y");
         bb.z = bt.getInt("z");
         bb.secondStep = bt.contains("second") ? bt.getBoolean("second") : defaultSecond;
+        bb.freePlacement = bt.getBoolean("free");
         if (bt.contains("state", Tag.TAG_COMPOUND)) {
             bb.blockState = NbtUtils.readBlockState(BuiltInRegistries.BLOCK.asLookup(), bt.getCompound("state"));
         }
