@@ -8,7 +8,9 @@ import net.minecraft.world.item.PickaxeItem;
 import net.minecraft.world.item.ShovelItem;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tiers;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
+import net.neoforged.neoforge.registries.DeferredRegister;
 import org.dizzymii.millenaire2.Millenaire2;
 import org.dizzymii.millenaire2.block.MillBlocks;
 
@@ -18,12 +20,14 @@ import java.util.function.Supplier;
 
 /**
  * Central registry for all Millénaire items.
- * Items are registered via DeferredRegister in Millenaire2.ITEMS.
+ * Items are registered via DeferredRegister in ITEMS.
  *
  * Ported from org.millenaire.common.item.MillItems (Forge 1.12.2).
  * Armor items are stubbed as plain Items — full ArmorMaterial registration in a later phase.
  */
 public class MillItems {
+
+    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(Millenaire2.MODID);
 
     /** Tracks all registered items for creative tab population. */
     public static final List<DeferredItem<? extends Item>> ALL_ITEMS = new ArrayList<>();
@@ -316,162 +320,162 @@ public class MillItems {
 
     private static void registerBlockItems() {
         // Decorative stone
-        Millenaire2.ITEMS.registerSimpleBlockItem("stone_decoration", MillBlocks.STONE_DECORATION);
-        Millenaire2.ITEMS.registerSimpleBlockItem("cooked_brick", MillBlocks.COOKED_BRICK);
+        ITEMS.registerSimpleBlockItem("stone_decoration", MillBlocks.STONE_DECORATION);
+        ITEMS.registerSimpleBlockItem("cooked_brick", MillBlocks.COOKED_BRICK);
 
         // Painted bricks
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_white", MillBlocks.PAINTED_BRICK_WHITE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_orange", MillBlocks.PAINTED_BRICK_ORANGE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_magenta", MillBlocks.PAINTED_BRICK_MAGENTA);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_light_blue", MillBlocks.PAINTED_BRICK_LIGHT_BLUE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_yellow", MillBlocks.PAINTED_BRICK_YELLOW);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_lime", MillBlocks.PAINTED_BRICK_LIME);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_pink", MillBlocks.PAINTED_BRICK_PINK);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_gray", MillBlocks.PAINTED_BRICK_GRAY);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_light_gray", MillBlocks.PAINTED_BRICK_LIGHT_GRAY);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_cyan", MillBlocks.PAINTED_BRICK_CYAN);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_purple", MillBlocks.PAINTED_BRICK_PURPLE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_blue", MillBlocks.PAINTED_BRICK_BLUE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_brown", MillBlocks.PAINTED_BRICK_BROWN);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_green", MillBlocks.PAINTED_BRICK_GREEN);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_red", MillBlocks.PAINTED_BRICK_RED);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_black", MillBlocks.PAINTED_BRICK_BLACK);
+        ITEMS.registerSimpleBlockItem("painted_brick_white", MillBlocks.PAINTED_BRICK_WHITE);
+        ITEMS.registerSimpleBlockItem("painted_brick_orange", MillBlocks.PAINTED_BRICK_ORANGE);
+        ITEMS.registerSimpleBlockItem("painted_brick_magenta", MillBlocks.PAINTED_BRICK_MAGENTA);
+        ITEMS.registerSimpleBlockItem("painted_brick_light_blue", MillBlocks.PAINTED_BRICK_LIGHT_BLUE);
+        ITEMS.registerSimpleBlockItem("painted_brick_yellow", MillBlocks.PAINTED_BRICK_YELLOW);
+        ITEMS.registerSimpleBlockItem("painted_brick_lime", MillBlocks.PAINTED_BRICK_LIME);
+        ITEMS.registerSimpleBlockItem("painted_brick_pink", MillBlocks.PAINTED_BRICK_PINK);
+        ITEMS.registerSimpleBlockItem("painted_brick_gray", MillBlocks.PAINTED_BRICK_GRAY);
+        ITEMS.registerSimpleBlockItem("painted_brick_light_gray", MillBlocks.PAINTED_BRICK_LIGHT_GRAY);
+        ITEMS.registerSimpleBlockItem("painted_brick_cyan", MillBlocks.PAINTED_BRICK_CYAN);
+        ITEMS.registerSimpleBlockItem("painted_brick_purple", MillBlocks.PAINTED_BRICK_PURPLE);
+        ITEMS.registerSimpleBlockItem("painted_brick_blue", MillBlocks.PAINTED_BRICK_BLUE);
+        ITEMS.registerSimpleBlockItem("painted_brick_brown", MillBlocks.PAINTED_BRICK_BROWN);
+        ITEMS.registerSimpleBlockItem("painted_brick_green", MillBlocks.PAINTED_BRICK_GREEN);
+        ITEMS.registerSimpleBlockItem("painted_brick_red", MillBlocks.PAINTED_BRICK_RED);
+        ITEMS.registerSimpleBlockItem("painted_brick_black", MillBlocks.PAINTED_BRICK_BLACK);
 
         // Decorated painted bricks
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_white", MillBlocks.PAINTED_BRICK_DECO_WHITE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_orange", MillBlocks.PAINTED_BRICK_DECO_ORANGE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_magenta", MillBlocks.PAINTED_BRICK_DECO_MAGENTA);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_light_blue", MillBlocks.PAINTED_BRICK_DECO_LIGHT_BLUE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_yellow", MillBlocks.PAINTED_BRICK_DECO_YELLOW);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_lime", MillBlocks.PAINTED_BRICK_DECO_LIME);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_pink", MillBlocks.PAINTED_BRICK_DECO_PINK);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_gray", MillBlocks.PAINTED_BRICK_DECO_GRAY);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_light_gray", MillBlocks.PAINTED_BRICK_DECO_LIGHT_GRAY);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_cyan", MillBlocks.PAINTED_BRICK_DECO_CYAN);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_purple", MillBlocks.PAINTED_BRICK_DECO_PURPLE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_blue", MillBlocks.PAINTED_BRICK_DECO_BLUE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_brown", MillBlocks.PAINTED_BRICK_DECO_BROWN);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_green", MillBlocks.PAINTED_BRICK_DECO_GREEN);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_red", MillBlocks.PAINTED_BRICK_DECO_RED);
-        Millenaire2.ITEMS.registerSimpleBlockItem("painted_brick_deco_black", MillBlocks.PAINTED_BRICK_DECO_BLACK);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_white", MillBlocks.PAINTED_BRICK_DECO_WHITE);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_orange", MillBlocks.PAINTED_BRICK_DECO_ORANGE);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_magenta", MillBlocks.PAINTED_BRICK_DECO_MAGENTA);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_light_blue", MillBlocks.PAINTED_BRICK_DECO_LIGHT_BLUE);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_yellow", MillBlocks.PAINTED_BRICK_DECO_YELLOW);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_lime", MillBlocks.PAINTED_BRICK_DECO_LIME);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_pink", MillBlocks.PAINTED_BRICK_DECO_PINK);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_gray", MillBlocks.PAINTED_BRICK_DECO_GRAY);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_light_gray", MillBlocks.PAINTED_BRICK_DECO_LIGHT_GRAY);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_cyan", MillBlocks.PAINTED_BRICK_DECO_CYAN);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_purple", MillBlocks.PAINTED_BRICK_DECO_PURPLE);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_blue", MillBlocks.PAINTED_BRICK_DECO_BLUE);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_brown", MillBlocks.PAINTED_BRICK_DECO_BROWN);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_green", MillBlocks.PAINTED_BRICK_DECO_GREEN);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_red", MillBlocks.PAINTED_BRICK_DECO_RED);
+        ITEMS.registerSimpleBlockItem("painted_brick_deco_black", MillBlocks.PAINTED_BRICK_DECO_BLACK);
 
         // Wood
-        Millenaire2.ITEMS.registerSimpleBlockItem("timber_frame_plain", MillBlocks.TIMBER_FRAME_PLAIN);
-        Millenaire2.ITEMS.registerSimpleBlockItem("timber_frame_cross", MillBlocks.TIMBER_FRAME_CROSS);
-        Millenaire2.ITEMS.registerSimpleBlockItem("thatch", MillBlocks.THATCH);
+        ITEMS.registerSimpleBlockItem("timber_frame_plain", MillBlocks.TIMBER_FRAME_PLAIN);
+        ITEMS.registerSimpleBlockItem("timber_frame_cross", MillBlocks.TIMBER_FRAME_CROSS);
+        ITEMS.registerSimpleBlockItem("thatch", MillBlocks.THATCH);
 
         // Earth
-        Millenaire2.ITEMS.registerSimpleBlockItem("mud_brick", MillBlocks.MUD_BRICK);
-        Millenaire2.ITEMS.registerSimpleBlockItem("mud_brick_extended", MillBlocks.MUD_BRICK_EXTENDED);
+        ITEMS.registerSimpleBlockItem("mud_brick", MillBlocks.MUD_BRICK);
+        ITEMS.registerSimpleBlockItem("mud_brick_extended", MillBlocks.MUD_BRICK_EXTENDED);
 
         // Sandstone
-        Millenaire2.ITEMS.registerSimpleBlockItem("sandstone_carved", MillBlocks.SANDSTONE_CARVED);
-        Millenaire2.ITEMS.registerSimpleBlockItem("sandstone_red_carved", MillBlocks.SANDSTONE_RED_CARVED);
-        Millenaire2.ITEMS.registerSimpleBlockItem("sandstone_ochre_carved", MillBlocks.SANDSTONE_OCHRE_CARVED);
-        Millenaire2.ITEMS.registerSimpleBlockItem("sandstone_decorated", MillBlocks.SANDSTONE_DECORATED);
-        Millenaire2.ITEMS.registerSimpleBlockItem("byzantine_stone_ornament", MillBlocks.BYZANTINE_STONE_ORNAMENT);
-        Millenaire2.ITEMS.registerSimpleBlockItem("byzantine_sandstone_ornament", MillBlocks.BYZANTINE_SANDSTONE_ORNAMENT);
+        ITEMS.registerSimpleBlockItem("sandstone_carved", MillBlocks.SANDSTONE_CARVED);
+        ITEMS.registerSimpleBlockItem("sandstone_red_carved", MillBlocks.SANDSTONE_RED_CARVED);
+        ITEMS.registerSimpleBlockItem("sandstone_ochre_carved", MillBlocks.SANDSTONE_OCHRE_CARVED);
+        ITEMS.registerSimpleBlockItem("sandstone_decorated", MillBlocks.SANDSTONE_DECORATED);
+        ITEMS.registerSimpleBlockItem("byzantine_stone_ornament", MillBlocks.BYZANTINE_STONE_ORNAMENT);
+        ITEMS.registerSimpleBlockItem("byzantine_sandstone_ornament", MillBlocks.BYZANTINE_SANDSTONE_ORNAMENT);
 
         // Tiles
-        Millenaire2.ITEMS.registerSimpleBlockItem("byzantine_tiles", MillBlocks.BYZANTINE_TILES);
-        Millenaire2.ITEMS.registerSimpleBlockItem("byzantine_stone_tiles", MillBlocks.BYZANTINE_STONE_TILES);
-        Millenaire2.ITEMS.registerSimpleBlockItem("byzantine_sandstone_tiles", MillBlocks.BYZANTINE_SANDSTONE_TILES);
-        Millenaire2.ITEMS.registerSimpleBlockItem("gray_tiles", MillBlocks.GRAY_TILES);
-        Millenaire2.ITEMS.registerSimpleBlockItem("green_tiles", MillBlocks.GREEN_TILES);
-        Millenaire2.ITEMS.registerSimpleBlockItem("red_tiles", MillBlocks.RED_TILES);
+        ITEMS.registerSimpleBlockItem("byzantine_tiles", MillBlocks.BYZANTINE_TILES);
+        ITEMS.registerSimpleBlockItem("byzantine_stone_tiles", MillBlocks.BYZANTINE_STONE_TILES);
+        ITEMS.registerSimpleBlockItem("byzantine_sandstone_tiles", MillBlocks.BYZANTINE_SANDSTONE_TILES);
+        ITEMS.registerSimpleBlockItem("gray_tiles", MillBlocks.GRAY_TILES);
+        ITEMS.registerSimpleBlockItem("green_tiles", MillBlocks.GREEN_TILES);
+        ITEMS.registerSimpleBlockItem("red_tiles", MillBlocks.RED_TILES);
 
         // Stairs
-        Millenaire2.ITEMS.registerSimpleBlockItem("stairs_timberframe", MillBlocks.STAIRS_TIMBERFRAME);
-        Millenaire2.ITEMS.registerSimpleBlockItem("stairs_mudbrick", MillBlocks.STAIRS_MUDBRICK);
-        Millenaire2.ITEMS.registerSimpleBlockItem("stairs_cookedbrick", MillBlocks.STAIRS_COOKEDBRICK);
-        Millenaire2.ITEMS.registerSimpleBlockItem("stairs_thatch", MillBlocks.STAIRS_THATCH);
-        Millenaire2.ITEMS.registerSimpleBlockItem("stairs_sandstone_carved", MillBlocks.STAIRS_SANDSTONE_CARVED);
-        Millenaire2.ITEMS.registerSimpleBlockItem("stairs_sandstone_red_carved", MillBlocks.STAIRS_SANDSTONE_RED_CARVED);
-        Millenaire2.ITEMS.registerSimpleBlockItem("stairs_sandstone_ochre_carved", MillBlocks.STAIRS_SANDSTONE_OCHRE_CARVED);
-        Millenaire2.ITEMS.registerSimpleBlockItem("stairs_byzantine_tiles", MillBlocks.STAIRS_BYZANTINE_TILES);
-        Millenaire2.ITEMS.registerSimpleBlockItem("stairs_gray_tiles", MillBlocks.STAIRS_GRAY_TILES);
-        Millenaire2.ITEMS.registerSimpleBlockItem("stairs_green_tiles", MillBlocks.STAIRS_GREEN_TILES);
-        Millenaire2.ITEMS.registerSimpleBlockItem("stairs_red_tiles", MillBlocks.STAIRS_RED_TILES);
+        ITEMS.registerSimpleBlockItem("stairs_timberframe", MillBlocks.STAIRS_TIMBERFRAME);
+        ITEMS.registerSimpleBlockItem("stairs_mudbrick", MillBlocks.STAIRS_MUDBRICK);
+        ITEMS.registerSimpleBlockItem("stairs_cookedbrick", MillBlocks.STAIRS_COOKEDBRICK);
+        ITEMS.registerSimpleBlockItem("stairs_thatch", MillBlocks.STAIRS_THATCH);
+        ITEMS.registerSimpleBlockItem("stairs_sandstone_carved", MillBlocks.STAIRS_SANDSTONE_CARVED);
+        ITEMS.registerSimpleBlockItem("stairs_sandstone_red_carved", MillBlocks.STAIRS_SANDSTONE_RED_CARVED);
+        ITEMS.registerSimpleBlockItem("stairs_sandstone_ochre_carved", MillBlocks.STAIRS_SANDSTONE_OCHRE_CARVED);
+        ITEMS.registerSimpleBlockItem("stairs_byzantine_tiles", MillBlocks.STAIRS_BYZANTINE_TILES);
+        ITEMS.registerSimpleBlockItem("stairs_gray_tiles", MillBlocks.STAIRS_GRAY_TILES);
+        ITEMS.registerSimpleBlockItem("stairs_green_tiles", MillBlocks.STAIRS_GREEN_TILES);
+        ITEMS.registerSimpleBlockItem("stairs_red_tiles", MillBlocks.STAIRS_RED_TILES);
 
         // Slabs
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_wood_deco", MillBlocks.SLAB_WOOD_DECO);
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_stone_deco", MillBlocks.SLAB_STONE_DECO);
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_sandstone_carved", MillBlocks.SLAB_SANDSTONE_CARVED);
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_sandstone_red_carved", MillBlocks.SLAB_SANDSTONE_RED_CARVED);
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_sandstone_ochre_carved", MillBlocks.SLAB_SANDSTONE_OCHRE_CARVED);
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_byzantine_tiles", MillBlocks.SLAB_BYZANTINE_TILES);
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_gray_tiles", MillBlocks.SLAB_GRAY_TILES);
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_green_tiles", MillBlocks.SLAB_GREEN_TILES);
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_red_tiles", MillBlocks.SLAB_RED_TILES);
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_path_dirt", MillBlocks.SLAB_PATH_DIRT);
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_path_gravel", MillBlocks.SLAB_PATH_GRAVEL);
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_path_slabs", MillBlocks.SLAB_PATH_SLABS);
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_path_sandstone", MillBlocks.SLAB_PATH_SANDSTONE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_path_gravel_slabs", MillBlocks.SLAB_PATH_GRAVEL_SLABS);
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_path_ochre_tiles", MillBlocks.SLAB_PATH_OCHRE_TILES);
-        Millenaire2.ITEMS.registerSimpleBlockItem("slab_path_snow", MillBlocks.SLAB_PATH_SNOW);
+        ITEMS.registerSimpleBlockItem("slab_wood_deco", MillBlocks.SLAB_WOOD_DECO);
+        ITEMS.registerSimpleBlockItem("slab_stone_deco", MillBlocks.SLAB_STONE_DECO);
+        ITEMS.registerSimpleBlockItem("slab_sandstone_carved", MillBlocks.SLAB_SANDSTONE_CARVED);
+        ITEMS.registerSimpleBlockItem("slab_sandstone_red_carved", MillBlocks.SLAB_SANDSTONE_RED_CARVED);
+        ITEMS.registerSimpleBlockItem("slab_sandstone_ochre_carved", MillBlocks.SLAB_SANDSTONE_OCHRE_CARVED);
+        ITEMS.registerSimpleBlockItem("slab_byzantine_tiles", MillBlocks.SLAB_BYZANTINE_TILES);
+        ITEMS.registerSimpleBlockItem("slab_gray_tiles", MillBlocks.SLAB_GRAY_TILES);
+        ITEMS.registerSimpleBlockItem("slab_green_tiles", MillBlocks.SLAB_GREEN_TILES);
+        ITEMS.registerSimpleBlockItem("slab_red_tiles", MillBlocks.SLAB_RED_TILES);
+        ITEMS.registerSimpleBlockItem("slab_path_dirt", MillBlocks.SLAB_PATH_DIRT);
+        ITEMS.registerSimpleBlockItem("slab_path_gravel", MillBlocks.SLAB_PATH_GRAVEL);
+        ITEMS.registerSimpleBlockItem("slab_path_slabs", MillBlocks.SLAB_PATH_SLABS);
+        ITEMS.registerSimpleBlockItem("slab_path_sandstone", MillBlocks.SLAB_PATH_SANDSTONE);
+        ITEMS.registerSimpleBlockItem("slab_path_gravel_slabs", MillBlocks.SLAB_PATH_GRAVEL_SLABS);
+        ITEMS.registerSimpleBlockItem("slab_path_ochre_tiles", MillBlocks.SLAB_PATH_OCHRE_TILES);
+        ITEMS.registerSimpleBlockItem("slab_path_snow", MillBlocks.SLAB_PATH_SNOW);
 
         // Walls
-        Millenaire2.ITEMS.registerSimpleBlockItem("wall_mud_brick", MillBlocks.WALL_MUD_BRICK);
-        Millenaire2.ITEMS.registerSimpleBlockItem("wall_sandstone_carved", MillBlocks.WALL_SANDSTONE_CARVED);
-        Millenaire2.ITEMS.registerSimpleBlockItem("wall_sandstone_red_carved", MillBlocks.WALL_SANDSTONE_RED_CARVED);
-        Millenaire2.ITEMS.registerSimpleBlockItem("wall_sandstone_ochre_carved", MillBlocks.WALL_SANDSTONE_OCHRE_CARVED);
-        Millenaire2.ITEMS.registerSimpleBlockItem("wall_snow", MillBlocks.WALL_SNOW);
+        ITEMS.registerSimpleBlockItem("wall_mud_brick", MillBlocks.WALL_MUD_BRICK);
+        ITEMS.registerSimpleBlockItem("wall_sandstone_carved", MillBlocks.WALL_SANDSTONE_CARVED);
+        ITEMS.registerSimpleBlockItem("wall_sandstone_red_carved", MillBlocks.WALL_SANDSTONE_RED_CARVED);
+        ITEMS.registerSimpleBlockItem("wall_sandstone_ochre_carved", MillBlocks.WALL_SANDSTONE_OCHRE_CARVED);
+        ITEMS.registerSimpleBlockItem("wall_snow", MillBlocks.WALL_SNOW);
 
         // Panes / Bars
-        Millenaire2.ITEMS.registerSimpleBlockItem("paper_wall", MillBlocks.PAPER_WALL);
-        Millenaire2.ITEMS.registerSimpleBlockItem("wooden_bars", MillBlocks.WOODEN_BARS);
-        Millenaire2.ITEMS.registerSimpleBlockItem("wooden_bars_indian", MillBlocks.WOODEN_BARS_INDIAN);
-        Millenaire2.ITEMS.registerSimpleBlockItem("wooden_bars_rosette", MillBlocks.WOODEN_BARS_ROSETTE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("wooden_bars_dark", MillBlocks.WOODEN_BARS_DARK);
+        ITEMS.registerSimpleBlockItem("paper_wall", MillBlocks.PAPER_WALL);
+        ITEMS.registerSimpleBlockItem("wooden_bars", MillBlocks.WOODEN_BARS);
+        ITEMS.registerSimpleBlockItem("wooden_bars_indian", MillBlocks.WOODEN_BARS_INDIAN);
+        ITEMS.registerSimpleBlockItem("wooden_bars_rosette", MillBlocks.WOODEN_BARS_ROSETTE);
+        ITEMS.registerSimpleBlockItem("wooden_bars_dark", MillBlocks.WOODEN_BARS_DARK);
 
         // Functional
-        Millenaire2.ITEMS.registerSimpleBlockItem("wet_brick", MillBlocks.WET_BRICK);
-        Millenaire2.ITEMS.registerSimpleBlockItem("silk_worm", MillBlocks.SILK_WORM_BLOCK);
-        Millenaire2.ITEMS.registerSimpleBlockItem("snail_soil", MillBlocks.SNAIL_SOIL);
-        Millenaire2.ITEMS.registerSimpleBlockItem("sod", MillBlocks.SOD);
-        Millenaire2.ITEMS.registerSimpleBlockItem("alchemist_explosive", MillBlocks.ALCHEMIST_EXPLOSIVE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("rosette", MillBlocks.ROSETTE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("stained_glass", MillBlocks.STAINED_GLASS);
-        Millenaire2.ITEMS.registerSimpleBlockItem("mill_statue", MillBlocks.MILL_STATUE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("ice_brick", MillBlocks.ICE_BRICK);
-        Millenaire2.ITEMS.registerSimpleBlockItem("snow_brick", MillBlocks.SNOW_BRICK);
+        ITEMS.registerSimpleBlockItem("wet_brick", MillBlocks.WET_BRICK);
+        ITEMS.registerSimpleBlockItem("silk_worm", MillBlocks.SILK_WORM_BLOCK);
+        ITEMS.registerSimpleBlockItem("snail_soil", MillBlocks.SNAIL_SOIL);
+        ITEMS.registerSimpleBlockItem("sod", MillBlocks.SOD);
+        ITEMS.registerSimpleBlockItem("alchemist_explosive", MillBlocks.ALCHEMIST_EXPLOSIVE);
+        ITEMS.registerSimpleBlockItem("rosette", MillBlocks.ROSETTE);
+        ITEMS.registerSimpleBlockItem("stained_glass", MillBlocks.STAINED_GLASS);
+        ITEMS.registerSimpleBlockItem("mill_statue", MillBlocks.MILL_STATUE);
+        ITEMS.registerSimpleBlockItem("ice_brick", MillBlocks.ICE_BRICK);
+        ITEMS.registerSimpleBlockItem("snow_brick", MillBlocks.SNOW_BRICK);
 
         // Paths
-        Millenaire2.ITEMS.registerSimpleBlockItem("path_dirt", MillBlocks.PATH_DIRT);
-        Millenaire2.ITEMS.registerSimpleBlockItem("path_gravel", MillBlocks.PATH_GRAVEL);
-        Millenaire2.ITEMS.registerSimpleBlockItem("path_slabs", MillBlocks.PATH_SLABS);
-        Millenaire2.ITEMS.registerSimpleBlockItem("path_sandstone", MillBlocks.PATH_SANDSTONE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("path_gravel_slabs", MillBlocks.PATH_GRAVEL_SLABS);
-        Millenaire2.ITEMS.registerSimpleBlockItem("path_ochre_tiles", MillBlocks.PATH_OCHRE_TILES);
-        Millenaire2.ITEMS.registerSimpleBlockItem("path_snow", MillBlocks.PATH_SNOW);
+        ITEMS.registerSimpleBlockItem("path_dirt", MillBlocks.PATH_DIRT);
+        ITEMS.registerSimpleBlockItem("path_gravel", MillBlocks.PATH_GRAVEL);
+        ITEMS.registerSimpleBlockItem("path_slabs", MillBlocks.PATH_SLABS);
+        ITEMS.registerSimpleBlockItem("path_sandstone", MillBlocks.PATH_SANDSTONE);
+        ITEMS.registerSimpleBlockItem("path_gravel_slabs", MillBlocks.PATH_GRAVEL_SLABS);
+        ITEMS.registerSimpleBlockItem("path_ochre_tiles", MillBlocks.PATH_OCHRE_TILES);
+        ITEMS.registerSimpleBlockItem("path_snow", MillBlocks.PATH_SNOW);
 
         // Saplings & Leaves
-        Millenaire2.ITEMS.registerSimpleBlockItem("sapling_appletree", MillBlocks.SAPLING_APPLE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("sapling_olivetree", MillBlocks.SAPLING_OLIVE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("sapling_pistachio", MillBlocks.SAPLING_PISTACHIO);
-        Millenaire2.ITEMS.registerSimpleBlockItem("sapling_cherry", MillBlocks.SAPLING_CHERRY);
-        Millenaire2.ITEMS.registerSimpleBlockItem("sapling_sakura", MillBlocks.SAPLING_SAKURA);
-        Millenaire2.ITEMS.registerSimpleBlockItem("leaves_appletree", MillBlocks.LEAVES_APPLE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("leaves_olivetree", MillBlocks.LEAVES_OLIVE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("leaves_pistachio", MillBlocks.LEAVES_PISTACHIO);
-        Millenaire2.ITEMS.registerSimpleBlockItem("leaves_cherry", MillBlocks.LEAVES_CHERRY);
-        Millenaire2.ITEMS.registerSimpleBlockItem("leaves_sakura", MillBlocks.LEAVES_SAKURA);
+        ITEMS.registerSimpleBlockItem("sapling_appletree", MillBlocks.SAPLING_APPLE);
+        ITEMS.registerSimpleBlockItem("sapling_olivetree", MillBlocks.SAPLING_OLIVE);
+        ITEMS.registerSimpleBlockItem("sapling_pistachio", MillBlocks.SAPLING_PISTACHIO);
+        ITEMS.registerSimpleBlockItem("sapling_cherry", MillBlocks.SAPLING_CHERRY);
+        ITEMS.registerSimpleBlockItem("sapling_sakura", MillBlocks.SAPLING_SAKURA);
+        ITEMS.registerSimpleBlockItem("leaves_appletree", MillBlocks.LEAVES_APPLE);
+        ITEMS.registerSimpleBlockItem("leaves_olivetree", MillBlocks.LEAVES_OLIVE);
+        ITEMS.registerSimpleBlockItem("leaves_pistachio", MillBlocks.LEAVES_PISTACHIO);
+        ITEMS.registerSimpleBlockItem("leaves_cherry", MillBlocks.LEAVES_CHERRY);
+        ITEMS.registerSimpleBlockItem("leaves_sakura", MillBlocks.LEAVES_SAKURA);
 
         // Special blocks
-        Millenaire2.ITEMS.registerSimpleBlockItem("locked_chest", MillBlocks.LOCKED_CHEST);
-        Millenaire2.ITEMS.registerSimpleBlockItem("fire_pit", MillBlocks.FIRE_PIT);
-        Millenaire2.ITEMS.registerSimpleBlockItem("panel", MillBlocks.PANEL);
-        Millenaire2.ITEMS.registerSimpleBlockItem("import_table", MillBlocks.IMPORT_TABLE);
-        Millenaire2.ITEMS.registerSimpleBlockItem("bed_straw", MillBlocks.BED_STRAW);
-        Millenaire2.ITEMS.registerSimpleBlockItem("bed_charpoy", MillBlocks.BED_CHARPOY);
+        ITEMS.registerSimpleBlockItem("locked_chest", MillBlocks.LOCKED_CHEST);
+        ITEMS.registerSimpleBlockItem("fire_pit", MillBlocks.FIRE_PIT);
+        ITEMS.registerSimpleBlockItem("panel", MillBlocks.PANEL);
+        ITEMS.registerSimpleBlockItem("import_table", MillBlocks.IMPORT_TABLE);
+        ITEMS.registerSimpleBlockItem("bed_straw", MillBlocks.BED_STRAW);
+        ITEMS.registerSimpleBlockItem("bed_charpoy", MillBlocks.BED_CHARPOY);
     }
 
     /**
      * Helper to register an item and also add it to the ALL_ITEMS list for creative tab.
      */
     private static <T extends Item> DeferredItem<T> registerItem(String name, Supplier<T> supplier) {
-        DeferredItem<T> item = Millenaire2.ITEMS.register(name, supplier);
+        DeferredItem<T> item = ITEMS.register(name, supplier);
         ALL_ITEMS.add(item);
         return item;
     }
@@ -479,6 +483,10 @@ public class MillItems {
     /**
      * Called from Millenaire2 constructor to force class loading and register all items.
      */
+    public static void register(IEventBus modEventBus) {
+        ITEMS.register(modEventBus);
+    }
+
     public static void init() {
         // Class loading triggers all static final fields above
     }

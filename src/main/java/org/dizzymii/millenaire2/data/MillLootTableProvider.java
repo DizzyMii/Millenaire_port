@@ -186,7 +186,7 @@ public class MillLootTableProvider extends LootTableProvider {
 
         @Override
         protected Iterable<Block> getKnownBlocks() {
-            return Millenaire2.BLOCKS.getEntries().stream()
+            return MillBlocks.BLOCKS.getEntries().stream()
                     .map(DeferredHolder::get)
                     .map(b -> (Block) b)
                     .filter(b -> !NO_LOOT_BLOCKS.contains(b))

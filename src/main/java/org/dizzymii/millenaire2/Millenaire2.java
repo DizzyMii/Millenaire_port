@@ -1,12 +1,6 @@
 package org.dizzymii.millenaire2;
 
 import com.mojang.logging.LogUtils;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -19,14 +13,13 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import org.dizzymii.millenaire2.block.MillBlocks;
 import org.dizzymii.millenaire2.client.screen.FirePitScreen;
 import org.dizzymii.millenaire2.data.ContentDeployer;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.init.ModCreativeTabs;
 import org.dizzymii.millenaire2.item.MillItems;
 import org.dizzymii.millenaire2.menu.MillMenuTypes;
 import org.dizzymii.millenaire2.network.MillNetworking;
@@ -43,41 +36,23 @@ public class Millenaire2 {
     private static final Logger LOGGER = LogUtils.getLogger();
     @Nullable private static MillWorldData worldData;
 
-    // --- Deferred Registers ---
-    public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MODID);
-    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MODID);
-    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
-    public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(Registries.ENTITY_TYPE, MODID);
-    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
-
-    // --- Creative Tab ---
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MILL_TAB = CREATIVE_MODE_TABS.register("millenaire_tab",
-            () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup.millenaire2"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
-                    .icon(() -> MillItems.DENIER.get().getDefaultInstance())
-                    .displayItems((parameters, output) -> {
-                        MillItems.ALL_ITEMS.forEach(item -> output.accept(item.get()));
-                    })
-                    .build());
-
     public Millenaire2(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::registerEntityAttributes);
         modEventBus.addListener(MillNetworking::register);
 
         // Register all deferred registers
-        BLOCKS.register(modEventBus);
-        ITEMS.register(modEventBus);
-        CREATIVE_MODE_TABS.register(modEventBus);
-        ENTITY_TYPES.register(modEventBus);
-        BLOCK_ENTITY_TYPES.register(modEventBus);
-        MillMenuTypes.MENU_TYPES.register(modEventBus);
+        MillBlocks.register(modEventBus);
+        MillItems.register(modEventBus);
+        ModCreativeTabs.register(modEventBus);
+        MillEntities.register(modEventBus);
+        MillMenuTypes.register(modEventBus);
 
         // Force class loading of registration holders
         MillBlocks.init();
         MillItems.init();
         MillEntities.init();
+        ModCreativeTabs.init();
         MillMenuTypes.init();
 
         NeoForge.EVENT_BUS.register(this);
