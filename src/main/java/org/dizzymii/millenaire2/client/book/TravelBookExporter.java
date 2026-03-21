@@ -14,6 +14,27 @@ import java.io.IOException;
 public class TravelBookExporter {
 
     /**
+     * Export a travel book snapshot to both text and html files.
+     */
+    public static boolean exportBookSnapshot(TextBook book, File outputDir, String baseName) {
+        if (book == null || outputDir == null || baseName == null || baseName.isBlank()) {
+            return false;
+        }
+
+        if (!outputDir.exists() && !outputDir.mkdirs()) {
+            MillLog.minor("TravelBookExporter", "Failed to create export directory: " + outputDir.getAbsolutePath());
+            return false;
+        }
+
+        File textFile = new File(outputDir, baseName + ".txt");
+        File htmlFile = new File(outputDir, baseName + ".html");
+
+        boolean textOk = exportToText(book, textFile);
+        boolean htmlOk = exportToHtml(book, htmlFile);
+        return textOk && htmlOk;
+    }
+
+    /**
      * Exports a TextBook to a plain text file.
      */
     public static boolean exportToText(TextBook book, File outputFile) {
