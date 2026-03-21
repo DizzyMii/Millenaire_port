@@ -136,7 +136,7 @@ public class DiplomacyManager {
      * Evaluates relations with known villages and rolls for raid chance.
      */
     public static void checkRaidTrigger(Building townhall, MillWorldData mw) {
-        if (!raidsEnabled || !MillConfig.raidsEnabled) return;
+        if (!raidsEnabled || !MillConfig.raidsEnabled()) return;
         if (townhall.getPos() == null) return;
         if (townhall.world == null) return;
 

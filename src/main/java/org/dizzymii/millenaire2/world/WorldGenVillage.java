@@ -59,7 +59,7 @@ public class WorldGenVillage {
         }
 
         // Check distance from existing villages
-        int minVillageDistance = MillConfig.villageMinDistance > 0 ? MillConfig.villageMinDistance : 250;
+        int minVillageDistance = MillConfig.villageMinDistance() > 0 ? MillConfig.villageMinDistance() : 250;
         Point centerPoint = new Point(center.getX(), 0, center.getZ());
         for (Building b : worldData.allBuildings()) {
             if (b.isTownhall && b.getPos() != null) {

@@ -294,7 +294,7 @@ public class Building {
         if (currentConstruction != null && !currentConstruction.isComplete()
                 && world instanceof ServerLevel serverLevel) {
             int placed = currentConstruction.placeBlocks(serverLevel,
-                    org.dizzymii.millenaire2.MillConfig.constructionBlocksPerTick);
+                    org.dizzymii.millenaire2.MillConfig.constructionBlocksPerTick());
             if (placed > 0 && mw != null) mw.setDirty();
             if (currentConstruction.isComplete()) {
                 MillLog.minor("Building", "Construction complete for: " + name);

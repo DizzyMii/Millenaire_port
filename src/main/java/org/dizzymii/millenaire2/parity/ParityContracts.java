@@ -43,12 +43,12 @@ public final class ParityContracts {
                 worldAvailable ? "savedDataReady" : "worldData=null"
         ));
 
-        boolean generationEnabled = worldAvailable && worldData.generateVillages && MillConfig.generateVillages;
+        boolean generationEnabled = worldAvailable && worldData.generateVillages && MillConfig.generateVillages();
         results.add(check(
                 ParityContract.VILLAGE_GENERATION_ENABLED,
                 generationEnabled,
                 worldAvailable
-                        ? "worldData.generateVillages=" + worldData.generateVillages + ", config=" + MillConfig.generateVillages
+                        ? "worldData.generateVillages=" + worldData.generateVillages + ", config=" + MillConfig.generateVillages()
                         : "worldDataMissing"
         ));
 

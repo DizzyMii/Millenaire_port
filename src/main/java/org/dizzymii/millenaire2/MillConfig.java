@@ -83,24 +83,43 @@ public class MillConfig {
 
     static final ModConfigSpec SPEC = BUILDER.build();
 
-    // --- Runtime values ---
-    public static boolean generateVillages;
-    public static boolean stopDefaultVillages;
-    public static int villageMinDistance;
-    public static int villageMaxDistance;
-    public static boolean displayVillagerNames;
-    public static int villagerNamesDistance;
-    public static boolean languageLearning;
-    public static boolean displayStartText;
-    public static int logGeneral;
-    public static int logWorldGeneration;
-    public static int logConstruction;
-    public static int logVillager;
-    public static boolean raidsEnabled;
-    public static boolean useCustomPathing;
-    public static int constructionBlocksPerTick;
-    public static boolean generateHelpData;
-    public static boolean devMode;
+    // --- Runtime values (cached on config load) ---
+    private static boolean generateVillages;
+    private static boolean stopDefaultVillages;
+    private static int villageMinDistance;
+    private static int villageMaxDistance;
+    private static boolean displayVillagerNames;
+    private static int villagerNamesDistance;
+    private static boolean languageLearning;
+    private static boolean displayStartText;
+    private static int logGeneral;
+    private static int logWorldGeneration;
+    private static int logConstruction;
+    private static int logVillager;
+    private static boolean raidsEnabled;
+    private static boolean useCustomPathing;
+    private static int constructionBlocksPerTick;
+    private static boolean generateHelpData;
+    private static boolean devMode;
+
+    // --- Accessors ---
+    public static boolean generateVillages() { return generateVillages; }
+    public static boolean stopDefaultVillages() { return stopDefaultVillages; }
+    public static int villageMinDistance() { return villageMinDistance; }
+    public static int villageMaxDistance() { return villageMaxDistance; }
+    public static boolean displayVillagerNames() { return displayVillagerNames; }
+    public static int villagerNamesDistance() { return villagerNamesDistance; }
+    public static boolean languageLearning() { return languageLearning; }
+    public static boolean displayStartText() { return displayStartText; }
+    public static int logGeneral() { return logGeneral; }
+    public static int logWorldGeneration() { return logWorldGeneration; }
+    public static int logConstruction() { return logConstruction; }
+    public static int logVillager() { return logVillager; }
+    public static boolean raidsEnabled() { return raidsEnabled; }
+    public static boolean useCustomPathing() { return useCustomPathing; }
+    public static int constructionBlocksPerTick() { return constructionBlocksPerTick; }
+    public static boolean generateHelpData() { return generateHelpData; }
+    public static boolean devMode() { return devMode; }
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event) {

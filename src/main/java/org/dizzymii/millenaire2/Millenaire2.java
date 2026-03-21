@@ -89,7 +89,7 @@ public class Millenaire2 {
         // Initialize world data from the overworld
         net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
         MillWorldData loadedWorldData = MillWorldData.get(overworld);
-        if (MillConfig.generateVillages && !loadedWorldData.generateVillages) {
+        if (MillConfig.generateVillages() && !loadedWorldData.generateVillages) {
             loadedWorldData.generateVillages = true;
             loadedWorldData.setDirty();
         }
