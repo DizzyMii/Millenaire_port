@@ -38,7 +38,7 @@ public class GuiQuest extends GuiText {
             if (q.isOffer) {
                 addRenderableWidget(Button.builder(Component.literal("Accept"), btn -> acceptQuest())
                         .bounds(guiLeft + MARGIN, btnY, 65, 20).build());
-                addRenderableWidget(Button.builder(Component.literal("Decline"), btn -> onClose())
+                addRenderableWidget(Button.builder(Component.literal("Decline"), btn -> declineQuest())
                         .bounds(guiLeft + MARGIN + 70, btnY, 65, 20).build());
             } else {
                 addRenderableWidget(Button.builder(Component.literal("Complete"), btn -> completeStep())
@@ -70,6 +70,16 @@ public class GuiQuest extends GuiText {
         w.writeString(q.questKey);
         w.writeInt(ClientPacketHandler.cachedQuestVillagerEntityId);
         ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_QUEST_COMPLETESTEP, w);
+        onClose();
+    }
+
+    private void declineQuest() {
+        ClientPacketHandler.QuestClientEntry q = ClientPacketHandler.cachedQuest;
+        if (q == null) return;
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeString(q.questKey);
+        w.writeInt(ClientPacketHandler.cachedQuestVillagerEntityId);
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_QUEST_REFUSE, w);
         onClose();
     }
 }

@@ -8,6 +8,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.dizzymii.millenaire2.Millenaire2;
+import org.dizzymii.millenaire2.culture.Culture;
+import org.dizzymii.millenaire2.culture.VillageType;
 import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
@@ -31,9 +33,32 @@ public class MillWorldData extends SavedData {
     private static final String DATA_NAME = Millenaire2.MODID + "_world";
 
     // ========== Fields ==========
+    public static class VillageList {
+        public final List<String> names = new ArrayList<>();
+        public final List<Point> pos = new ArrayList<>();
+        public final List<String> cultures = new ArrayList<>();
+        public final List<String> types = new ArrayList<>();
+
+        public void clear() {
+            names.clear();
+            pos.clear();
+            cultures.clear();
+            types.clear();
+        }
+
+        public void add(String name, Point point, String cultureKey, String typeKey) {
+            names.add(name == null ? "" : name);
+            pos.add(point);
+            cultures.add(cultureKey == null ? "" : cultureKey);
+            types.add(typeKey == null ? "" : typeKey);
+        }
+    }
+
     private final HashMap<Point, Building> buildings = new HashMap<>();
     private final HashMap<Long, VillagerRecord> villagerRecords = new HashMap<>();
     public final List<String> globalTags = new ArrayList<>();
+    public final VillageList villagesList = new VillageList();
+    public final VillageList loneBuildingsList = new VillageList();
     public HashMap<UUID, UserProfile> profiles = new HashMap<>();
 
     @Nullable public Level world;
@@ -69,6 +94,7 @@ public class MillWorldData extends SavedData {
         buildings.put(p, b);
         b.world = this.world;
         b.mw = this;
+        updateVillageListsForBuilding(b, p);
         setDirty();
     }
 
@@ -90,7 +116,11 @@ public class MillWorldData extends SavedData {
     }
 
     public void removeBuilding(Point p) {
-        buildings.remove(p);
+        Building removed = buildings.remove(p);
+        if (removed != null) {
+            removeFromVillageList(villagesList, p);
+            removeFromVillageList(loneBuildingsList, p);
+        }
         setDirty();
     }
 
@@ -99,6 +129,16 @@ public class MillWorldData extends SavedData {
     public void addVillagerRecord(VillagerRecord vr) {
         villagerRecords.put(vr.getVillagerId(), vr);
         setDirty();
+    }
+
+    public void registerVillagerRecord(VillagerRecord vr, boolean markDirty) {
+        if (vr == null) {
+            return;
+        }
+        villagerRecords.put(vr.getVillagerId(), vr);
+        if (markDirty) {
+            setDirty();
+        }
     }
 
     @Nullable
@@ -113,6 +153,29 @@ public class MillWorldData extends SavedData {
     public void removeVillagerRecord(long id) {
         villagerRecords.remove(id);
         setDirty();
+    }
+
+    public void clearVillagerOfId(long id) {
+        villagerRecords.remove(id);
+        for (Building b : buildings.values()) {
+            b.removeVillagerRecord(id);
+        }
+        setDirty();
+    }
+
+    public void refreshVillageAndLoneBuildingLists() {
+        villagesList.clear();
+        loneBuildingsList.clear();
+        for (Map.Entry<Point, Building> entry : buildings.entrySet()) {
+            updateVillageListsForBuilding(entry.getValue(), entry.getKey());
+        }
+        setDirty();
+    }
+
+    public List<Point> getCombinedVillagesLoneBuildings() {
+        List<Point> combined = new ArrayList<>(villagesList.pos);
+        combined.addAll(loneBuildingsList.pos);
+        return combined;
     }
 
     // ========== Profile management ==========
@@ -138,6 +201,18 @@ public class MillWorldData extends SavedData {
         return globalTags.contains(tag);
     }
 
+    public boolean isGlobalTagSet(String tag) {
+        return hasGlobalTag(tag);
+    }
+
+    public void setGlobalTag(String tag) {
+        addGlobalTag(tag);
+    }
+
+    public void clearGlobalTag(String tag) {
+        removeGlobalTag(tag);
+    }
+
     public void addGlobalTag(String tag) {
         if (!globalTags.contains(tag)) {
             globalTags.add(tag);
@@ -148,6 +223,77 @@ public class MillWorldData extends SavedData {
     public void removeGlobalTag(String tag) {
         if (globalTags.remove(tag)) {
             setDirty();
+        }
+    }
+
+    private void updateVillageListsForBuilding(Building b, Point p) {
+        if (!b.isTownhall) {
+            return;
+        }
+
+        String cultureKey = b.cultureKey == null ? "" : b.cultureKey;
+        String typeKey = b.villageTypeKey == null ? "" : b.villageTypeKey;
+        String displayName = b.getName() == null ? "" : b.getName();
+
+        removeFromVillageList(villagesList, p);
+        removeFromVillageList(loneBuildingsList, p);
+
+        VillageType vType = null;
+        if (!cultureKey.isEmpty()) {
+            Culture culture = Culture.getCultureByName(cultureKey);
+            if (culture != null && !typeKey.isEmpty()) {
+                vType = culture.villageTypes.get(typeKey);
+                if (vType == null) {
+                    vType = culture.loneBuildingTypes.get(typeKey);
+                }
+            }
+        }
+
+        if (vType != null && vType.lonebuilding) {
+            loneBuildingsList.add(displayName, p, cultureKey, typeKey);
+        } else {
+            villagesList.add(displayName, p, cultureKey, typeKey);
+        }
+    }
+
+    private void removeFromVillageList(VillageList list, Point p) {
+        for (int i = list.pos.size() - 1; i >= 0; i--) {
+            if (list.pos.get(i).equals(p)) {
+                list.pos.remove(i);
+                list.names.remove(i);
+                list.cultures.remove(i);
+                list.types.remove(i);
+            }
+        }
+    }
+
+    private static ListTag saveVillageList(VillageList list) {
+        ListTag out = new ListTag();
+        int size = list.pos.size();
+        for (int i = 0; i < size; i++) {
+            CompoundTag entry = new CompoundTag();
+            list.pos.get(i).writeToNBT(entry, "pos");
+            entry.putString("name", list.names.get(i));
+            entry.putString("culture", list.cultures.get(i));
+            entry.putString("type", list.types.get(i));
+            out.add(entry);
+        }
+        return out;
+    }
+
+    private static void loadVillageList(CompoundTag root, String key, VillageList target) {
+        target.clear();
+        if (!root.contains(key, Tag.TAG_LIST)) {
+            return;
+        }
+        ListTag list = root.getList(key, Tag.TAG_COMPOUND);
+        for (int i = 0; i < list.size(); i++) {
+            CompoundTag entry = list.getCompound(i);
+            Point point = Point.readFromNBT(entry, "pos");
+            if (point == null) {
+                continue;
+            }
+            target.add(entry.getString("name"), point, entry.getString("culture"), entry.getString("type"));
         }
     }
 
@@ -184,6 +330,9 @@ public class MillWorldData extends SavedData {
         }
         root.put("buildings", buildingList);
 
+        root.put("villagesList", saveVillageList(villagesList));
+        root.put("loneBuildingsList", saveVillageList(loneBuildingsList));
+
         // Save global tags
         ListTag tagList = new ListTag();
         for (String tag : globalTags) {
@@ -192,6 +341,13 @@ public class MillWorldData extends SavedData {
             tagList.add(t);
         }
         root.put("globalTags", tagList);
+
+        // Save global villager records
+        ListTag villagerRecordList = new ListTag();
+        for (VillagerRecord vr : villagerRecords.values()) {
+            villagerRecordList.add(vr.save());
+        }
+        root.put("villagerRecords", villagerRecordList);
 
         // Save player profiles
         ListTag profileList = new ListTag();
@@ -224,11 +380,26 @@ public class MillWorldData extends SavedData {
             }
         }
 
+        loadVillageList(root, "villagesList", data.villagesList);
+        loadVillageList(root, "loneBuildingsList", data.loneBuildingsList);
+        if (data.villagesList.pos.isEmpty() && data.loneBuildingsList.pos.isEmpty()) {
+            data.refreshVillageAndLoneBuildingLists();
+        }
+
         // Load global tags
         if (root.contains("globalTags", Tag.TAG_LIST)) {
             ListTag tagList = root.getList("globalTags", Tag.TAG_COMPOUND);
             for (int i = 0; i < tagList.size(); i++) {
                 data.globalTags.add(tagList.getCompound(i).getString("tag"));
+            }
+        }
+
+        // Load global villager records
+        if (root.contains("villagerRecords", Tag.TAG_LIST)) {
+            ListTag villagerRecordList = root.getList("villagerRecords", Tag.TAG_COMPOUND);
+            for (int i = 0; i < villagerRecordList.size(); i++) {
+                VillagerRecord vr = VillagerRecord.load(villagerRecordList.getCompound(i));
+                data.villagerRecords.put(vr.getVillagerId(), vr);
             }
         }
 

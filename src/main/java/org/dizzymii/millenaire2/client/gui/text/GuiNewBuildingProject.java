@@ -2,6 +2,9 @@ package org.dizzymii.millenaire2.client.gui.text;
 
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
+import org.dizzymii.millenaire2.network.ClientPacketSender;
+import org.dizzymii.millenaire2.network.MillPacketIds;
+import org.dizzymii.millenaire2.network.PacketDataHelper;
 
 /**
  * New building project screen — lists available building types the village can construct.
@@ -30,7 +33,9 @@ public class GuiNewBuildingProject extends GuiText {
     }
 
     private void startProject() {
-        // Send start project packet to server
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeString("project_auto");
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_NEW_BUILDING_PROJECT, w);
         onClose();
     }
 }

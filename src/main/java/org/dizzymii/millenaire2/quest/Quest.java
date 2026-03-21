@@ -178,6 +178,19 @@ public class Quest {
     // ========== Runtime checks ==========
 
     public boolean canStart(UserProfile profile, MillWorldData mw, @Nullable Point villagePos) {
+        // Enforce maximum simultaneous instances for this quest key on this profile
+        int activeCount = 0;
+        for (QuestInstance qi : profile.questInstances) {
+            Quest activeQuest = qi.quest;
+            String activeKey = activeQuest != null ? activeQuest.key : null;
+            if (activeKey != null && this.key != null && this.key.equals(activeKey)) {
+                activeCount++;
+            }
+        }
+        if (activeCount >= maxsimultaneous) {
+            return false;
+        }
+
         // Check minimum reputation
         if (villagePos != null && profile.getVillageReputation(villagePos) < minreputation) {
             return false;

@@ -2,6 +2,9 @@ package org.dizzymii.millenaire2.client.gui.text;
 
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
+import org.dizzymii.millenaire2.network.ClientPacketSender;
+import org.dizzymii.millenaire2.network.MillPacketIds;
+import org.dizzymii.millenaire2.network.PacketDataHelper;
 
 /**
  * Custom building placement screen — allows the player to place a custom building plan.
@@ -29,7 +32,9 @@ public class GuiCustomBuilding extends GuiText {
     }
 
     private void placeBuilding() {
-        // Send place building packet to server
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeString("custom_plan");
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_NEW_CUSTOM_BUILDING_PROJECT, w);
         onClose();
     }
 }

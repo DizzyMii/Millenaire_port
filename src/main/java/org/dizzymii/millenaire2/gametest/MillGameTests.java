@@ -15,9 +15,12 @@ import org.dizzymii.millenaire2.culture.VillageType;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.goal.Goal;
+import org.dizzymii.millenaire2.item.InvItem;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.village.ConstructionIP;
+import org.dizzymii.millenaire2.village.VillagerRecord;
+import org.dizzymii.millenaire2.world.MillWorldData;
 import org.dizzymii.millenaire2.world.UserProfile;
 
 /**
@@ -468,6 +471,72 @@ public class MillGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "empty", timeoutTicks = 60)
+    public static void testConstructionIPOrientationRotation(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        net.minecraft.core.BlockPos origin = helper.absolutePos(new net.minecraft.core.BlockPos(5, 1, 5));
+
+        java.util.List<org.dizzymii.millenaire2.buildingplan.BuildingBlock> blocks = new java.util.ArrayList<>();
+        org.dizzymii.millenaire2.buildingplan.BuildingBlock bb =
+                new org.dizzymii.millenaire2.buildingplan.BuildingBlock();
+        bb.blockState = net.minecraft.world.level.block.Blocks.STONE.defaultBlockState();
+        bb.x = 1; bb.y = 0; bb.z = 0;
+        blocks.add(bb);
+
+        org.dizzymii.millenaire2.village.BuildingLocation loc =
+                new org.dizzymii.millenaire2.village.BuildingLocation();
+        loc.pos = new Point(origin.getX(), origin.getY(), origin.getZ());
+
+        ConstructionIP cip = new ConstructionIP(loc);
+        cip.orientation = 1;
+        cip.setBlocks(blocks);
+
+        int placed = cip.placeBlocks(level, 5);
+        helper.assertTrue(placed == 1, "Expected 1 block placed, got " + placed);
+
+        // Orientation 1 rotates local (1,0,0) to world (0,0,-1)
+        helper.assertBlockPresent(net.minecraft.world.level.block.Blocks.STONE,
+                new net.minecraft.core.BlockPos(5, 1, 4));
+
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 60)
+    public static void testConstructionIPFactoryPreservesOrientation(GameTestHelper helper) {
+        Culture norman = Culture.getCultureByName("norman");
+        helper.assertFalse(norman == null, "Norman culture missing");
+        if (norman == null) {
+            helper.fail("Norman culture missing");
+            return;
+        }
+
+        ServerLevel level = helper.getLevel();
+        BlockPos abs = helper.absolutePos(BlockPos.ZERO);
+        Point origin = new Point(abs.getX(), abs.getY(), abs.getZ());
+
+        ConstructionIP cip = null;
+        for (BuildingPlanSet bps : norman.planSets.values()) {
+            BuildingPlan initial = bps.getInitialPlan();
+            if (initial == null || !initial.hasImage()) {
+                continue;
+            }
+            cip = ConstructionIP.fromBuildingPlan(initial, origin, level, 3, false);
+            if (cip != null) {
+                break;
+            }
+        }
+
+        helper.assertFalse(cip == null, "Could not create ConstructionIP from any Norman initial plan");
+        if (cip == null) {
+            helper.fail("Could not create ConstructionIP from any Norman initial plan");
+            return;
+        }
+        helper.assertTrue(cip.orientation == 3,
+                "Expected ConstructionIP orientation 3, got " + cip.orientation);
+
+        helper.succeed();
+    }
+
     // ==================== Building Tick Progresses Construction ====================
 
     @GameTest(template = "empty", timeoutTicks = 100)
@@ -568,6 +637,103 @@ public class MillGameTests {
                 "Deniers not persisted, got " + loaded.deniers);
         helper.assertTrue(loaded.getVillageReputation(new Point(100, 64, 200)) == 75,
                 "Reputation not persisted");
+
+        helper.succeed();
+    }
+
+    // ==================== VillagerRecord NBT Round-Trip ====================
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testVillagerRecordNBTRoundTrip(GameTestHelper helper) {
+        VillagerRecord original = VillagerRecord.create("norman", "farmer", "Jean", "Martin", 1);
+        original.nb = 2;
+        original.size = 17;
+        original.scale = 0.95f;
+        original.killed = false;
+        original.raidingVillage = true;
+        original.awayraiding = true;
+        original.awayhired = false;
+        original.fathersName = "Pierre";
+        original.mothersName = "Marie";
+        original.spousesName = "Anne";
+        original.maidenName = "Dubois";
+        original.setHousePos(new Point(100, 65, 200));
+        original.setTownHallPos(new Point(96, 65, 196));
+        original.originalVillagePos = new Point(32, 70, 32);
+        original.setOriginalId(4242L);
+        original.addQuestTag("test_quest_tag");
+
+        InvItem wheat = InvItem.get("wheat");
+        if (wheat != null) {
+            original.addToInv(wheat, 12);
+        }
+
+        CompoundTag tag = original.save();
+        VillagerRecord loaded = VillagerRecord.load(tag);
+
+        helper.assertTrue(loaded.getVillagerId() == original.getVillagerId(), "Villager id not persisted");
+        helper.assertTrue(loaded.gender == original.gender, "Gender not persisted");
+        helper.assertTrue(loaded.nb == original.nb, "nb not persisted");
+        helper.assertTrue(loaded.size == original.size, "size not persisted");
+        helper.assertTrue(Math.abs(loaded.scale - original.scale) < 0.001f, "scale not persisted");
+        helper.assertTrue(loaded.raidingVillage == original.raidingVillage, "raidingVillage not persisted");
+        helper.assertTrue(loaded.awayraiding == original.awayraiding, "awayraiding not persisted");
+        helper.assertTrue(loaded.hasQuestTag("test_quest_tag"), "quest tag not persisted");
+        Point loadedHouse = loaded.getHousePos();
+        Point originalHouse = original.getHousePos();
+        helper.assertTrue(loadedHouse != null && originalHouse != null,
+                "house position missing after round-trip");
+        if (loadedHouse != null && originalHouse != null) {
+            helper.assertTrue(loadedHouse.equals(originalHouse), "house position not persisted");
+        }
+
+        Point loadedTownHall = loaded.getTownHallPos();
+        Point originalTownHall = original.getTownHallPos();
+        helper.assertTrue(loadedTownHall != null && originalTownHall != null,
+                "townhall position missing after round-trip");
+        if (loadedTownHall != null && originalTownHall != null) {
+            helper.assertTrue(loadedTownHall.equals(originalTownHall), "townhall position not persisted");
+        }
+        helper.assertTrue(loaded.originalVillagePos != null && loaded.originalVillagePos.equals(original.originalVillagePos),
+                "original village position not persisted");
+
+        if (wheat != null) {
+            helper.assertTrue(loaded.countInv(wheat) == 12, "inventory not persisted for wheat");
+        }
+
+        helper.succeed();
+    }
+
+    // ==================== MillWorldData Persistence Round-Trip ====================
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testMillWorldDataPersistenceRoundTrip(GameTestHelper helper) {
+        MillWorldData original = new MillWorldData();
+
+        Building th = new Building();
+        th.isTownhall = true;
+        th.isActive = true;
+        th.cultureKey = "norman";
+        th.villageTypeKey = "village";
+        th.setName("Test Village");
+        Point thPos = new Point(200, 70, 200);
+        th.setPos(thPos);
+        original.addBuilding(th, thPos);
+
+        VillagerRecord vr = VillagerRecord.create("norman", "farmer", "Louis", "Martin", 1);
+        vr.setHousePos(new Point(204, 70, 202));
+        vr.setTownHallPos(thPos);
+        original.addVillagerRecord(vr);
+        original.addGlobalTag("gametest_tag");
+
+        CompoundTag saved = original.save(new CompoundTag(), helper.getLevel().registryAccess());
+        MillWorldData loaded = MillWorldData.load(saved, helper.getLevel().registryAccess());
+
+        helper.assertTrue(loaded.hasGlobalTag("gametest_tag"), "Global tag not persisted");
+        helper.assertTrue(loaded.getVillagerRecord(vr.getVillagerId()) != null, "Villager record not persisted");
+        helper.assertTrue(loaded.getBuilding(thPos) != null, "Building not persisted");
+        helper.assertTrue(!loaded.villagesList.pos.isEmpty(), "Village list not persisted");
+        helper.assertTrue(loaded.villagesList.pos.get(0).equals(thPos), "Village list position mismatch");
 
         helper.succeed();
     }

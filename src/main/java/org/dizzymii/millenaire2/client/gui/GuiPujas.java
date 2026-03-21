@@ -4,6 +4,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.dizzymii.millenaire2.network.ClientPacketSender;
+import org.dizzymii.millenaire2.network.MillPacketIds;
+import org.dizzymii.millenaire2.network.PacketDataHelper;
 
 /**
  * GUI screen for the pujas (Hindu prayer) interaction.
@@ -47,7 +50,9 @@ public class GuiPujas extends Screen {
     }
 
     private void makeOffering() {
-        // Send pujas offering packet to server
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeInt(0);
+        ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_PUJAS_CHANGE_ENCHANTMENT, w);
         onClose();
     }
 

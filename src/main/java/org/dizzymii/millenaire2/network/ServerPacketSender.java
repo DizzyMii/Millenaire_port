@@ -189,6 +189,42 @@ public final class ServerPacketSender {
         PacketDistributor.sendToPlayer(target, payload);
     }
 
+    public static void sendQuestInstance(
+            ServerPlayer target,
+            String questKey,
+            int stepIndex,
+            int totalSteps,
+            String stepDescription,
+            String stepLabel,
+            int rewardMoney,
+            int rewardReputation,
+            int villagerEntityId,
+            boolean isOffer) {
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeString(questKey);
+        w.writeInt(stepIndex);
+        w.writeInt(totalSteps);
+        w.writeString(stepDescription);
+        w.writeString(stepLabel);
+        w.writeInt(rewardMoney);
+        w.writeInt(rewardReputation);
+        w.writeInt(villagerEntityId);
+        w.writeBoolean(isOffer);
+
+        MillGenericS2CPayload payload = new MillGenericS2CPayload(
+                MillPacketIds.PACKET_QUESTINSTANCE, 0, w.toByteArray());
+        PacketDistributor.sendToPlayer(target, payload);
+    }
+
+    public static void sendQuestInstanceDestroy(ServerPlayer target, String questKey) {
+        PacketDataHelper.Writer w = new PacketDataHelper.Writer();
+        w.writeString(questKey);
+
+        MillGenericS2CPayload payload = new MillGenericS2CPayload(
+                MillPacketIds.PACKET_QUESTINSTANCE_DESTROY, 0, w.toByteArray());
+        PacketDistributor.sendToPlayer(target, payload);
+    }
+
     // ========== Internal helpers ==========
 
     private static void writePoint(PacketDataHelper.Writer w, @Nullable Point p) {

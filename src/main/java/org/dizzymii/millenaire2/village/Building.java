@@ -3,8 +3,13 @@ package org.dizzymii.millenaire2.village;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.Level;
 import org.dizzymii.millenaire2.culture.BuildingPlan;
 import org.dizzymii.millenaire2.culture.BuildingPlanSet;
@@ -13,6 +18,7 @@ import org.dizzymii.millenaire2.culture.VillageType;
 import org.dizzymii.millenaire2.culture.VillagerType;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.item.InvItem;
 import org.dizzymii.millenaire2.item.TradeGood;
 import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
@@ -110,14 +116,46 @@ public class Building {
     public String getQualifier() { return qualifier; }
     public void setQualifier(String q) { this.qualifier = q; }
 
+    private boolean isChildRecord(VillagerRecord vr) {
+        if (vr == null || vr.type == null) {
+            return false;
+        }
+        String cKey = vr.getCultureKey() != null ? vr.getCultureKey() : cultureKey;
+        if (cKey == null) {
+            return false;
+        }
+        Culture culture = Culture.getCultureByName(cKey);
+        if (culture == null) {
+            return false;
+        }
+        VillagerType vt = culture.getVillagerType(vr.type);
+        return vt != null && vt.isChild;
+    }
+
     public Collection<VillagerRecord> getVillagerRecords() { return vrecords.values(); }
 
     @Nullable
     public VillagerRecord getVillagerRecord(long id) { return vrecords.get(id); }
 
-    public void addVillagerRecord(VillagerRecord vr) { vrecords.put(vr.getVillagerId(), vr); }
+    public void addVillagerRecord(VillagerRecord vr) {
+        if (vr == null) {
+            return;
+        }
+        vrecords.put(vr.getVillagerId(), vr);
+        if (mw != null) {
+            mw.addVillagerRecord(vr);
+        }
+        markDirty();
+    }
 
-    public void removeVillagerRecord(long id) { vrecords.remove(id); }
+    public void removeVillagerRecord(long id) {
+        if (vrecords.remove(id) != null) {
+            if (mw != null) {
+                mw.removeVillagerRecord(id);
+            }
+            markDirty();
+        }
+    }
 
     public int getRelation(Point villagePos) {
         return relations.getOrDefault(villagePos, RELATION_NEUTRAL);
@@ -128,6 +166,201 @@ public class Building {
     }
 
     public Set<Point> getKnownVillages() { return relations.keySet(); }
+
+    private void markDirty() {
+        if (mw != null) {
+            mw.setDirty();
+        }
+    }
+
+    @Nullable
+    private InvItem findInvItem(Item item) {
+        for (InvItem iv : InvItem.getAll().values()) {
+            if (iv.getItem() == item) {
+                return iv;
+            }
+        }
+        return null;
+    }
+
+    public int countGoods(InvItem item) {
+        return resManager.countGoods(item);
+    }
+
+    public int countGoods(Item item) {
+        InvItem iv = findInvItem(item);
+        return iv == null ? 0 : countGoods(iv);
+    }
+
+    public void storeGoods(InvItem item, int count) {
+        if (item == null || count <= 0) {
+            return;
+        }
+        resManager.storeGoods(item, count);
+        markDirty();
+    }
+
+    public int storeGoods(Item item, int count) {
+        if (item == null || count <= 0) {
+            return 0;
+        }
+        InvItem iv = findInvItem(item);
+        if (iv == null) {
+            return 0;
+        }
+        storeGoods(iv, count);
+        return count;
+    }
+
+    public int takeGoods(InvItem item, int count) {
+        if (item == null || count <= 0) {
+            return 0;
+        }
+        int taken = Math.min(count, countGoods(item));
+        if (taken <= 0) {
+            return 0;
+        }
+        if (resManager.takeGoods(item, taken)) {
+            markDirty();
+            return taken;
+        }
+        return 0;
+    }
+
+    public int takeGoods(Item item, int count) {
+        if (item == null || count <= 0) {
+            return 0;
+        }
+        InvItem iv = findInvItem(item);
+        if (iv == null) {
+            return 0;
+        }
+        return takeGoods(iv, count);
+    }
+
+    public int nbGoodAvailable(InvItem item, boolean allBuildings, boolean includeTownHall, boolean includeVillagers) {
+        if (item == null) {
+            return 0;
+        }
+
+        int total = countGoods(item);
+        MillWorldData worldData = mw;
+        if (worldData == null) {
+            return total;
+        }
+
+        if (allBuildings) {
+            for (Building other : worldData.getBuildingsMap().values()) {
+                if (other == this || !isSameVillage(other)) {
+                    continue;
+                }
+                total += other.countGoods(item);
+            }
+        } else if (includeTownHall && !isTownhall) {
+            Point thPos = getTownHallPos();
+            if (thPos != null) {
+                Building th = worldData.getBuilding(thPos);
+                if (th != null && th != this) {
+                    total += th.countGoods(item);
+                }
+            }
+        }
+
+        return total;
+    }
+
+    public int nbGoodNeeded(Item item) {
+        InvItem iv = findInvItem(item);
+        if (iv == null) {
+            return 0;
+        }
+        if (planSetKey == null) {
+            return 0;
+        }
+        int capacity = VillageEconomyLoader.getCapacity(planSetKey);
+        return Math.max(0, capacity - countGoods(iv));
+    }
+
+    public void cancelRaid() {
+        raidTarget = null;
+        underAttack = false;
+        markDirty();
+    }
+
+    public void cancelBuilding() {
+        if (currentConstruction != null) {
+            currentConstruction = null;
+            markDirty();
+        }
+    }
+
+    public boolean canChildMoveIn(int pGender, String familyName) {
+        if (familyName == null || familyName.isEmpty()) {
+            return true;
+        }
+
+        for (VillagerRecord vr : vrecords.values()) {
+            if (vr == null || vr.killed || vr.awayraiding || vr.awayhired || vr.familyName == null) {
+                continue;
+            }
+            if (isChildRecord(vr)) {
+                continue;
+            }
+            String existingFamily = vr.familyName;
+            if (existingFamily != null && existingFamily.equals(familyName) && vr.gender != pGender) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public void changeVillageName(String newName) {
+        setName(newName);
+        MillWorldData worldData = mw;
+        Point selfPos = getPos();
+        if (worldData == null || selfPos == null) {
+            markDirty();
+            return;
+        }
+
+        for (int i = 0; i < worldData.villagesList.pos.size(); i++) {
+            if (worldData.villagesList.pos.get(i).equals(selfPos)) {
+                worldData.villagesList.names.set(i, newName == null ? "" : newName);
+            }
+        }
+        for (int i = 0; i < worldData.loneBuildingsList.pos.size(); i++) {
+            if (worldData.loneBuildingsList.pos.get(i).equals(selfPos)) {
+                worldData.loneBuildingsList.names.set(i, newName == null ? "" : newName);
+            }
+        }
+        markDirty();
+    }
+
+    public void changeVillageQualifier(String newQualifier) {
+        setQualifier(newQualifier == null ? "" : newQualifier);
+        MillWorldData worldData = mw;
+        Point selfPos = getPos();
+        if (worldData == null || selfPos == null) {
+            markDirty();
+            return;
+        }
+
+        String qualified = (name == null ? "" : name)
+                + (qualifier == null || qualifier.isEmpty() ? "" : " " + qualifier);
+
+        for (int i = 0; i < worldData.villagesList.pos.size(); i++) {
+            if (worldData.villagesList.pos.get(i).equals(selfPos)) {
+                worldData.villagesList.names.set(i, qualified);
+            }
+        }
+        for (int i = 0; i < worldData.loneBuildingsList.pos.size(); i++) {
+            if (worldData.loneBuildingsList.pos.get(i).equals(selfPos)) {
+                worldData.loneBuildingsList.names.set(i, qualified);
+            }
+        }
+        markDirty();
+    }
 
     // ========== Resource manager ==========
 
@@ -184,11 +417,14 @@ public class Building {
         int nextLevel = buildingLevel + 1;
         BuildingPlan nextPlan = planSet.getPlan(nextLevel);
         if (nextPlan == null) return false;
+        if (!hasRequiredResourcesForPlan(nextPlan)) return false;
 
         // Start construction from the plan
         if (pos != null && nextPlan.hasImage() && world instanceof ServerLevel serverLevel) {
-            ConstructionIP cip = ConstructionIP.fromBuildingPlan(nextPlan, pos, serverLevel);
+            int orientation = getPlanOrientation(nextPlan);
+            ConstructionIP cip = ConstructionIP.fromBuildingPlan(nextPlan, pos, serverLevel, orientation, false);
             if (cip != null) {
+                consumeResourcesForPlan(nextPlan);
                 currentConstruction = cip;
                 buildingLevel = nextLevel;
                 if (mw != null) mw.setDirty();
@@ -340,11 +576,12 @@ public class Building {
      * Start construction of a new building near the townhall.
      */
     private void startNewBuilding(String newPlanSetKey, Culture culture) {
-        if (pos == null || !(world instanceof ServerLevel serverLevel)) return;
+        if (pos == null || mw == null || !(world instanceof ServerLevel serverLevel)) return;
         BuildingPlanSet planSet = culture.planSets.get(newPlanSetKey);
         if (planSet == null) return;
         BuildingPlan initialPlan = planSet.getInitialPlan();
         if (initialPlan == null || !initialPlan.hasImage()) return;
+        if (!hasRequiredResourcesForPlan(initialPlan)) return;
 
         // Find a position near the townhall (offset by existing building count)
         int buildingCount = 0;
@@ -369,13 +606,113 @@ public class Building {
         newBuilding.world = world;
 
         // Start construction
-        ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, newPos, serverLevel);
+        int orientation = getPlanOrientation(initialPlan);
+        ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, newPos, serverLevel, orientation, false);
         if (cip != null) {
+            consumeResourcesForPlan(initialPlan);
             newBuilding.currentConstruction = cip;
             mw.addBuilding(newBuilding, newPos);
             mw.setDirty();
             MillLog.minor("Building", "Village expansion: new building " + newPlanSetKey + " at " + newPos);
         }
+    }
+
+    private int getPlanOrientation(BuildingPlan plan) {
+        if (location != null) {
+            return Math.floorMod(location.orientation, 4);
+        }
+
+        if (plan != null) {
+            return Math.floorMod(plan.buildingOrientation, 4);
+        }
+
+        return 0;
+    }
+
+    private boolean hasRequiredResourcesForPlan(BuildingPlan plan) {
+        if (plan == null) {
+            return false;
+        }
+
+        for (java.util.Map.Entry<String, Integer> entry : plan.computeResourceCost().entrySet()) {
+            if (entry.getValue() <= 0) {
+                continue;
+            }
+
+            Block block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(entry.getKey()));
+            if (block == null) {
+                continue;
+            }
+
+            Item item = block.asItem();
+            if (item == Items.AIR) {
+                continue;
+            }
+
+            InvItem inv = findInvItem(item);
+            if (inv == null) {
+                continue;
+            }
+
+            if (nbGoodAvailable(inv, true, true, false) < entry.getValue()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void consumeResourcesForPlan(BuildingPlan plan) {
+        if (plan == null) {
+            return;
+        }
+
+        for (java.util.Map.Entry<String, Integer> entry : plan.computeResourceCost().entrySet()) {
+            int needed = entry.getValue();
+            if (needed <= 0) {
+                continue;
+            }
+
+            Block block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(entry.getKey()));
+            if (block == null) {
+                continue;
+            }
+
+            Item item = block.asItem();
+            if (item == Items.AIR) {
+                continue;
+            }
+
+            InvItem inv = findInvItem(item);
+            if (inv == null) {
+                continue;
+            }
+
+            takeGoodsAcrossVillage(inv, needed);
+        }
+    }
+
+    private int takeGoodsAcrossVillage(InvItem item, int needed) {
+        int remaining = needed;
+
+        int takenHere = takeGoods(item, remaining);
+        remaining -= takenHere;
+        if (remaining <= 0 || mw == null) {
+            return needed - remaining;
+        }
+
+        for (Building other : mw.getBuildingsMap().values()) {
+            if (other == this || !isSameVillage(other)) {
+                continue;
+            }
+            int taken = other.takeGoods(item, remaining);
+            remaining -= taken;
+            if (remaining <= 0) {
+                break;
+            }
+        }
+
+        return needed - remaining;
     }
 
     /**
@@ -505,19 +842,7 @@ public class Building {
         // Save villager records
         ListTag vrList = new ListTag();
         for (VillagerRecord vr : vrecords.values()) {
-            CompoundTag vrTag = new CompoundTag();
-            vrTag.putLong("id", vr.getVillagerId());
-            vrTag.putInt("gender", vr.gender);
-            if (vr.firstName != null) vrTag.putString("firstName", vr.firstName);
-            if (vr.familyName != null) vrTag.putString("familyName", vr.familyName);
-            if (vr.type != null) vrTag.putString("type", vr.type);
-            if (vr.getCultureKey() != null) vrTag.putString("culture", vr.getCultureKey());
-            vrTag.putBoolean("killed", vr.killed);
-            vrTag.putBoolean("awayraiding", vr.awayraiding);
-            vrTag.putBoolean("awayhired", vr.awayhired);
-            vrTag.putFloat("scale", vr.scale);
-            if (vr.getHousePos() != null) vr.getHousePos().writeToNBT(vrTag, "house");
-            if (vr.getTownHallPos() != null) vr.getTownHallPos().writeToNBT(vrTag, "th");
+            CompoundTag vrTag = vr.save();
             vrList.add(vrTag);
         }
         tag.put("villagers", vrList);
@@ -531,6 +856,14 @@ public class Building {
             relList.add(relTag);
         }
         tag.put("relations", relList);
+
+        // Save resource manager state
+        resManager.save(tag, "res_");
+
+        // Save current construction
+        if (currentConstruction != null) {
+            tag.put("currentConstruction", currentConstruction.save());
+        }
 
         return tag;
     }
@@ -566,19 +899,7 @@ public class Building {
             ListTag vrList = tag.getList("villagers", Tag.TAG_COMPOUND);
             for (int i = 0; i < vrList.size(); i++) {
                 CompoundTag vrTag = vrList.getCompound(i);
-                VillagerRecord vr = new VillagerRecord();
-                vr.setVillagerId(vrTag.getLong("id"));
-                vr.gender = vrTag.getInt("gender");
-                if (vrTag.contains("firstName")) vr.firstName = vrTag.getString("firstName");
-                if (vrTag.contains("familyName")) vr.familyName = vrTag.getString("familyName");
-                if (vrTag.contains("type")) vr.type = vrTag.getString("type");
-                if (vrTag.contains("culture")) vr.setCultureKey(vrTag.getString("culture"));
-                vr.killed = vrTag.getBoolean("killed");
-                vr.awayraiding = vrTag.getBoolean("awayraiding");
-                vr.awayhired = vrTag.getBoolean("awayhired");
-                vr.scale = vrTag.getFloat("scale");
-                vr.setHousePos(Point.readFromNBT(vrTag, "house"));
-                vr.setTownHallPos(Point.readFromNBT(vrTag, "th"));
+                VillagerRecord vr = VillagerRecord.load(vrTag);
                 b.addVillagerRecord(vr);
             }
         }
@@ -593,6 +914,14 @@ public class Building {
                     b.relations.put(p, relTag.getInt("val"));
                 }
             }
+        }
+
+        // Load resource manager state
+        b.resManager.load(tag, "res_");
+
+        // Load current construction
+        if (tag.contains("currentConstruction", Tag.TAG_COMPOUND)) {
+            b.currentConstruction = ConstructionIP.load(tag.getCompound("currentConstruction"));
         }
 
         return b;

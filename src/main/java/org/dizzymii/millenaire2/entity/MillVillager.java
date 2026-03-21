@@ -107,6 +107,7 @@ public abstract class MillVillager extends PathfinderMob {
     public boolean isRaider = false;
     private long villagerId = -1L;
     private int goalTickCounter = 0;
+    private static final int RECORD_SYNC_INTERVAL = 200;
 
     protected MillVillager(EntityType<? extends MillVillager> type, Level level) {
         super(type, level);
@@ -219,12 +220,20 @@ public abstract class MillVillager extends PathfinderMob {
     }
 
     private void serverTick() {
+        updateHired();
+
         goalTickCounter++;
         if (goalTickCounter >= GOAL_TICK_INTERVAL) {
             goalTickCounter = 0;
             tickGoalSelection();
         }
         tickGoalExecution();
+
+        if (this.tickCount % RECORD_SYNC_INTERVAL == 0) {
+            syncRecordToWorld();
+        }
+
+        performNightAction();
     }
 
     /**
@@ -347,7 +356,7 @@ public abstract class MillVillager extends PathfinderMob {
         }
     }
 
-    private void clearGoal() {
+    public void clearGoal() {
         if (currentGoal != null) {
             lastGoalTime.put(currentGoal, this.level().getGameTime());
         }
@@ -366,11 +375,12 @@ public abstract class MillVillager extends PathfinderMob {
         if (currentGoal == null || goalInformation == null) return;
 
         // Check if we're close enough to the target to perform the action
-        if (goalInformation.targetPoint != null) {
+        Point targetPoint = goalInformation.targetPoint;
+        if (targetPoint != null) {
             double dist = this.distanceToSqr(
-                    goalInformation.targetPoint.x + 0.5,
-                    goalInformation.targetPoint.y,
-                    goalInformation.targetPoint.z + 0.5
+                    targetPoint.x + 0.5,
+                    targetPoint.y,
+                    targetPoint.z + 0.5
             );
             int range = currentGoal.range(this);
             if (dist > (range * range + 1)) {
@@ -397,6 +407,108 @@ public abstract class MillVillager extends PathfinderMob {
             MillLog.error(this, "Error executing goal: " + goalKey, e);
             clearGoal();
         }
+    }
+
+    private void syncRecordToWorld() {
+        if (this.level().isClientSide) {
+            return;
+        }
+        org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+        if (mw == null || villagerId < 0) {
+            return;
+        }
+
+        org.dizzymii.millenaire2.village.VillagerRecord vr = mw.getVillagerRecord(villagerId);
+        if (vr == null) {
+            vr = new org.dizzymii.millenaire2.village.VillagerRecord();
+            vr.setVillagerId(villagerId);
+        }
+
+        vr.updateRecord(this);
+        mw.registerVillagerRecord(vr, true);
+    }
+
+    private void updateHired() {
+        if (hiredBy == null || hiredBy.isEmpty()) {
+            return;
+        }
+
+        if (hiredUntil > 0 && this.level().getGameTime() >= hiredUntil) {
+            hiredBy = null;
+            hiredUntil = 0L;
+            aggressiveStance = false;
+            clearGoal();
+        }
+    }
+
+    private void performNightAction() {
+        if (this.level().isDay()) {
+            nightActionPerformed = false;
+            return;
+        }
+
+        if (nightActionPerformed) {
+            return;
+        }
+
+        nightActionPerformed = true;
+        if (isChildVillager()) {
+            visitorNbNights++;
+        }
+    }
+
+    public boolean isChildVillager() {
+        VillagerType type = vtype;
+        return type != null && type.isChild;
+    }
+
+    public boolean helpsInAttacks() {
+        VillagerType type = vtype;
+        return type != null && type.helpInAttacks;
+    }
+
+    public boolean isForeignMerchant() {
+        VillagerType type = vtype;
+        return type != null && type.isForeignMerchant;
+    }
+
+    public boolean isLocalMerchant() {
+        VillagerType type = vtype;
+        return type != null && type.isLocalMerchant;
+    }
+
+    public boolean isHostile() {
+        VillagerType type = vtype;
+        return type != null && type.hostile;
+    }
+
+    public boolean isChief() {
+        VillagerType type = vtype;
+        return type != null && type.isChief;
+    }
+
+    public String getNameString() {
+        String first = getFirstName();
+        String family = getFamilyName();
+        if (first.isEmpty()) return family;
+        if (family.isEmpty()) return first;
+        return first + " " + family;
+    }
+
+    public String getNativeOccupationName() {
+        VillagerType type = vtype;
+        if (type == null || type.name == null) {
+            return "";
+        }
+        return type.name;
+    }
+
+    public String getGameOccupation() {
+        VillagerType type = vtype;
+        if (type == null || type.name == null) {
+            return "";
+        }
+        return type.name;
     }
 
     // ========== Player interaction ==========

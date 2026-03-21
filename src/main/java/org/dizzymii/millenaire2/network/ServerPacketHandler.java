@@ -76,6 +76,58 @@ public final class ServerPacketHandler {
                         building.getTownHallPos() != null ? building.getTownHallPos() : building.getPos();
                 int rep = vPos != null ? profile.getVillageReputation(vPos) : 0;
                 String vName = villager.getFirstName() + " " + villager.getFamilyName();
+
+                // Offer an eligible quest first (original flow prioritises quest interactions)
+                for (org.dizzymii.millenaire2.quest.Quest quest : org.dizzymii.millenaire2.quest.Quest.quests.values()) {
+                    if (quest == null || quest.key == null || quest.steps.isEmpty()) {
+                        continue;
+                    }
+
+                    boolean alreadyActive = false;
+                    for (org.dizzymii.millenaire2.quest.QuestInstance qi : profile.questInstances) {
+                        org.dizzymii.millenaire2.quest.Quest activeQuest = qi.quest;
+                        String activeKey = activeQuest != null ? activeQuest.key : null;
+                        if (activeKey != null && quest.key.equals(activeKey)) {
+                            alreadyActive = true;
+                            break;
+                        }
+                    }
+                    if (alreadyActive) {
+                        continue;
+                    }
+
+                    if (!quest.canStart(profile, mw, vPos)) {
+                        continue;
+                    }
+
+                    if (quest.chanceperhour > 0.0) {
+                        double chance = Math.max(0.0, Math.min(1.0, quest.chanceperhour));
+                        if (player.getRandom().nextDouble() > chance) {
+                            continue;
+                        }
+                    }
+
+                    org.dizzymii.millenaire2.quest.QuestStep firstStep = quest.steps.get(0);
+                    String description = pickLocalizedText(firstStep.descriptions, "Quest available");
+                    String label = pickLocalizedText(firstStep.labels, quest.key);
+
+                    ServerPacketSender.sendQuestInstance(
+                            player,
+                            quest.key,
+                            0,
+                            quest.steps.size(),
+                            description,
+                            label,
+                            firstStep.rewardMoney,
+                            firstStep.rewardReputation,
+                            villager.getId(),
+                            true
+                    );
+                    ServerPacketSender.sendOpenGui(player, MillPacketIds.GUI_QUEST, villager.getId(), villager.townHallPoint);
+                    MillLog.minor("ServerPacketHandler", "Offered quest '" + quest.key + "' to " + player.getName().getString());
+                    return;
+                }
+
                 ServerPacketSender.sendTradeData(player, villager.getId(),
                         building.getTradeGoods(), profile.deniers, rep, vName);
             }
@@ -219,10 +271,14 @@ public final class ServerPacketHandler {
     private static void handleMapInfoRequest(IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
         MillLog.minor("ServerPacketHandler", "Map info requested by " + player.getName().getString());
-        // Map info packet contains village positions and culture markers for the minimap
-        // Currently sends empty data — will be populated when MillWorldData tracks village positions
+
+        org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+        java.util.List<org.dizzymii.millenaire2.util.Point> villages = mw != null
+                ? mw.getCombinedVillagesLoneBuildings()
+                : java.util.List.of();
+
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
-        w.writeInt(0); // village count
+        w.writeInt(villages.size());
         org.dizzymii.millenaire2.network.payloads.MillGenericS2CPayload payload =
                 new org.dizzymii.millenaire2.network.payloads.MillGenericS2CPayload(
                         MillPacketIds.PACKET_MAPINFO, 0, w.toByteArray());
@@ -272,9 +328,99 @@ public final class ServerPacketHandler {
 
     private static void handleChiefAction(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Chief action " + actionId + " from " + player.getName().getString());
-        // Chief actions modify village building priorities, crop selection, diplomacy, etc.
-        // Actual village modification deferred to when Village tick system is complete
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw == null) {
+                return;
+            }
+            org.dizzymii.millenaire2.world.UserProfile profile =
+                    mw.getOrCreateProfile(player.getUUID(), player.getName().getString());
+            org.dizzymii.millenaire2.village.Building townHall = findNearestTownHall(player, mw, 512.0);
+
+            switch (actionId) {
+                case MillPacketIds.GUIACTION_TRADE_TOGGLE_DONATION -> {
+                    profile.donationActivated = !profile.donationActivated;
+                    mw.setDirty();
+                    ServerPacketSender.sendProfile(player, profile, org.dizzymii.millenaire2.world.UserProfile.UPDATE_ACTIONDATA);
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Donation mode " + (profile.donationActivated ? "enabled" : "disabled") + "."));
+                }
+                case MillPacketIds.GUIACTION_PUJAS_CHANGE_ENCHANTMENT -> {
+                    final int pujaCost = 16;
+                    if (profile.deniers < pujaCost) {
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                                "§c[Millénaire] Not enough deniers for pujas."));
+                        return;
+                    }
+                    profile.deniers -= pujaCost;
+                    if (townHall != null && townHall.getPos() != null) {
+                        profile.adjustVillageReputation(townHall.getPos(), 32);
+                    }
+                    profile.addTag("pujas.performed");
+                    mw.setDirty();
+                    ServerPacketSender.sendProfile(player, profile, org.dizzymii.millenaire2.world.UserProfile.UPDATE_REPUTATION);
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Offering accepted."));
+                }
+                case MillPacketIds.GUIACTION_CHIEF_BUILDING -> {
+                    if (townHall == null) {
+                        return;
+                    }
+                    String planSet = r.hasRemaining() ? r.readString() : null;
+                    if (planSet != null && !planSet.isEmpty()) {
+                        townHall.buildingsBought.add(planSet);
+                        mw.setDirty();
+                    }
+                }
+                case MillPacketIds.GUIACTION_CHIEF_CROP -> {
+                    String cropKey = r.hasRemaining() ? r.readString() : null;
+                    if (cropKey != null && !cropKey.isEmpty()) {
+                        mw.setGlobalTag("chief.crop." + cropKey);
+                        mw.setDirty();
+                    }
+                }
+                case MillPacketIds.GUIACTION_CHIEF_CONTROL -> {
+                    String controlKey = r.hasRemaining() ? r.readString() : "default";
+                    profile.addTag("chief.control." + controlKey);
+                    mw.setDirty();
+                }
+                case MillPacketIds.GUIACTION_CHIEF_DIPLOMACY -> {
+                    if (townHall == null || !r.hasRemaining()) {
+                        return;
+                    }
+                    int[] targetPos = r.readBlockPos();
+                    int relation = r.hasRemaining() ? r.readInt() : 0;
+                    org.dizzymii.millenaire2.util.Point targetPoint =
+                            new org.dizzymii.millenaire2.util.Point(targetPos[0], targetPos[1], targetPos[2]);
+                    org.dizzymii.millenaire2.village.Building target = mw.getBuilding(targetPoint);
+                    if (target != null && townHall.getPos() != null && target.getPos() != null) {
+                        townHall.setRelation(target.getPos(), relation);
+                        target.setRelation(townHall.getPos(), relation);
+                        mw.setDirty();
+                    }
+                }
+                case MillPacketIds.GUIACTION_CHIEF_SCROLL -> {
+                    int scroll = r.hasRemaining() ? r.readInt() : 0;
+                    profile.addTag("chief.scroll." + scroll);
+                    mw.setDirty();
+                }
+                case MillPacketIds.GUIACTION_CHIEF_HUNTING_DROP -> {
+                    boolean drop = r.hasRemaining() && r.readBoolean();
+                    if (drop) {
+                        profile.addTag("chief.hunting.drop");
+                    } else {
+                        profile.removeTag("chief.hunting.drop");
+                    }
+                    mw.setDirty();
+                }
+                default -> MillLog.minor("ServerPacketHandler", "Unhandled chief action " + actionId);
+            }
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling chief action", e);
+        } finally {
+            r.release();
+        }
     }
 
     private static void handleQuestAction(int actionId, byte[] data, IPayloadContext context) {
@@ -286,13 +432,19 @@ public final class ServerPacketHandler {
             int villagerEntityId = r.readInt();
 
             org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
-            org.dizzymii.millenaire2.world.UserProfile profile = mw.getProfile(player.getUUID());
+            if (mw == null || questKey == null || questKey.isEmpty()) {
+                return;
+            }
+            org.dizzymii.millenaire2.world.UserProfile profile =
+                    mw.getOrCreateProfile(player.getUUID(), player.getName().getString());
 
             if (actionId == MillPacketIds.GUIACTION_QUEST_COMPLETESTEP) {
                 // Find the active quest instance for this player
                 org.dizzymii.millenaire2.quest.QuestInstance active = null;
                 for (org.dizzymii.millenaire2.quest.QuestInstance qi : profile.questInstances) {
-                    if (qi.quest != null && questKey.equals(qi.quest.key)) {
+                    org.dizzymii.millenaire2.quest.Quest qiQuest = qi.quest;
+                    String qiQuestKey = qiQuest != null ? qiQuest.key : null;
+                    if (qiQuestKey != null && questKey.equals(qiQuestKey)) {
                         active = qi;
                         break;
                     }
@@ -310,20 +462,56 @@ public final class ServerPacketHandler {
                     active = new org.dizzymii.millenaire2.quest.QuestInstance(mw, quest, profile, vils, System.currentTimeMillis());
                     profile.questInstances.add(active);
                     MillLog.minor("ServerPacketHandler", "Quest '" + questKey + "' accepted by " + player.getName().getString());
+
+                    org.dizzymii.millenaire2.quest.QuestStep acceptedStep = active.getCurrentStep();
+                    if (acceptedStep != null && active.quest != null) {
+                        ServerPacketSender.sendQuestInstance(
+                                player,
+                                active.quest.key,
+                                active.currentStep,
+                                active.quest.steps.size(),
+                                pickLocalizedText(acceptedStep.descriptions, "Quest accepted"),
+                                pickLocalizedText(acceptedStep.labels, active.quest.key),
+                                acceptedStep.rewardMoney,
+                                acceptedStep.rewardReputation,
+                                villagerEntityId,
+                                false
+                        );
+                    }
                 }
 
                 boolean finished = active.completeStep();
                 if (finished) {
                     // Award money
-                    org.dizzymii.millenaire2.quest.QuestStep lastStep = active.quest != null && active.currentStep > 0
-                            ? active.quest.steps.get(active.currentStep - 1) : null;
+                    org.dizzymii.millenaire2.quest.Quest activeQuest = active.quest;
+                    org.dizzymii.millenaire2.quest.QuestStep lastStep = activeQuest != null
+                            && active.currentStep > 0
+                            && active.currentStep - 1 < activeQuest.steps.size()
+                            ? activeQuest.steps.get(active.currentStep - 1)
+                            : null;
                     if (lastStep != null && lastStep.rewardMoney > 0) {
                         profile.deniers += lastStep.rewardMoney;
                     }
                     profile.questInstances.remove(active);
+                    ServerPacketSender.sendQuestInstanceDestroy(player, questKey);
                     player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
                             "\u00a76[Mill\u00e9naire]\u00a7r Quest '" + questKey + "' completed!"));
                 } else {
+                    org.dizzymii.millenaire2.quest.QuestStep nextStep = active.getCurrentStep();
+                    if (nextStep != null && active.quest != null) {
+                        ServerPacketSender.sendQuestInstance(
+                                player,
+                                active.quest.key,
+                                active.currentStep,
+                                active.quest.steps.size(),
+                                pickLocalizedText(nextStep.descriptions, "Quest updated"),
+                                pickLocalizedText(nextStep.labels, active.quest.key),
+                                nextStep.rewardMoney,
+                                nextStep.rewardReputation,
+                                villagerEntityId,
+                                false
+                        );
+                    }
                     player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
                             "\u00a76[Mill\u00e9naire]\u00a7r Quest step completed."));
                 }
@@ -331,7 +519,12 @@ public final class ServerPacketHandler {
 
             } else if (actionId == MillPacketIds.GUIACTION_QUEST_REFUSE) {
                 // Remove quest instance if it exists
-                profile.questInstances.removeIf(qi -> qi.quest != null && questKey.equals(qi.quest.key));
+                profile.questInstances.removeIf(qi -> {
+                    org.dizzymii.millenaire2.quest.Quest qiQuest = qi.quest;
+                    String qiQuestKey = qiQuest != null ? qiQuest.key : null;
+                    return qiQuestKey != null && questKey.equals(qiQuestKey);
+                });
+                ServerPacketSender.sendQuestInstanceDestroy(player, questKey);
                 player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
                         "\u00a76[Mill\u00e9naire]\u00a7r Quest declined."));
                 mw.setDirty();
@@ -491,20 +684,212 @@ public final class ServerPacketHandler {
 
     private static void handleBuildingProject(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Building project action " + actionId + " from " + player.getName().getString());
-        // New/custom/update building project in village
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw == null) {
+                return;
+            }
+
+            org.dizzymii.millenaire2.village.Building th = null;
+            if (r.hasRemaining()) {
+                int[] pos = r.readBlockPos();
+                th = mw.getBuilding(new org.dizzymii.millenaire2.util.Point(pos[0], pos[1], pos[2]));
+            }
+            if (th == null) {
+                th = findNearestTownHall(player, mw, 256.0);
+            }
+            if (th == null) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "§c[Millénaire] No nearby townhall found for project action."));
+                return;
+            }
+
+            if (actionId == MillPacketIds.GUIACTION_NEW_BUILDING_PROJECT) {
+                String planSet = r.hasRemaining() ? r.readString() : null;
+                if (planSet != null && !planSet.isEmpty()) {
+                    th.buildingsBought.add(planSet);
+                    mw.setDirty();
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Building project requested: " + planSet));
+                }
+            } else if (actionId == MillPacketIds.GUIACTION_NEW_CUSTOM_BUILDING_PROJECT) {
+                String customKey = r.hasRemaining() ? r.readString() : null;
+                if (customKey != null && !customKey.isEmpty()) {
+                    th.buildingsBought.add("custom:" + customKey);
+                    mw.setDirty();
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Custom project requested: " + customKey));
+                }
+            } else if (actionId == MillPacketIds.GUIACTION_UPDATE_CUSTOM_BUILDING_PROJECT) {
+                String customKey = r.hasRemaining() ? r.readString() : null;
+                if (customKey != null && !customKey.isEmpty()) {
+                    th.buildingsBought.remove("custom:" + customKey);
+                    th.buildingsBought.add("custom:" + customKey);
+                    mw.setDirty();
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Custom project updated: " + customKey));
+                }
+            }
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling building project action", e);
+        } finally {
+            r.release();
+        }
     }
 
     private static void handleMilitaryAction(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Military action " + actionId + " from " + player.getName().getString());
-        // Military diplomacy: relations, raid, cancel raid between villages
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw == null) {
+                return;
+            }
+
+            org.dizzymii.millenaire2.village.Building source = findNearestTownHall(player, mw, 512.0);
+            if (source == null) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "§c[Millénaire] No nearby townhall found for military action."));
+                return;
+            }
+
+            if (actionId == MillPacketIds.GUIACTION_MILITARY_CANCEL_RAID) {
+                source.cancelRaid();
+                mw.setDirty();
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "§6[Millénaire]§r Raid cancelled."));
+                return;
+            }
+
+            org.dizzymii.millenaire2.village.Building target = null;
+            if (r.hasRemaining()) {
+                int[] pos = r.readBlockPos();
+                target = mw.getBuilding(new org.dizzymii.millenaire2.util.Point(pos[0], pos[1], pos[2]));
+            }
+
+            if (target == null || target.getPos() == null) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "§c[Millénaire] Invalid military target."));
+                return;
+            }
+
+            if (actionId == MillPacketIds.GUIACTION_MILITARY_RELATIONS) {
+                int relation = r.hasRemaining() ? r.readInt() : 0;
+                source.setRelation(target.getPos(), relation);
+                target.setRelation(source.getPos(), relation);
+                mw.setDirty();
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "§6[Millénaire]§r Relation set to " + relation + "."));
+            } else if (actionId == MillPacketIds.GUIACTION_MILITARY_RAID) {
+                source.raidTarget = target.getPos();
+                source.underAttack = false;
+                mw.setDirty();
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "§6[Millénaire]§r Raid target set."));
+            }
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling military action", e);
+        } finally {
+            r.release();
+        }
+    }
+
+    private static org.dizzymii.millenaire2.village.Building findNearestTownHall(
+            ServerPlayer player,
+            org.dizzymii.millenaire2.world.MillWorldData mw,
+            double maxDistance) {
+        org.dizzymii.millenaire2.village.Building nearest = null;
+        double nearestDist = maxDistance;
+        org.dizzymii.millenaire2.util.Point playerPoint = new org.dizzymii.millenaire2.util.Point(player.blockPosition());
+
+        for (org.dizzymii.millenaire2.village.Building b : mw.allBuildings()) {
+            org.dizzymii.millenaire2.util.Point pos = b.getPos();
+            if (!b.isTownhall || pos == null) {
+                continue;
+            }
+            double dist = playerPoint.distanceTo(pos);
+            if (dist < nearestDist) {
+                nearestDist = dist;
+                nearest = b;
+            }
+        }
+
+        return nearest;
+    }
+
+    private static String pickLocalizedText(java.util.Map<String, String> map, String fallback) {
+        if (map == null || map.isEmpty()) {
+            return fallback;
+        }
+        if (map.containsKey("en") && map.get("en") != null) {
+            return map.get("en");
+        }
+        for (String value : map.values()) {
+            if (value != null && !value.isEmpty()) {
+                return value;
+            }
+        }
+        return fallback;
     }
 
     private static void handleImportTableAction(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Import table action " + actionId + " from " + player.getName().getString());
-        // Import table: import building plan, change settings, create building from plan
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw == null) {
+                return;
+            }
+
+            if (actionId == MillPacketIds.GUIACTION_IMPORTTABLE_IMPORTBUILDINGPLAN) {
+                String planKey = r.hasRemaining() ? r.readString() : null;
+                if (planKey != null && !planKey.isEmpty()) {
+                    mw.setGlobalTag("importplan:" + planKey);
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Imported building plan: " + planKey));
+                }
+            } else if (actionId == MillPacketIds.GUIACTION_IMPORTTABLE_CHANGESETTINGS) {
+                boolean enabled = r.hasRemaining() && r.readBoolean();
+                if (enabled) {
+                    mw.setGlobalTag("importtable:enabled");
+                } else {
+                    mw.clearGlobalTag("importtable:enabled");
+                }
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "§6[Millénaire]§r Import table settings updated."));
+            } else if (actionId == MillPacketIds.GUIACTION_IMPORTTABLE_CREATEBUILDING) {
+                String cultureKey = r.hasRemaining() ? r.readString() : "norman";
+                org.dizzymii.millenaire2.culture.Culture culture =
+                        org.dizzymii.millenaire2.culture.Culture.getCultureByName(cultureKey);
+                if (culture == null) {
+                    culture = org.dizzymii.millenaire2.culture.Culture.getCultureByName("norman");
+                }
+                if (culture == null) {
+                    return;
+                }
+
+                net.minecraft.server.level.ServerLevel level = (net.minecraft.server.level.ServerLevel) player.level();
+                boolean generated = org.dizzymii.millenaire2.world.WorldGenVillage.generateNewVillage(
+                        level,
+                        player.blockPosition(),
+                        culture,
+                        mw,
+                        level.random);
+
+                if (generated) {
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Import table created new village building set."));
+                } else {
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§c[Millénaire] Import table failed to create building."));
+                }
+            }
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling import table action", e);
+        } finally {
+            r.release();
+        }
     }
 
     // ========== Trade ==========

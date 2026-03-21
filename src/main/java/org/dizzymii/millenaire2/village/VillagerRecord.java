@@ -5,6 +5,11 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import org.dizzymii.millenaire2.culture.Culture;
+import org.dizzymii.millenaire2.culture.VillagerType;
+import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.item.InvItem;
 import org.dizzymii.millenaire2.util.Point;
 
 import javax.annotation.Nullable;
@@ -83,6 +88,138 @@ public class VillagerRecord implements Cloneable {
 
     public void removeQuestTag(String tag) {
         questTags.remove(tag);
+    }
+
+    public int countInv(String key) {
+        return inventory.getOrDefault(key, 0);
+    }
+
+    public int countInv(InvItem item) {
+        if (item == null) {
+            return 0;
+        }
+        return countInv(item.key);
+    }
+
+    public int countInv(Item item) {
+        if (item == null) {
+            return 0;
+        }
+        for (Map.Entry<String, Integer> entry : inventory.entrySet()) {
+            InvItem inv = InvItem.get(entry.getKey());
+            if (inv != null && inv.getItem() == item) {
+                return entry.getValue();
+            }
+        }
+        return 0;
+    }
+
+    public void addToInv(InvItem item, int count) {
+        if (item == null || count == 0) {
+            return;
+        }
+        int updated = inventory.getOrDefault(item.key, 0) + count;
+        if (updated <= 0) {
+            inventory.remove(item.key);
+        } else {
+            inventory.put(item.key, updated);
+        }
+    }
+
+    public int takeFromInv(InvItem item, int count) {
+        if (item == null || count <= 0) {
+            return 0;
+        }
+        int taken = Math.min(countInv(item), count);
+        if (taken <= 0) {
+            return 0;
+        }
+        addToInv(item, -taken);
+        return taken;
+    }
+
+    public boolean matches(MillVillager villager) {
+        return villager != null && villager.getVillagerId() == this.villagerId;
+    }
+
+    public void updateRecord(MillVillager villager) {
+        if (villager == null) {
+            return;
+        }
+
+        this.villagerId = villager.getVillagerId();
+        this.firstName = villager.getFirstName();
+        this.familyName = villager.getFamilyName();
+        this.gender = villager.getGender();
+        this.cultureKey = villager.getCultureKey();
+        this.type = villager.vtypeKey;
+        this.raidingVillage = villager.isRaider;
+        this.killed = !villager.isAlive();
+        this.housePos = villager.housePoint != null ? new Point(villager.housePoint) : null;
+        this.townHallPos = villager.townHallPoint != null ? new Point(villager.townHallPoint) : null;
+
+        this.inventory.clear();
+        for (Map.Entry<InvItem, Integer> entry : villager.inventory.entrySet()) {
+            if (entry.getKey() != null && entry.getValue() != null && entry.getValue() > 0) {
+                this.inventory.put(entry.getKey().key, entry.getValue());
+            }
+        }
+
+        this.flawedRecord = (this.housePos == null && this.townHallPos == null);
+    }
+
+    public VillagerRecord generateRaidRecord(Building target) {
+        VillagerRecord raidRecord = this.clone();
+        raidRecord.villagerId = Math.abs(System.nanoTime() ^ (long) (Math.random() * Long.MAX_VALUE));
+        raidRecord.raidingVillage = true;
+        raidRecord.awayraiding = false;
+        raidRecord.killed = false;
+        raidRecord.originalId = this.villagerId;
+        raidRecord.originalVillagePos = this.townHallPos != null ? new Point(this.townHallPos) : null;
+        raidRecord.raiderSpawn = 0L;
+
+        if (target != null) {
+            Point targetPos = target.getPos();
+            Point targetTownHall = target.getTownHallPos();
+            raidRecord.housePos = targetPos != null ? new Point(targetPos) : null;
+            raidRecord.townHallPos = targetTownHall != null
+                    ? new Point(targetTownHall)
+                    : (targetPos != null ? new Point(targetPos) : null);
+        }
+
+        return raidRecord;
+    }
+
+    public String getName() {
+        String first = firstName == null ? "" : firstName;
+        String family = familyName == null ? "" : familyName;
+        if (first.isEmpty()) {
+            return family;
+        }
+        if (family.isEmpty()) {
+            return first;
+        }
+        return first + " " + family;
+    }
+
+    @Nullable
+    public VillagerType getType() {
+        if (cultureKey == null || type == null) {
+            return null;
+        }
+        Culture culture = Culture.getCultureByName(cultureKey);
+        if (culture == null) {
+            return null;
+        }
+        return culture.getVillagerType(type);
+    }
+
+    public String getNativeOccupationName() {
+        VillagerType vt = getType();
+        if (vt == null) {
+            return "";
+        }
+        return vt.name == null ? "" : vt.name;
     }
 
     // ========== NBT persistence ==========
@@ -206,9 +343,30 @@ public class VillagerRecord implements Cloneable {
             VillagerRecord copy = (VillagerRecord) super.clone();
             copy.inventory = new HashMap<>(this.inventory);
             copy.questTags = new ArrayList<>(this.questTags);
+            copy.housePos = this.housePos == null ? null : new Point(this.housePos);
+            copy.townHallPos = this.townHallPos == null ? null : new Point(this.townHallPos);
+            copy.originalVillagePos = this.originalVillagePos == null ? null : new Point(this.originalVillagePos);
             return copy;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError(e);
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof VillagerRecord other)) return false;
+        return this.villagerId == other.villagerId;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(villagerId);
+    }
+
+    @Override
+    public String toString() {
+        String t = type == null ? "" : type;
+        return getName() + "/" + t + "/" + villagerId;
     }
 }

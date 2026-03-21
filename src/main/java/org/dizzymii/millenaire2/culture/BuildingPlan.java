@@ -3,8 +3,14 @@ package org.dizzymii.millenaire2.culture;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ConfigField;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.FieldDocumentation;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ParameterType;
+import org.dizzymii.millenaire2.buildingplan.BuildingBlock;
+import org.dizzymii.millenaire2.buildingplan.PointType;
+import org.dizzymii.millenaire2.buildingplan.SpecialPointTypeList;
 import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.VirtualDir;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -197,19 +203,22 @@ public class BuildingPlan {
      * Number of floors = image width / building width.
      */
     private void parsePlanImage() {
-        if (planImage == null || width <= 0 || length <= 0) return;
+        if (planImage == null) return;
 
         int imgWidth = planImage.getWidth();
         int imgHeight = planImage.getHeight();
 
         // If width/length not set from config, try to infer
-        if (width == 0) width = imgWidth;
-        if (length == 0) length = imgHeight;
+        if (width <= 0) width = imgWidth;
+        if (length <= 0) length = imgHeight;
+
+        if (width <= 0 || length <= 0) return;
 
         nbFloors = imgWidth / Math.max(width, 1);
         if (nbFloors <= 0) nbFloors = 1;
 
         blockData = new int[width][length][nbFloors];
+        specialPositions.clear();
 
         for (int floor = 0; floor < nbFloors; floor++) {
             for (int x = 0; x < width && (floor * width + x) < imgWidth; x++) {
@@ -217,6 +226,12 @@ public class BuildingPlan {
                     int pixelX = floor * width + x;
                     int rgb = planImage.getRGB(pixelX, z) & 0xFFFFFF;
                     blockData[x][z][floor] = rgb;
+
+                    PointType pt = PointType.colourPoints.get(rgb);
+                    if (pt != null && pt.getBlock() == null && pt.getSpecialType() != null) {
+                        specialPositions.computeIfAbsent(pt.getSpecialType(), k -> new ArrayList<>())
+                                .add(new int[]{x, floor + altitudeOffset, z});
+                    }
                 }
             }
         }
@@ -237,6 +252,104 @@ public class BuildingPlan {
 
     public boolean hasImage() {
         return planImage != null;
+    }
+
+    /**
+     * Resolve the parsed colour data into concrete BuildingBlock placements.
+     */
+    public List<BuildingBlock> resolveBuildingBlocks() {
+        return resolveBuildingBlocks(false);
+    }
+
+    /**
+     * Resolve parsed colour data into concrete BuildingBlock placements, with optional mirroring.
+     */
+    public List<BuildingBlock> resolveBuildingBlocks(boolean mirrorX) {
+        List<BuildingBlock> blocks = new ArrayList<>();
+        if (blockData == null) {
+            return blocks;
+        }
+
+        for (int floor = 0; floor < nbFloors; floor++) {
+            int y = floor + altitudeOffset;
+            for (int x = 0; x < width; x++) {
+                for (int z = 0; z < length; z++) {
+                    int rgb = getBlockColor(x, z, floor);
+                    if (rgb < 0 || rgb == 0xFFFFFF) {
+                        continue;
+                    }
+
+                    PointType pt = PointType.colourPoints.get(rgb);
+                    if (pt == null) {
+                        continue;
+                    }
+
+                    int planX = mirrorX ? (width - 1 - x) : x;
+
+                    if (pt.getBlock() != null) {
+                        blocks.add(new BuildingBlock(pt, planX, y, z));
+                        continue;
+                    }
+
+                    BuildingBlock specialBlock = createSpecialBlock(pt.getSpecialType(), planX, y, z);
+                    if (specialBlock != null) {
+                        blocks.add(specialBlock);
+                    }
+                }
+            }
+        }
+
+        return blocks;
+    }
+
+    /**
+     * Compute required block counts from resolved plan blocks.
+     */
+    public Map<String, Integer> computeResourceCost() {
+        Map<String, Integer> costs = new HashMap<>();
+        for (BuildingBlock bb : resolveBuildingBlocks()) {
+            BlockState state = bb.blockState;
+            if (state == null || state.is(Blocks.AIR)) {
+                continue;
+            }
+            String key = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
+            costs.merge(key, 1, Integer::sum);
+        }
+        return costs;
+    }
+
+    @javax.annotation.Nullable
+    private static BuildingBlock createSpecialBlock(String specialType, int x, int y, int z) {
+        if (specialType == null) {
+            return null;
+        }
+
+        BuildingBlock bb = new BuildingBlock();
+        bb.x = x;
+        bb.y = y;
+        bb.z = z;
+
+        if (specialType.equals(SpecialPointTypeList.bsoil)
+                || specialType.equals(SpecialPointTypeList.bmaizesoil)
+                || specialType.equals(SpecialPointTypeList.bcarrotsoil)
+                || specialType.equals(SpecialPointTypeList.bpotatosoil)
+                || specialType.equals(SpecialPointTypeList.bflowersoil)) {
+            bb.blockState = Blocks.FARMLAND.defaultBlockState();
+            return bb;
+        }
+
+        if (specialType.equals(SpecialPointTypeList.bricesoil)
+                || specialType.equals(SpecialPointTypeList.bsugarcanesoil)) {
+            bb.blockState = Blocks.WATER.defaultBlockState();
+            return bb;
+        }
+
+        if (specialType.equals(SpecialPointTypeList.bgrass)) {
+            bb.blockState = Blocks.GRASS_BLOCK.defaultBlockState();
+            return bb;
+        }
+
+        return null;
     }
 
     @Override

@@ -207,6 +207,11 @@ public class WorldGenVillage {
      */
     private static List<BuildingBlock> loadPlanBlocks(Culture culture, BuildingPlanSet planSet,
                                                        BuildingPlan plan) {
+        List<BuildingBlock> resolved = plan.resolveBuildingBlocks();
+        if (!resolved.isEmpty()) {
+            return resolved;
+        }
+
         // Locate the PNG file
         File contentDir = MillCommonUtilities.getMillenaireContentDir();
         File cultureDir = new File(contentDir, "cultures/" + culture.key);
@@ -214,11 +219,7 @@ public class WorldGenVillage {
 
         String fileName = plan.pngFileName;
         if (fileName == null) {
-            if ("initial".equals(plan.upgradeKey)) {
-                fileName = planSet.key + ".png";
-            } else {
-                fileName = planSet.key + "_" + plan.upgradeKey + ".png";
-            }
+            fileName = planSet.key + plan.planIndex + ".png";
         }
 
         File pngFile = buildingsDir.getChildFileRecursive(fileName);

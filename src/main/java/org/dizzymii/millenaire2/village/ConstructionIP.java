@@ -119,34 +119,27 @@ public class ConstructionIP {
             org.dizzymii.millenaire2.culture.BuildingPlan plan,
             org.dizzymii.millenaire2.util.Point origin,
             ServerLevel level) {
+        return fromBuildingPlan(plan, origin, level, 0, false);
+    }
+
+    @Nullable
+    public static ConstructionIP fromBuildingPlan(
+            org.dizzymii.millenaire2.culture.BuildingPlan plan,
+            org.dizzymii.millenaire2.util.Point origin,
+            ServerLevel level,
+            int orientation,
+            boolean mirrorX) {
         if (plan == null || !plan.hasImage() || origin == null) return null;
 
-        List<BuildingBlock> allBlocks = new ArrayList<>();
-        int w = plan.width;
-        int l = plan.length;
-        int floors = plan.nbFloors;
-
-        for (int floor = 0; floor < floors; floor++) {
-            int y = floor + plan.altitudeOffset;
-            for (int x = 0; x < w; x++) {
-                for (int z = 0; z < l; z++) {
-                    int rgb = plan.getBlockColor(x, z, floor);
-                    if (rgb < 0 || rgb == 0xFFFFFF) continue;
-
-                    org.dizzymii.millenaire2.buildingplan.PointType pt =
-                            org.dizzymii.millenaire2.buildingplan.PointType.colourPoints.get(rgb);
-                    if (pt == null || pt.getBlock() == null) continue;
-
-                    allBlocks.add(new BuildingBlock(pt, x, y, z));
-                }
-            }
-        }
+        List<BuildingBlock> allBlocks = plan.resolveBuildingBlocks(mirrorX);
 
         if (allBlocks.isEmpty()) return null;
 
         BuildingLocation loc = new BuildingLocation();
         loc.pos = origin;
+        loc.orientation = orientation;
         ConstructionIP cip = new ConstructionIP(loc);
+        cip.orientation = Math.floorMod(orientation, 4);
         cip.setBlocks(allBlocks);
         return cip;
     }

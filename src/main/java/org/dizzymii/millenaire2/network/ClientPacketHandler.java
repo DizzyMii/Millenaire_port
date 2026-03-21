@@ -69,12 +69,33 @@ public final class ClientPacketHandler {
             case MillPacketIds.PACKET_QUESTINSTANCE:
                 handleQuestInstance(payload.data());
                 break;
+            case MillPacketIds.PACKET_QUESTINSTANCE_DESTROY:
+                handleQuestInstanceDestroy(payload.data());
+                break;
             case MillPacketIds.PACKET_VILLAGER_SENTENCE:
                 handleVillagerSentence(payload.data());
                 break;
             default:
                 MillLog.warn("ClientPacketHandler", "Unknown S2C packet type: " + type + "/" + subType);
                 break;
+        }
+    }
+
+    private static void handleQuestInstanceDestroy(byte[] data) {
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            String questKey = r.readString();
+            QuestClientEntry currentQuest = cachedQuest;
+            String currentQuestKey = currentQuest != null ? currentQuest.questKey : null;
+            if (currentQuestKey != null && currentQuestKey.equals(questKey)) {
+                cachedQuest = null;
+                cachedQuestVillagerEntityId = -1;
+            }
+            MillLog.minor("ClientPacketHandler", "Quest removed: " + questKey);
+        } catch (Exception e) {
+            MillLog.error("ClientPacketHandler", "Error handling quest instance destroy", e);
+        } finally {
+            r.release();
         }
     }
 
