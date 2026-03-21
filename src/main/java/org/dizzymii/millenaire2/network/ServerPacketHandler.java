@@ -68,7 +68,7 @@ public final class ServerPacketHandler {
             org.dizzymii.millenaire2.village.Building building = villager.getHomeBuilding();
             if (building == null) building = villager.getTownHallBuilding();
 
-            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.world.MillWorldData.get(player.serverLevel());
             if (mw != null && building != null) {
                 org.dizzymii.millenaire2.world.UserProfile profile =
                         mw.getOrCreateProfile(player.getUUID(), player.getName().getString());
@@ -96,7 +96,7 @@ public final class ServerPacketHandler {
     private static void handleVillageListRequest(IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
 
-        org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+        org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.world.MillWorldData.get(player.serverLevel());
         java.util.List<ServerPacketSender.VillageListEntry> entries = new java.util.ArrayList<>();
 
         if (mw != null) {
@@ -287,7 +287,7 @@ public final class ServerPacketHandler {
             String questKey = r.readString();
             int villagerEntityId = r.readInt();
 
-            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.world.MillWorldData.get(player.serverLevel());
             org.dizzymii.millenaire2.world.UserProfile profile = mw.getProfile(player.getUUID());
 
             if (actionId == MillPacketIds.GUIACTION_QUEST_COMPLETESTEP) {
@@ -362,7 +362,7 @@ public final class ServerPacketHandler {
             net.minecraft.server.level.ServerLevel level = (net.minecraft.server.level.ServerLevel) player.level();
             net.minecraft.core.BlockPos playerPos = player.blockPosition();
             org.dizzymii.millenaire2.world.MillWorldData mw =
-                    org.dizzymii.millenaire2.Millenaire2.getWorldData();
+                    org.dizzymii.millenaire2.world.MillWorldData.get(player.serverLevel());
             if (mw == null) return;
 
             boolean generated = org.dizzymii.millenaire2.world.WorldGenVillage
@@ -388,7 +388,7 @@ public final class ServerPacketHandler {
         PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
         try {
             org.dizzymii.millenaire2.world.MillWorldData mw =
-                    org.dizzymii.millenaire2.Millenaire2.getWorldData();
+                    org.dizzymii.millenaire2.world.MillWorldData.get(player.serverLevel());
             if (mw == null) return;
             org.dizzymii.millenaire2.world.UserProfile profile =
                     mw.getOrCreateProfile(player.getUUID(), player.getName().getString());
@@ -443,7 +443,7 @@ public final class ServerPacketHandler {
         if (!(context.player() instanceof ServerPlayer player)) return;
 
         org.dizzymii.millenaire2.world.MillWorldData mw =
-                org.dizzymii.millenaire2.Millenaire2.getWorldData();
+                org.dizzymii.millenaire2.world.MillWorldData.get(player.serverLevel());
         if (mw == null) return;
 
         net.minecraft.core.BlockPos playerPos = player.blockPosition();
@@ -497,7 +497,7 @@ public final class ServerPacketHandler {
         PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
         try {
             org.dizzymii.millenaire2.world.MillWorldData mw =
-                    org.dizzymii.millenaire2.Millenaire2.getWorldData();
+                    org.dizzymii.millenaire2.world.MillWorldData.get(player.serverLevel());
             if (mw == null) return;
 
             org.dizzymii.millenaire2.util.Point townHallPos = readPoint(r);
@@ -604,7 +604,7 @@ public final class ServerPacketHandler {
         PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
         try {
             org.dizzymii.millenaire2.world.MillWorldData mw =
-                    org.dizzymii.millenaire2.Millenaire2.getWorldData();
+                    org.dizzymii.millenaire2.world.MillWorldData.get(player.serverLevel());
             if (mw == null) return;
 
             org.dizzymii.millenaire2.util.Point townHallPos = readPoint(r);
@@ -746,7 +746,7 @@ public final class ServerPacketHandler {
             org.dizzymii.millenaire2.item.TradeGood good = goods.get(goodIndex);
 
             // Get player profile for deniers and reputation
-            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.world.MillWorldData.get(player.serverLevel());
             if (mw == null) return;
             org.dizzymii.millenaire2.world.UserProfile profile =
                     mw.getOrCreateProfile(player.getUUID(), player.getName().getString());

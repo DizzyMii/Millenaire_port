@@ -49,11 +49,9 @@ public class MillEventController {
 
         // SavedData is automatically persisted by Minecraft when the level unloads,
         // but we mark dirty to ensure latest state is flushed.
-        MillWorldData mw = Millenaire2.getWorldData();
-        if (mw != null) {
-            mw.setDirty();
-            MillLog.minor("MillEventController", "Level unloading — marked MillWorldData dirty for save.");
-        }
+        MillWorldData mw = MillWorldData.get(serverLevel);
+        mw.setDirty();
+        MillLog.minor("MillEventController", "Level unloading — marked MillWorldData dirty for save.");
     }
 
     @SubscribeEvent
@@ -63,8 +61,8 @@ public class MillEventController {
 
         // Locked chest interaction
         if (state.is(MillBlocks.LOCKED_CHEST.get())) {
-            MillWorldData mw = Millenaire2.getWorldData();
-            if (mw == null) return;
+            if (!(event.getLevel() instanceof ServerLevel sl)) return;
+            MillWorldData mw = MillWorldData.get(sl);
 
             // Find the building that owns this locked chest
             Point clickPos = new Point(event.getPos());
@@ -93,8 +91,8 @@ public class MillEventController {
         if (!(entity instanceof MillVillager villager)) return;
         if (entity.level().isClientSide) return;
 
-        MillWorldData mw = Millenaire2.getWorldData();
-        if (mw == null) return;
+        if (!(entity.level() instanceof ServerLevel sl)) return;
+        MillWorldData mw = MillWorldData.get(sl);
 
         long villagerId = villager.getVillagerId();
 

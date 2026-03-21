@@ -93,11 +93,7 @@ public class MillCommands {
     // ========== Command implementations ==========
 
     private static int cmdListVillages(CommandContext<CommandSourceStack> ctx) {
-        MillWorldData mw = Millenaire2.getWorldData();
-        if (mw == null) {
-            ctx.getSource().sendFailure(Component.literal("Millenaire world data not loaded."));
-            return 0;
-        }
+        MillWorldData mw = MillWorldData.get(ctx.getSource().getLevel());
 
         List<Building> townhalls = new ArrayList<>();
         for (Building b : mw.allBuildings()) {
@@ -129,7 +125,7 @@ public class MillCommands {
             return 0;
         }
         String villageName = StringArgumentType.getString(ctx, "village");
-        Building target = findVillageByName(villageName);
+        Building target = findVillageByName(ctx, villageName);
         if (target == null || target.getPos() == null) {
             ctx.getSource().sendFailure(Component.literal("Village '" + villageName + "' not found."));
             return 0;
@@ -147,13 +143,12 @@ public class MillCommands {
         }
         int amount = IntegerArgumentType.getInteger(ctx, "amount");
         String villageName = StringArgumentType.getString(ctx, "village");
-        Building target = findVillageByName(villageName);
+        Building target = findVillageByName(ctx, villageName);
         if (target == null || target.getTownHallPos() == null) {
             ctx.getSource().sendFailure(Component.literal("Village '" + villageName + "' not found."));
             return 0;
         }
-        MillWorldData mw = Millenaire2.getWorldData();
-        if (mw == null) return 0;
+        MillWorldData mw = MillWorldData.get(ctx.getSource().getLevel());
         UserProfile profile = mw.getOrCreateProfile(player.getUUID(), player.getGameProfile().getName());
         profile.adjustVillageReputation(target.getTownHallPos(), amount);
         int newRep = profile.getVillageReputation(target.getTownHallPos());
@@ -171,8 +166,7 @@ public class MillCommands {
             ctx.getSource().sendFailure(Component.literal("Culture '" + cultureName + "' not found."));
             return 0;
         }
-        MillWorldData mw = Millenaire2.getWorldData();
-        if (mw == null) return 0;
+        MillWorldData mw = MillWorldData.get(ctx.getSource().getLevel());
 
         // Create a new townhall building at the command source's position
         net.minecraft.core.BlockPos blockPos = net.minecraft.core.BlockPos.containing(
@@ -206,14 +200,14 @@ public class MillCommands {
         }
         String oldName = input.substring(0, lastSpace).trim();
         String newName = input.substring(lastSpace + 1).trim();
-        Building target = findVillageByName(oldName);
+        Building target = findVillageByName(ctx, oldName);
         if (target == null) {
             ctx.getSource().sendFailure(Component.literal("Village '" + oldName + "' not found."));
             return 0;
         }
         target.setName(newName);
-        MillWorldData mw = Millenaire2.getWorldData();
-        if (mw != null) mw.setDirty();
+        MillWorldData mw = MillWorldData.get(ctx.getSource().getLevel());
+        mw.setDirty();
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "§6[Millénaire]§r Renamed '" + oldName + "' to '" + newName + "'"
         ), true);
@@ -226,7 +220,7 @@ public class MillCommands {
             return 0;
         }
         String villageName = StringArgumentType.getString(ctx, "village");
-        Building target = findVillageByName(villageName);
+        Building target = findVillageByName(ctx, villageName);
         if (target == null) {
             ctx.getSource().sendFailure(Component.literal("Village '" + villageName + "' not found."));
             return 0;
@@ -245,8 +239,8 @@ public class MillCommands {
                     "§6[Millénaire]§r Now controlling " + target.getName()
             ), true);
         }
-        MillWorldData mw = Millenaire2.getWorldData();
-        if (mw != null) mw.setDirty();
+        MillWorldData mw = MillWorldData.get(ctx.getSource().getLevel());
+        mw.setDirty();
         return 1;
     }
 
@@ -266,8 +260,7 @@ public class MillCommands {
     }
 
     private static int cmdDebugResetVillagers(CommandContext<CommandSourceStack> ctx) {
-        MillWorldData mw = Millenaire2.getWorldData();
-        if (mw == null) return 0;
+        MillWorldData mw = MillWorldData.get(ctx.getSource().getLevel());
         int count = 0;
         for (Building b : mw.allBuildings()) {
             for (VillagerRecord vr : b.getVillagerRecords()) {
@@ -286,8 +279,7 @@ public class MillCommands {
     }
 
     private static int cmdDebugResendProfiles(CommandContext<CommandSourceStack> ctx) {
-        MillWorldData mw = Millenaire2.getWorldData();
-        if (mw == null) return 0;
+        MillWorldData mw = MillWorldData.get(ctx.getSource().getLevel());
         int count = mw.profiles.size();
         // Mark dirty so profiles are re-saved
         mw.setDirty();
@@ -300,9 +292,8 @@ public class MillCommands {
     // ========== Helpers ==========
 
     @Nullable
-    private static Building findVillageByName(String name) {
-        MillWorldData mw = Millenaire2.getWorldData();
-        if (mw == null) return null;
+    private static Building findVillageByName(CommandContext<CommandSourceStack> ctx, String name) {
+        MillWorldData mw = MillWorldData.get(ctx.getSource().getLevel());
         String lower = name.toLowerCase();
         for (Building b : mw.allBuildings()) {
             if (b.isTownhall && b.getName() != null && b.getName().toLowerCase().contains(lower)) {

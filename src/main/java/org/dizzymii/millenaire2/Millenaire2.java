@@ -26,15 +26,12 @@ import org.dizzymii.millenaire2.network.MillNetworking;
 import org.dizzymii.millenaire2.world.MillWorldData;
 import org.slf4j.Logger;
 
-import javax.annotation.Nullable;
-
 @Mod(Millenaire2.MODID)
 public class Millenaire2 {
     public static final String MODID = "millenaire2";
     public static final String MODNAME = "Millénaire";
     public static final String VERSION = "2.0.0";
     private static final Logger LOGGER = LogUtils.getLogger();
-    @Nullable private static MillWorldData worldData;
 
     public Millenaire2(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
@@ -92,7 +89,6 @@ public class Millenaire2 {
         // Initialize world data from the overworld
         net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
         MillWorldData loadedWorldData = MillWorldData.get(overworld);
-        worldData = loadedWorldData;
         if (MillConfig.generateVillages && !loadedWorldData.generateVillages) {
             loadedWorldData.generateVillages = true;
             loadedWorldData.setDirty();
@@ -105,11 +101,6 @@ public class Millenaire2 {
 
         // Register empty GameTest templates
         org.dizzymii.millenaire2.gametest.GameTestSetup.ensureTemplates(overworld);
-    }
-
-    @Nullable
-    public static MillWorldData getWorldData() {
-        return worldData;
     }
 
     @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)

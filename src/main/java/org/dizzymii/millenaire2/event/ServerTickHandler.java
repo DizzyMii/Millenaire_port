@@ -11,6 +11,8 @@ import org.dizzymii.millenaire2.world.BuildingChunkLoader;
 import org.dizzymii.millenaire2.world.MillWorldData;
 import org.dizzymii.millenaire2.world.WorldGenVillage;
 
+import net.minecraft.server.MinecraftServer;
+
 /**
  * Handles server-side tick events for village updates and villager AI.
  * Ported from org.millenaire.common.forge.ServerTickHandler (Forge 1.12.2).
@@ -24,8 +26,9 @@ public class ServerTickHandler {
     public static void onServerTick(ServerTickEvent.Post event) {
         tickCounter++;
 
-        MillWorldData worldData = Millenaire2.getWorldData();
-        if (worldData == null) return;
+        MinecraftServer server = event.getServer();
+        ServerLevel overworld = server.overworld();
+        MillWorldData worldData = MillWorldData.get(overworld);
 
         // Every tick: update active buildings (construction, villager goals)
         worldData.tick();
@@ -33,7 +36,8 @@ public class ServerTickHandler {
         // Every 200 ticks (~10 seconds): attempt village generation near players
         if (tickCounter >= 200) {
             tickCounter = 0;
-            if (worldData.world instanceof ServerLevel serverLevel) {
+            {
+                ServerLevel serverLevel = overworld;
                 if (worldData.generateVillages) {
                     attemptVillageGenerationNearPlayers(serverLevel, worldData);
                 }

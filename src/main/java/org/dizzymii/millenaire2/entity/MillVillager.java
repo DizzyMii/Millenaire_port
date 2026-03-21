@@ -532,8 +532,8 @@ public abstract class MillVillager extends PathfinderMob {
             MillLog.major(this, "Villager died: " + getFirstName() + " " + getFamilyName()
                     + " at " + new Point(this.blockPosition()));
             // Notify village and update villager record
-            org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.Millenaire2.getWorldData();
-            if (mw != null) {
+            if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                org.dizzymii.millenaire2.world.MillWorldData mw = org.dizzymii.millenaire2.world.MillWorldData.get(sl);
                 org.dizzymii.millenaire2.village.VillagerRecord vr = mw.getVillagerRecord(this.villagerId);
                 if (vr != null) {
                     vr.killed = true;
