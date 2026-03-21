@@ -294,15 +294,26 @@ public class Building {
         Culture culture = Culture.getCultureByName(cultureKey);
         if (culture == null) return;
 
+        // Gate: no concurrent construction in village
+        for (Building b : mw.getBuildingsMap().values()) {
+            if (isSameVillage(b) && b.isUnderConstruction()) return;
+        }
+
+        // Gate: minimum population before expanding
+        int population = 0;
+        for (Building b : mw.getBuildingsMap().values()) {
+            if (isSameVillage(b)) population += b.getVillagerRecords().size();
+        }
+        if (population < 2) return;
+
         // 1. Try to upgrade existing buildings that are idle
         for (Building b : mw.getBuildingsMap().values()) {
             if (b == this) continue;
             if (!isSameVillage(b)) continue;
-            if (b.isUnderConstruction()) continue;
             if (b.canUpgrade()) {
                 if (b.tryUpgrade()) {
                     MillLog.minor("Building", "Village expansion: upgrading " + b.getName());
-                    return; // One upgrade per cycle
+                    return;
                 }
             }
         }
@@ -313,14 +324,12 @@ public class Building {
         if (vtype == null) vtype = culture.loneBuildingTypes.get(villageTypeKey);
         if (vtype == null) return;
 
-        // Collect what plan sets are already built in this village
         java.util.Set<String> builtPlanSets = new java.util.HashSet<>();
         for (Building b : mw.getBuildingsMap().values()) {
             if (!isSameVillage(b)) continue;
             if (b.planSetKey != null) builtPlanSets.add(b.planSetKey);
         }
 
-        // Check core buildings first, then secondary
         String needed = findNeededBuilding(vtype.coreBuildings, builtPlanSets, culture);
         if (needed == null) {
             needed = findNeededBuilding(vtype.secondaryBuildings, builtPlanSets, culture);
@@ -353,36 +362,87 @@ public class Building {
         BuildingPlan initialPlan = planSet.getInitialPlan();
         if (initialPlan == null || !initialPlan.hasImage()) return;
 
-        // Find a position near the townhall (offset by existing building count)
-        int buildingCount = 0;
-        for (Building b : mw.getBuildingsMap().values()) {
-            if (isSameVillage(b)) buildingCount++;
+        // Spiral search for a valid site near the townhall
+        Point site = findBuildingSite(serverLevel, initialPlan.width, initialPlan.length);
+        if (site == null) {
+            MillLog.minor("Building", "Village expansion: no valid site found for " + newPlanSetKey);
+            return;
         }
-        int offsetX = ((buildingCount % 4) - 1) * 20;
-        int offsetZ = ((buildingCount / 4) + 1) * 20;
-        Point newPos = new Point(pos.x + offsetX, pos.y, pos.z + offsetZ);
 
-        // Create the building
         Building newBuilding = new Building();
         newBuilding.cultureKey = cultureKey;
         newBuilding.planSetKey = newPlanSetKey;
         newBuilding.villageTypeKey = villageTypeKey;
         newBuilding.buildingLevel = 0;
         newBuilding.isActive = true;
-        newBuilding.setPos(newPos);
+        newBuilding.setPos(site);
         newBuilding.setTownHallPos(pos);
         newBuilding.setName(planSet.name != null ? planSet.name : newPlanSetKey);
         newBuilding.mw = mw;
         newBuilding.world = world;
 
-        // Start construction
-        ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, newPos, serverLevel);
+        BuildingLocation loc = new BuildingLocation();
+        loc.planKey = newPlanSetKey;
+        loc.cultureKey = cultureKey;
+        loc.pos = site;
+        loc.width = initialPlan.width;
+        loc.length = initialPlan.length;
+        newBuilding.location = loc;
+
+        ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, site, serverLevel);
         if (cip != null) {
+            cip.location = loc;
             newBuilding.currentConstruction = cip;
-            mw.addBuilding(newBuilding, newPos);
+            mw.addBuilding(newBuilding, site);
             mw.setDirty();
-            MillLog.minor("Building", "Village expansion: new building " + newPlanSetKey + " at " + newPos);
+            MillLog.minor("Building", "Village expansion: new building " + newPlanSetKey + " at " + site);
         }
+    }
+
+    @Nullable
+    private Point findBuildingSite(ServerLevel level, int buildWidth, int buildLength) {
+        if (pos == null) return null;
+        int minDist = 15;
+        int maxDist = 60;
+        int step = 5;
+
+        for (int dist = minDist; dist <= maxDist; dist += step) {
+            for (int angle = 0; angle < 8; angle++) {
+                double rad = angle * Math.PI / 4.0;
+                int cx = pos.x + (int)(Math.cos(rad) * dist);
+                int cz = pos.z + (int)(Math.sin(rad) * dist);
+
+                // Check overlap with existing buildings
+                boolean overlaps = false;
+                for (Building b : mw.getBuildingsMap().values()) {
+                    if (b.getPos() != null && isSameVillage(b)) {
+                        double d = new Point(cx, 0, cz).horizontalDistanceTo(b.getPos());
+                        if (d < 12) { overlaps = true; break; }
+                    }
+                }
+                if (overlaps) continue;
+
+                // Find ground level
+                net.minecraft.core.BlockPos check = new net.minecraft.core.BlockPos(cx, 0, cz);
+                int groundY = findGround(level, check);
+                if (groundY < 0) continue;
+                if (Math.abs(groundY - pos.y) > 8) continue;
+
+                return new Point(cx, groundY, cz);
+            }
+        }
+        return null;
+    }
+
+    private static int findGround(ServerLevel level, net.minecraft.core.BlockPos pos) {
+        for (int y = level.getMaxBuildHeight() - 1; y > level.getMinBuildHeight(); y--) {
+            net.minecraft.core.BlockPos check = new net.minecraft.core.BlockPos(pos.getX(), y, pos.getZ());
+            net.minecraft.world.level.block.state.BlockState state = level.getBlockState(check);
+            if (!state.isAir() && !state.is(net.minecraft.world.level.block.Blocks.WATER) && !state.canBeReplaced()) {
+                return y + 1;
+            }
+        }
+        return -1;
     }
 
     /**
