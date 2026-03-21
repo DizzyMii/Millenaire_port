@@ -118,6 +118,21 @@ public class InvItem {
     }
 
     /**
+     * Find the InvItem that matches the given ItemStack's item.
+     * Returns null if no matching InvItem is registered.
+     */
+    public static InvItem fromItemStack(ItemStack stack) {
+        if (stack.isEmpty()) return null;
+        Item target = stack.getItem();
+        for (InvItem inv : ITEMS.values()) {
+            if (inv.getItem() == target) {
+                return inv;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Check if an InvItem with the given key exists.
      */
     public static boolean exists(String key) {

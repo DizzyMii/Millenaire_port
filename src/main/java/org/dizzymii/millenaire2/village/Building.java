@@ -166,6 +166,58 @@ public class Building {
         return resolved.isEmpty() ? tradeGoods : resolved;
     }
 
+    // ========== Trade execution ==========
+
+    /**
+     * Player buys an item from this building's shop.
+     * @return true if the trade was successful
+     */
+    public boolean executeBuy(org.dizzymii.millenaire2.world.UserProfile profile, TradeGood good, int quantity) {
+        if (good.buyPrice <= 0 || good.item.isEmpty()) return false;
+        Point thPos = getTownHallPos() != null ? getTownHallPos() : getPos();
+        int rep = thPos != null ? profile.getVillageReputation(thPos) : 0;
+        int unitPrice = good.getAdjustedBuyPrice(rep);
+        int totalCost = unitPrice * quantity;
+
+        if (profile.deniers < totalCost) return false;
+
+        // Check building has stock (via resManager)
+        org.dizzymii.millenaire2.item.InvItem invItem = org.dizzymii.millenaire2.item.InvItem.fromItemStack(good.item);
+        if (invItem != null) {
+            int stock = resManager.countGoods(invItem);
+            if (stock < quantity) return false;
+            resManager.takeGoods(invItem, quantity);
+        }
+
+        profile.deniers -= totalCost;
+        if (thPos != null) profile.adjustVillageReputation(thPos, 1);
+        if (mw != null) mw.setDirty();
+        return true;
+    }
+
+    /**
+     * Player sells an item to this building's shop.
+     * @return true if the trade was successful
+     */
+    public boolean executeSell(org.dizzymii.millenaire2.world.UserProfile profile, TradeGood good, int quantity) {
+        if (good.sellPrice <= 0 || good.item.isEmpty()) return false;
+        Point thPos = getTownHallPos() != null ? getTownHallPos() : getPos();
+        int rep = thPos != null ? profile.getVillageReputation(thPos) : 0;
+        int unitPrice = good.getAdjustedSellPrice(rep);
+        int totalEarning = unitPrice * quantity;
+
+        // Store goods in building inventory
+        org.dizzymii.millenaire2.item.InvItem invItem = org.dizzymii.millenaire2.item.InvItem.fromItemStack(good.item);
+        if (invItem != null) {
+            resManager.storeGoods(invItem, quantity);
+        }
+
+        profile.deniers += totalEarning;
+        if (thPos != null) profile.adjustVillageReputation(thPos, 1);
+        if (mw != null) mw.setDirty();
+        return true;
+    }
+
     // ========== Upgrade ==========
 
     /**

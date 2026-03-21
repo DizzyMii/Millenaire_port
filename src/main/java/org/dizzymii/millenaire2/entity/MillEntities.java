@@ -6,10 +6,10 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import org.dizzymii.millenaire2.Millenaire2;
 import org.dizzymii.millenaire2.block.MillBlocks;
-import org.dizzymii.millenaire2.entity.blockentity.MillFirePitBlockEntity;
-import org.dizzymii.millenaire2.entity.blockentity.MillImportTableBlockEntity;
-import org.dizzymii.millenaire2.entity.blockentity.MillLockedChestBlockEntity;
-import org.dizzymii.millenaire2.entity.blockentity.MillPanelBlockEntity;
+import org.dizzymii.millenaire2.block.entity.MillFirePitBlockEntity;
+import org.dizzymii.millenaire2.block.entity.MillImportTableBlockEntity;
+import org.dizzymii.millenaire2.block.entity.MillLockedChestBlockEntity;
+import org.dizzymii.millenaire2.block.entity.MillPanelBlockEntity;
 
 /**
  * Central registration for entity types and block entity types.

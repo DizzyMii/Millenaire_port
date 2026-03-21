@@ -1,4 +1,4 @@
-package org.dizzymii.millenaire2.entity.blockentity;
+package org.dizzymii.millenaire2.block.entity;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;

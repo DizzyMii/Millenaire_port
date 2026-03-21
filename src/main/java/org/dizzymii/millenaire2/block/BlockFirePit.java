@@ -28,7 +28,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.dizzymii.millenaire2.entity.MillEntities;
-import org.dizzymii.millenaire2.entity.blockentity.MillFirePitBlockEntity;
+import org.dizzymii.millenaire2.block.entity.MillFirePitBlockEntity;
 
 import javax.annotation.Nullable;
 

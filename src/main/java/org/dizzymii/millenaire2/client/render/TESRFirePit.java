@@ -2,7 +2,7 @@ package org.dizzymii.millenaire2.client.render;
 
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import org.dizzymii.millenaire2.entity.blockentity.MillFirePitBlockEntity;
+import org.dizzymii.millenaire2.block.entity.MillFirePitBlockEntity;
 
 /**
  * Block entity renderer for the fire pit (flame particles, cooking animation).

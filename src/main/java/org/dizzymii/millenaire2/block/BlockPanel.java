@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import org.dizzymii.millenaire2.entity.blockentity.MillPanelBlockEntity;
+import org.dizzymii.millenaire2.block.entity.MillPanelBlockEntity;
 
 import javax.annotation.Nullable;
 
