@@ -731,6 +731,47 @@ public class MillGameTests {
         helper.succeed();
     }
 
+    // ==================== MillWorldData NBT Round-Trip ====================
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testMillWorldDataNBTRoundTrip(GameTestHelper helper) {
+        MillWorldData original = new MillWorldData();
+        original.millenaireEnabled = true;
+        original.generateVillages = true;
+        original.lastWorldUpdate = 12345L;
+        original.addGlobalTag("test_tag_1");
+
+        Building b = new Building();
+        b.cultureKey = "norman";
+        b.planSetKey = "fort_a";
+        b.villageTypeKey = "norman_village";
+        b.buildingLevel = 1;
+        b.isActive = true;
+        b.isTownhall = true;
+        b.setPos(new Point(50, 64, 100));
+        b.setTownHallPos(new Point(50, 64, 100));
+        b.setName("Test Fort");
+        original.addBuilding(b, b.getPos());
+
+        CompoundTag tag = original.save(new CompoundTag(), helper.getLevel().registryAccess());
+        MillWorldData loaded = MillWorldData.load(tag, helper.getLevel().registryAccess());
+
+        helper.assertTrue(loaded.millenaireEnabled, "millenaireEnabled not persisted");
+        helper.assertTrue(loaded.generateVillages, "generateVillages not persisted");
+        helper.assertTrue(loaded.lastWorldUpdate == 12345L, "lastWorldUpdate not persisted");
+        helper.assertTrue(loaded.hasGlobalTag("test_tag_1"), "globalTag not persisted");
+        helper.assertTrue(loaded.allBuildings().size() == 1, "Building count mismatch, got " + loaded.allBuildings().size());
+
+        Building loadedB = loaded.getBuilding(new Point(50, 64, 100));
+        helper.assertFalse(loadedB == null, "Building not found at persisted position");
+        helper.assertTrue("norman".equals(loadedB.cultureKey), "Building cultureKey not persisted");
+        helper.assertTrue("fort_a".equals(loadedB.planSetKey), "Building planSetKey not persisted");
+        helper.assertTrue(loadedB.isTownhall, "Building isTownhall not persisted");
+        helper.assertTrue("Test Fort".equals(loadedB.getName()), "Building name not persisted");
+
+        helper.succeed();
+    }
+
     // ==================== UserProfile NBT Round-Trip ====================
 
     @GameTest(template = "empty", timeoutTicks = 40)

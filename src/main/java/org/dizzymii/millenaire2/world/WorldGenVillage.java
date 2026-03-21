@@ -53,7 +53,10 @@ public class WorldGenVillage {
 
         // Check spawn protection radius
         BlockPos spawn = level.getSharedSpawnPos();
-        if (center.closerThan(spawn, MIN_DISTANCE_FROM_SPAWN)) return false;
+        if (center.closerThan(spawn, MIN_DISTANCE_FROM_SPAWN)) {
+            MillLog.minor("WorldGenVillage", "Rejected chunk (" + chunkX + "," + chunkZ + "): too close to spawn");
+            return false;
+        }
 
         // Check distance from existing villages
         int minVillageDistance = MillConfig.villageMinDistance > 0 ? MillConfig.villageMinDistance : 250;
@@ -61,23 +64,36 @@ public class WorldGenVillage {
         for (Building b : worldData.allBuildings()) {
             if (b.isTownhall && b.getPos() != null) {
                 double dist = centerPoint.distanceTo(b.getPos());
-                if (dist < minVillageDistance) return false;
+                if (dist < minVillageDistance) {
+                    MillLog.minor("WorldGenVillage", "Rejected chunk (" + chunkX + "," + chunkZ + "): too close to existing village at " + b.getPos() + " (dist=" + (int)dist + ")");
+                    return false;
+                }
             }
         }
 
         // Find suitable ground level
         int groundY = findGroundLevel(level, center);
-        if (groundY < 0) return false;
+        if (groundY < 0) {
+            MillLog.minor("WorldGenVillage", "Rejected chunk (" + chunkX + "," + chunkZ + "): no valid ground level");
+            return false;
+        }
 
         BlockPos groundPos = new BlockPos(center.getX(), groundY, center.getZ());
 
         // Evaluate terrain suitability
         double usable = evaluateTerrainFlat(level, groundPos, 16);
-        if (usable < MINIMUM_USABLE_BLOCK_PERC) return false;
+        if (usable < MINIMUM_USABLE_BLOCK_PERC) {
+            MillLog.minor("WorldGenVillage", "Rejected chunk (" + chunkX + "," + chunkZ + "): terrain too rough (usable=" + String.format("%.2f", usable) + ")");
+            return false;
+        }
 
         // Pick a culture based on biome mapping (data-driven)
         Culture culture = BiomeCultureMapper.selectCulture(level, groundPos, random);
-        if (culture == null) return false;
+        if (culture == null) {
+            MillLog.minor("WorldGenVillage", "Rejected chunk (" + chunkX + "," + chunkZ + "): no culture for biome");
+            return false;
+        }
+        MillLog.minor("WorldGenVillage", "Attempting village generation at chunk (" + chunkX + "," + chunkZ + ") culture=" + culture.key);
 
         return generateNewVillage(level, groundPos, culture, worldData, random);
     }
