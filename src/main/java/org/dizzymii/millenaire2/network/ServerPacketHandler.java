@@ -196,6 +196,8 @@ public final class ServerPacketHandler {
             case MillPacketIds.GUIACTION_NEW_BUILDING_PROJECT:
             case MillPacketIds.GUIACTION_NEW_CUSTOM_BUILDING_PROJECT:
             case MillPacketIds.GUIACTION_UPDATE_CUSTOM_BUILDING_PROJECT:
+            case MillPacketIds.GUIACTION_CONTROLLEDBUILDING_TOGGLEALLOWED:
+            case MillPacketIds.GUIACTION_CONTROLLEDBUILDING_FORGET:
                 handleBuildingProject(actionId, data, context);
                 break;
             case MillPacketIds.GUIACTION_MILITARY_RELATIONS:
@@ -491,20 +493,220 @@ public final class ServerPacketHandler {
 
     private static void handleBuildingProject(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Building project action " + actionId + " from " + player.getName().getString());
-        // New/custom/update building project in village
+
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            org.dizzymii.millenaire2.world.MillWorldData mw =
+                    org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw == null) return;
+
+            org.dizzymii.millenaire2.util.Point townHallPos = readPoint(r);
+            org.dizzymii.millenaire2.village.Building townHall = mw.getBuilding(townHallPos);
+            if (townHall == null) {
+                MillLog.warn("ServerPacketHandler", "Building project action: unknown townhall at " + townHallPos);
+                return;
+            }
+
+            if (actionId == MillPacketIds.GUIACTION_NEW_BUILDING_PROJECT
+                    || actionId == MillPacketIds.GUIACTION_NEW_CUSTOM_BUILDING_PROJECT) {
+                org.dizzymii.millenaire2.util.Point buildPos = readPoint(r);
+                String planKey = r.readString();
+                if (planKey == null || planKey.isBlank()) return;
+
+                if (!townHall.buildingsBought.contains(planKey)) {
+                    townHall.buildingsBought.add(planKey);
+                }
+
+                org.dizzymii.millenaire2.village.BuildingProject bp = new org.dizzymii.millenaire2.village.BuildingProject();
+                bp.key = planKey;
+                bp.isCustomBuilding = actionId == MillPacketIds.GUIACTION_NEW_CUSTOM_BUILDING_PROJECT;
+                bp.projectTier = org.dizzymii.millenaire2.village.BuildingProject.EnumProjects.PLAYER;
+                org.dizzymii.millenaire2.village.BuildingLocation loc = new org.dizzymii.millenaire2.village.BuildingLocation();
+                loc.planKey = planKey;
+                loc.pos = buildPos;
+                loc.isCustomBuilding = bp.isCustomBuilding;
+                bp.location = loc;
+                townHall.buildingProjects
+                        .computeIfAbsent(org.dizzymii.millenaire2.village.BuildingProject.EnumProjects.PLAYER,
+                                k -> new java.util.concurrent.CopyOnWriteArrayList<>())
+                        .add(bp);
+
+                mw.setDirty();
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "§6[Millénaire]§r Project requested: " + planKey));
+                return;
+            }
+
+            if (actionId == MillPacketIds.GUIACTION_UPDATE_CUSTOM_BUILDING_PROJECT) {
+                org.dizzymii.millenaire2.util.Point buildingPos = readPoint(r);
+                org.dizzymii.millenaire2.village.Building existing = mw.getBuilding(buildingPos);
+                if (existing != null) {
+                    mw.setDirty();
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Custom building updated."));
+                }
+                return;
+            }
+
+            String projectKey = r.readString();
+            org.dizzymii.millenaire2.util.Point projectPos = readPoint(r);
+            if (projectKey == null || projectKey.isBlank()) return;
+
+            if (actionId == MillPacketIds.GUIACTION_CONTROLLEDBUILDING_TOGGLEALLOWED) {
+                boolean allow = r.readBoolean();
+                boolean changed = false;
+                for (java.util.List<org.dizzymii.millenaire2.village.BuildingProject> projects : townHall.buildingProjects.values()) {
+                    for (org.dizzymii.millenaire2.village.BuildingProject project : projects) {
+                        if (project == null || project.location == null || project.key == null) continue;
+                        if (!projectKey.equals(project.key)) continue;
+                        if (project.location.pos != null && !project.location.pos.equals(projectPos)) continue;
+                        project.location.upgradesAllowed = allow;
+                        changed = true;
+                    }
+                }
+                if (changed) {
+                    mw.setDirty();
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Project upgrades " + (allow ? "allowed" : "forbidden") + "."));
+                }
+                return;
+            }
+
+            if (actionId == MillPacketIds.GUIACTION_CONTROLLEDBUILDING_FORGET) {
+                boolean changed = false;
+                for (java.util.List<org.dizzymii.millenaire2.village.BuildingProject> projects : townHall.buildingProjects.values()) {
+                    boolean removed = projects.removeIf(project ->
+                            project != null
+                                    && project.key != null
+                                    && project.location != null
+                                    && project.location.pos != null
+                                    && projectKey.equals(project.key)
+                                    && project.location.pos.equals(projectPos));
+                    changed |= removed;
+                }
+                changed |= townHall.buildingsBought.remove(projectKey);
+                if (changed) {
+                    mw.setDirty();
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                            "§6[Millénaire]§r Project forgotten: " + projectKey));
+                }
+            }
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling building project action", e);
+        } finally {
+            r.release();
+        }
     }
 
     private static void handleMilitaryAction(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Military action " + actionId + " from " + player.getName().getString());
-        // Military diplomacy: relations, raid, cancel raid between villages
+
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            org.dizzymii.millenaire2.world.MillWorldData mw =
+                    org.dizzymii.millenaire2.Millenaire2.getWorldData();
+            if (mw == null) return;
+
+            org.dizzymii.millenaire2.util.Point townHallPos = readPoint(r);
+            org.dizzymii.millenaire2.village.Building townHall = mw.getBuilding(townHallPos);
+            if (townHall == null) {
+                MillLog.warn("ServerPacketHandler", "Military action: unknown townhall at " + townHallPos);
+                return;
+            }
+
+            if (actionId == MillPacketIds.GUIACTION_MILITARY_RELATIONS) {
+                org.dizzymii.millenaire2.util.Point targetPos = readPoint(r);
+                int amount = r.readInt();
+                int current = townHall.getRelation(targetPos);
+                townHall.setRelation(targetPos, current + amount);
+                mw.setDirty();
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "§6[Millénaire]§r Relation adjusted by " + amount + "."));
+                return;
+            }
+
+            if (actionId == MillPacketIds.GUIACTION_MILITARY_RAID) {
+                org.dizzymii.millenaire2.util.Point targetPos = readPoint(r);
+                townHall.raidTarget = targetPos;
+                mw.setDirty();
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "§6[Millénaire]§r Raid planned on " + targetPos));
+                return;
+            }
+
+            if (actionId == MillPacketIds.GUIACTION_MILITARY_CANCEL_RAID) {
+                townHall.raidTarget = null;
+                mw.setDirty();
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "§6[Millénaire]§r Raid plan canceled."));
+            }
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling military action", e);
+        } finally {
+            r.release();
+        }
     }
 
     private static void handleImportTableAction(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Import table action " + actionId + " from " + player.getName().getString());
-        // Import table: import building plan, change settings, create building from plan
+
+        PacketDataHelper.Reader r = new PacketDataHelper.Reader(data);
+        try {
+            if (actionId == MillPacketIds.GUIACTION_IMPORTTABLE_IMPORTBUILDINGPLAN) {
+                org.dizzymii.millenaire2.util.Point tablePos = readPoint(r);
+                String source = r.readString();
+                String buildingKey = r.readString();
+                boolean importAll = r.readBoolean();
+                int variation = r.readInt();
+                int level = r.readInt();
+                int orientation = r.readInt();
+                boolean importMockBlocks = r.readBoolean();
+
+                MillLog.minor("ServerPacketHandler", "ImportTable import request: table=" + tablePos
+                        + " source=" + source + " key=" + buildingKey + " all=" + importAll
+                        + " var=" + variation + " lvl=" + level + " ori=" + orientation
+                        + " mock=" + importMockBlocks);
+                return;
+            }
+
+            if (actionId == MillPacketIds.GUIACTION_IMPORTTABLE_CHANGESETTINGS) {
+                org.dizzymii.millenaire2.util.Point tablePos = readPoint(r);
+                int upgradeLevel = r.readInt();
+                int orientation = r.readInt();
+                int startingLevel = r.readInt();
+                boolean exportSnow = r.readBoolean();
+                boolean importMockBlocks = r.readBoolean();
+                boolean convertToPreserveGround = r.readBoolean();
+                boolean exportRegularChests = r.readBoolean();
+
+                MillLog.minor("ServerPacketHandler", "ImportTable settings: table=" + tablePos
+                        + " upgrade=" + upgradeLevel + " ori=" + orientation + " start=" + startingLevel
+                        + " snow=" + exportSnow + " mock=" + importMockBlocks
+                        + " preserve=" + convertToPreserveGround + " chests=" + exportRegularChests);
+                return;
+            }
+
+            if (actionId == MillPacketIds.GUIACTION_IMPORTTABLE_CREATEBUILDING) {
+                org.dizzymii.millenaire2.util.Point tablePos = readPoint(r);
+                int length = r.readInt();
+                int width = r.readInt();
+                int startingLevel = r.readInt();
+                boolean clearGround = r.readBoolean();
+
+                MillLog.minor("ServerPacketHandler", "ImportTable create building: table=" + tablePos
+                        + " len=" + length + " width=" + width + " start=" + startingLevel
+                        + " clear=" + clearGround);
+            }
+        } catch (Exception e) {
+            MillLog.error("ServerPacketHandler", "Error handling import table action", e);
+        } finally {
+            r.release();
+        }
+    }
+
+    private static org.dizzymii.millenaire2.util.Point readPoint(PacketDataHelper.Reader r) {
+        int[] p = r.readBlockPos();
+        return new org.dizzymii.millenaire2.util.Point(p[0], p[1], p[2]);
     }
 
     // ========== Trade ==========
