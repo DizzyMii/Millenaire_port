@@ -1,32 +1,54 @@
 package org.dizzymii.millenaire2.entity;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.AxeItem;
+import net.minecraft.world.item.PickaxeItem;
+import net.minecraft.world.item.ShovelItem;
+import net.minecraft.world.item.HoeItem;
+import net.minecraft.world.item.TieredItem;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.FenceGateBlock;
+import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.phys.AABB;
 import org.dizzymii.millenaire2.culture.VillagerType;
 import org.dizzymii.millenaire2.goal.Goal;
 import org.dizzymii.millenaire2.goal.GoalInformation;
 import org.dizzymii.millenaire2.item.InvItem;
 import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
+import org.dizzymii.millenaire2.village.VillagerRecord;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -108,6 +130,23 @@ public abstract class MillVillager extends PathfinderMob {
     private long villagerId = -1L;
     private int goalTickCounter = 0;
     private static final int RECORD_SYNC_INTERVAL = 200;
+
+    // --- Combat fields ---
+    @Nullable public LivingEntity attackTarget = null;
+    public int attackCooldown = 0;
+    private static final int MELEE_COOLDOWN = 20;
+    private static final int RANGED_COOLDOWN = 40;
+    private static final double CALL_FOR_HELP_RANGE = 16.0;
+    private static final int DOOR_INTERACT_RANGE_SQ = 4;
+
+    // --- Door/leaf tracking ---
+    @Nullable private BlockPos lastOpenedDoor = null;
+    private int doorCloseTimer = 0;
+    private static final int DOOR_CLOSE_DELAY = 40;
+
+    // --- Child/lifecycle ---
+    public int childAge = 0;
+    private static final int CHILD_GROWTH_AGE = 24000 * 4; // ~4 MC days
 
     protected MillVillager(EntityType<? extends MillVillager> type, Level level) {
         super(type, level);
@@ -222,6 +261,9 @@ public abstract class MillVillager extends PathfinderMob {
     private void serverTick() {
         updateHired();
 
+        // Combat tick (every tick for responsiveness)
+        tickCombat();
+
         goalTickCounter++;
         if (goalTickCounter >= GOAL_TICK_INTERVAL) {
             goalTickCounter = 0;
@@ -229,11 +271,24 @@ public abstract class MillVillager extends PathfinderMob {
         }
         tickGoalExecution();
 
+        // Door/fence-gate handling (every 5 ticks)
+        handleDoorsAndFenceGates();
+
+        // Leaf clearing (every 10 ticks)
+        handleLeafClearing();
+
+        // Crop detrample (every 20 ticks)
+        detrampleCrops();
+
+        // Dialogue expiry
+        tickDialogue();
+
         if (this.tickCount % RECORD_SYNC_INTERVAL == 0) {
             syncRecordToWorld();
         }
 
-        performNightAction();
+        // Night actions (once per night)
+        performNightActionFull();
     }
 
     /**
@@ -441,22 +496,6 @@ public abstract class MillVillager extends PathfinderMob {
         }
     }
 
-    private void performNightAction() {
-        if (this.level().isDay()) {
-            nightActionPerformed = false;
-            return;
-        }
-
-        if (nightActionPerformed) {
-            return;
-        }
-
-        nightActionPerformed = true;
-        if (isChildVillager()) {
-            visitorNbNights++;
-        }
-    }
-
     public boolean isChildVillager() {
         VillagerType type = vtype;
         return type != null && type.isChild;
@@ -608,6 +647,20 @@ public abstract class MillVillager extends PathfinderMob {
         } else if (vtype != null) {
             tag.putString("villagerType", vtype.key);
         }
+        // Sprint 3: additional fields
+        tag.putInt("childAge", childAge);
+        tag.putInt("visitorNbNights", visitorNbNights);
+        tag.putBoolean("nightActionPerformed", nightActionPerformed);
+        tag.putInt("foreignMerchantStallId", foreignMerchantStallId);
+        tag.putInt("constructionJobId", constructionJobId);
+        if (speech_key != null) {
+            tag.putString("speechKey", speech_key);
+            tag.putInt("speechVariant", speech_variant);
+        }
+        if (dialogueKey != null) {
+            tag.putString("dialogueKey", dialogueKey);
+            tag.putInt("dialogueRole", dialogueRole);
+        }
         // Save inventory
         ListTag invList = new ListTag();
         for (Map.Entry<InvItem, Integer> entry : inventory.entrySet()) {
@@ -658,6 +711,20 @@ public abstract class MillVillager extends PathfinderMob {
         if (tag.contains("villagerType")) {
             setVillagerTypeKey(tag.getString("villagerType"));
         }
+        // Sprint 3: additional fields
+        childAge = tag.getInt("childAge");
+        visitorNbNights = tag.getInt("visitorNbNights");
+        nightActionPerformed = tag.getBoolean("nightActionPerformed");
+        foreignMerchantStallId = tag.getInt("foreignMerchantStallId");
+        constructionJobId = tag.getInt("constructionJobId");
+        if (tag.contains("speechKey")) {
+            speech_key = tag.getString("speechKey");
+            speech_variant = tag.getInt("speechVariant");
+        }
+        if (tag.contains("dialogueKey")) {
+            dialogueKey = tag.getString("dialogueKey");
+            dialogueRole = tag.getInt("dialogueRole");
+        }
     }
 
     // --- Building helpers ---
@@ -692,6 +759,572 @@ public abstract class MillVillager extends PathfinderMob {
 
     public void removeFromInv(InvItem item, int count) {
         addToInv(item, -count);
+    }
+
+    // ========== Combat system ==========
+
+    public void attackEntity(LivingEntity target) {
+        if (target == null || !target.isAlive() || this.level().isClientSide) return;
+        this.attackTarget = target;
+
+        double distSq = this.distanceToSqr(target);
+        boolean useRanged = hasBow() && vtype != null && vtype.isArcher && distSq > 9.0;
+
+        if (useRanged) {
+            attackEntityWithRangedAttack(target);
+        } else {
+            // Melee attack
+            this.isUsingHandToHand = true;
+            this.isUsingBow = false;
+            float damage = (float) this.getAttributeValue(Attributes.ATTACK_DAMAGE);
+
+            // Weapon bonus
+            ItemStack weapon = getBestWeapon();
+            if (!weapon.isEmpty() && weapon.getItem() instanceof SwordItem) {
+                damage += weapon.getItem().getDamage(weapon);
+                this.heldItem = weapon;
+            }
+
+            target.hurt(this.damageSources().mobAttack(this), damage);
+            this.attackCooldown = MELEE_COOLDOWN;
+        }
+    }
+
+    public void attackEntityWithRangedAttack(LivingEntity target) {
+        if (target == null || this.level().isClientSide) return;
+        this.isUsingBow = true;
+        this.isUsingHandToHand = false;
+
+        Arrow arrow = new Arrow(this.level(), this, new ItemStack(Items.ARROW), null);
+        double dx = target.getX() - this.getX();
+        double dy = target.getY() + target.getEyeHeight() - 1.1 - arrow.getY();
+        double dz = target.getZ() - this.getZ();
+        double dist = Math.sqrt(dx * dx + dz * dz);
+        arrow.shoot(dx, dy + dist * 0.2, dz, 1.6F, 6.0F);
+        arrow.setOwner(this);
+
+        this.level().addFreshEntity(arrow);
+        this.attackCooldown = RANGED_COOLDOWN;
+    }
+
+    public void callForHelp(LivingEntity attacker) {
+        if (this.level().isClientSide || attacker == null) return;
+
+        AABB searchBox = this.getBoundingBox().inflate(CALL_FOR_HELP_RANGE);
+        List<MillVillager> nearby = this.level().getEntitiesOfClass(MillVillager.class, searchBox);
+        for (MillVillager ally : nearby) {
+            if (ally == this || !ally.isAlive()) continue;
+            if (!isSameVillage(ally)) continue;
+            if (ally.helpsInAttacks() && ally.attackTarget == null) {
+                ally.attackTarget = attacker;
+            }
+        }
+    }
+
+    public boolean isSameVillage(MillVillager other) {
+        if (other == null) return false;
+        if (townHallPoint == null || other.townHallPoint == null) return false;
+        return townHallPoint.equals(other.townHallPoint);
+    }
+
+    private void tickCombat() {
+        if (attackCooldown > 0) attackCooldown--;
+
+        if (attackTarget != null) {
+            if (!attackTarget.isAlive() || attackTarget.isRemoved()) {
+                attackTarget = null;
+                isUsingBow = false;
+                isUsingHandToHand = false;
+                return;
+            }
+            double distSq = this.distanceToSqr(attackTarget);
+            if (distSq > ATTACK_RANGE * ATTACK_RANGE) {
+                attackTarget = null;
+                isUsingBow = false;
+                isUsingHandToHand = false;
+                return;
+            }
+            if (attackCooldown <= 0) {
+                attackEntity(attackTarget);
+            }
+            // Navigate toward target
+            if (distSq > 4.0) {
+                this.getNavigation().moveTo(attackTarget, isUsingBow ? 0.6 : 1.0);
+            }
+        }
+
+        // Aggro nearby hostile mobs if defensive
+        if (this.tickCount % 40 == 0 && vtype != null && (vtype.helpInAttacks || vtype.isDefensive)) {
+            if (attackTarget == null) {
+                AABB scan = this.getBoundingBox().inflate(vtype.isDefensive ? ATTACK_RANGE_DEFENSIVE : ATTACK_RANGE);
+                List<Monster> hostiles = this.level().getEntitiesOfClass(Monster.class, scan);
+                if (!hostiles.isEmpty()) {
+                    attackTarget = hostiles.get(0);
+                }
+            }
+        }
+    }
+
+    // ========== Door / fence-gate / leaf handling ==========
+
+    private void handleDoorsAndFenceGates() {
+        if (this.tickCount % 5 != 0) return;
+
+        // Close previously opened door after delay
+        if (lastOpenedDoor != null) {
+            doorCloseTimer++;
+            if (doorCloseTimer >= DOOR_CLOSE_DELAY) {
+                BlockState state = this.level().getBlockState(lastOpenedDoor);
+                if (state.getBlock() instanceof DoorBlock door) {
+                    if (state.getValue(BlockStateProperties.OPEN)) {
+                        door.setOpen(null, this.level(), state, lastOpenedDoor, false);
+                    }
+                } else if (state.getBlock() instanceof FenceGateBlock) {
+                    if (state.getValue(BlockStateProperties.OPEN)) {
+                        this.level().setBlock(lastOpenedDoor,
+                                state.setValue(BlockStateProperties.OPEN, false), 3);
+                    }
+                }
+                lastOpenedDoor = null;
+                doorCloseTimer = 0;
+            }
+        }
+
+        // Open doors/fence gates near us if we're trying to path through
+        BlockPos feetPos = this.blockPosition();
+        for (BlockPos checkPos : new BlockPos[]{feetPos, feetPos.above()}) {
+            BlockState bs = this.level().getBlockState(checkPos);
+            if (bs.getBlock() instanceof DoorBlock door) {
+                if (!bs.getValue(BlockStateProperties.OPEN)) {
+                    door.setOpen(null, this.level(), bs, checkPos, true);
+                    lastOpenedDoor = checkPos;
+                    doorCloseTimer = 0;
+                }
+            } else if (bs.getBlock() instanceof FenceGateBlock) {
+                if (!bs.getValue(BlockStateProperties.OPEN)) {
+                    this.level().setBlock(checkPos,
+                            bs.setValue(BlockStateProperties.OPEN, true), 3);
+                    lastOpenedDoor = checkPos;
+                    doorCloseTimer = 0;
+                }
+            }
+        }
+    }
+
+    private void handleLeafClearing() {
+        if (vtype != null && vtype.noleafclearing) return;
+        if (this.tickCount % 10 != 0) return;
+
+        BlockPos headPos = this.blockPosition().above();
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                BlockPos check = headPos.offset(dx, 0, dz);
+                BlockState state = this.level().getBlockState(check);
+                if (state.getBlock() instanceof LeavesBlock) {
+                    this.level().destroyBlock(check, false);
+                }
+                BlockPos above = check.above();
+                BlockState stateAbove = this.level().getBlockState(above);
+                if (stateAbove.getBlock() instanceof LeavesBlock) {
+                    this.level().destroyBlock(above, false);
+                }
+            }
+        }
+    }
+
+    private void detrampleCrops() {
+        if (this.tickCount % 20 != 0) return;
+        BlockPos below = this.blockPosition().below();
+        BlockState state = this.level().getBlockState(below);
+        if (state.is(Blocks.DIRT) && this.level().getBlockState(below.above()).isAir()) {
+            // Check if farmland was recently trampled → restore it
+            BlockPos twoBelow = below.below();
+            if (this.level().getBlockState(twoBelow).is(Blocks.WATER) ||
+                    this.level().getBlockState(below.north()).is(Blocks.FARMLAND) ||
+                    this.level().getBlockState(below.south()).is(Blocks.FARMLAND) ||
+                    this.level().getBlockState(below.east()).is(Blocks.FARMLAND) ||
+                    this.level().getBlockState(below.west()).is(Blocks.FARMLAND)) {
+                this.level().setBlock(below, Blocks.FARMLAND.defaultBlockState(), 3);
+            }
+        }
+    }
+
+    // ========== Night actions (expanded) ==========
+
+    private void performNightActionFull() {
+        if (this.level().isDay()) {
+            nightActionPerformed = false;
+            return;
+        }
+        if (nightActionPerformed) return;
+        nightActionPerformed = true;
+
+        if (isChildVillager()) {
+            childAge++;
+            if (childAge >= CHILD_GROWTH_AGE) {
+                attemptChildGrowth();
+            }
+            return;
+        }
+
+        if (vtype != null && vtype.visitor) {
+            visitorNbNights++;
+            if (visitorNbNights >= 3) {
+                visitorDeparture();
+            }
+            return;
+        }
+
+        // Adult night action: attempt child conception
+        if (vtype != null && vtype.hasChildren() && isFemale()) {
+            attemptChildConception();
+        }
+    }
+
+    private void attemptChildConception() {
+        org.dizzymii.millenaire2.village.Building home = getHomeBuilding();
+        if (home == null) return;
+
+        // Need a male partner in the same building
+        boolean hasMalePartner = false;
+        for (VillagerRecord vr : home.getVillagerRecords()) {
+            if (vr.gender == MALE && !vr.killed && vr.type != null) {
+                VillagerType partnerType = vr.getType();
+                if (partnerType != null && !partnerType.isChild) {
+                    hasMalePartner = true;
+                    break;
+                }
+            }
+        }
+        if (!hasMalePartner) return;
+
+        // Count existing children
+        int childCount = 0;
+        for (VillagerRecord vr : home.getVillagerRecords()) {
+            if (!vr.killed) {
+                VillagerType vrType = vr.getType();
+                if (vrType != null && vrType.isChild) {
+                    childCount++;
+                }
+            }
+        }
+        if (childCount >= 2) return; // Max 2 children per household
+
+        // Random chance per night (~10%)
+        if (this.getRandom().nextFloat() > 0.10f) return;
+
+        // Create child
+        String childTypeKey = this.getRandom().nextBoolean() ?
+                vtype.maleChild : vtype.femaleChild;
+        if (childTypeKey == null) {
+            childTypeKey = vtype.maleChild != null ? vtype.maleChild : vtype.femaleChild;
+        }
+        if (childTypeKey == null) return;
+
+        org.dizzymii.millenaire2.culture.Culture culture = getCulture();
+        if (culture == null) return;
+
+        VillagerRecord childRecord = new VillagerRecord();
+        childRecord.setVillagerId(Math.abs(System.nanoTime() ^ this.getRandom().nextLong()));
+        childRecord.setCultureKey(getCultureKey());
+        childRecord.type = childTypeKey;
+        childRecord.gender = childTypeKey.equals(vtype.maleChild) ? MALE : FEMALE;
+        childRecord.setHousePos(housePoint);
+        childRecord.setTownHallPos(townHallPoint);
+        childRecord.fathersName = getFamilyName();
+        childRecord.mothersName = getFirstName();
+
+        // Generate name from culture
+        VillagerType childVType = culture.getVillagerType(childTypeKey);
+        if (childVType != null) {
+            childRecord.firstName = culture.getRandomName(childVType.firstNameList);
+            childRecord.familyName = getFamilyName();
+        }
+
+        home.addVillagerRecord(childRecord);
+        MillLog.minor(this, "Child born: " + childRecord.getName() +
+                " in " + (home.getName() != null ? home.getName() : "building"));
+    }
+
+    private void attemptChildGrowth() {
+        if (vtype == null || getCulture() == null) return;
+        org.dizzymii.millenaire2.culture.Culture culture = getCulture();
+
+        // Find the adult type this child grows into
+        String adultTypeKey = vtype.altkey;
+        if (adultTypeKey == null) return;
+
+        VillagerType adultType = culture.getVillagerType(adultTypeKey);
+        if (adultType == null) return;
+
+        this.vtypeKey = adultTypeKey;
+        this.vtype = adultType;
+        this.childAge = 0;
+
+        MillLog.minor(this, "Child grew up: " + getFirstName() + " → " + adultTypeKey);
+    }
+
+    private void visitorDeparture() {
+        MillLog.minor(this, "Visitor departing: " + getFirstName() + " " + getFamilyName());
+        this.discard();
+    }
+
+    // ========== Equipment system ==========
+
+    public ItemStack getBestWeapon() {
+        ItemStack best = ItemStack.EMPTY;
+        float bestDamage = 0;
+        for (Map.Entry<InvItem, Integer> entry : inventory.entrySet()) {
+            ItemStack stack = entry.getKey().getItemStack();
+            if (stack.getItem() instanceof SwordItem) {
+                float dmg = stack.getItem().getDamage(stack);
+                if (dmg > bestDamage) {
+                    bestDamage = dmg;
+                    best = stack;
+                }
+            }
+        }
+        return best;
+    }
+
+    public ItemStack getBestTool(Class<? extends TieredItem> toolClass) {
+        ItemStack best = ItemStack.EMPTY;
+        float bestTier = -1;
+        for (Map.Entry<InvItem, Integer> entry : inventory.entrySet()) {
+            ItemStack stack = entry.getKey().getItemStack();
+            if (toolClass.isInstance(stack.getItem())) {
+                TieredItem tiered = (TieredItem) stack.getItem();
+                float tier = tiered.getTier().getAttackDamageBonus();
+                if (tier > bestTier) {
+                    bestTier = tier;
+                    best = stack;
+                }
+            }
+        }
+        return best;
+    }
+
+    public ItemStack getBestAxe() { return getBestTool(AxeItem.class); }
+    public ItemStack getBestPickaxe() { return getBestTool(PickaxeItem.class); }
+    public ItemStack getBestShovel() { return getBestTool(ShovelItem.class); }
+    public ItemStack getBestHoe() { return getBestTool(HoeItem.class); }
+
+    public boolean hasBow() {
+        for (InvItem item : inventory.keySet()) {
+            if (item.getItemStack().getItem() instanceof BowItem) return true;
+        }
+        return false;
+    }
+
+    public ItemStack getWeaponOrBow() {
+        if (vtype != null && vtype.isArcher && hasBow()) {
+            for (InvItem item : inventory.keySet()) {
+                if (item.getItemStack().getItem() instanceof BowItem) return item.getItemStack();
+            }
+        }
+        return getBestWeapon();
+    }
+
+    // ========== Speech and dialogue ==========
+
+    public void speakSentence(String key, int variant) {
+        this.speech_key = key;
+        this.speech_variant = variant;
+        this.speech_started = this.level().getGameTime();
+    }
+
+    public void clearSpeech() {
+        this.speech_key = null;
+        this.speech_variant = 0;
+        this.speech_started = 0L;
+    }
+
+    private void tickDialogue() {
+        if (speech_key != null) {
+            long elapsed = this.level().getGameTime() - speech_started;
+            if (elapsed > 100) { // 5 seconds
+                clearSpeech();
+            }
+        }
+
+        if (dialogueKey != null) {
+            long elapsed = this.level().getGameTime() - dialogueStart;
+            if (elapsed > 200) { // 10 seconds
+                dialogueKey = null;
+                dialogueTargetFirstName = null;
+                dialogueTargetLastName = null;
+                dialogueStart = 0;
+            }
+        }
+    }
+
+    // ========== Villager spawning factory ==========
+
+    @Nullable
+    public static MillVillager createVillager(VillagerRecord record, ServerLevel level) {
+        if (record == null || level == null) return null;
+
+        VillagerType vt = record.getType();
+        int gender = record.gender;
+
+        // Determine entity type based on gender and model
+        EntityType<? extends MillVillager> entityType;
+        if (gender == FEMALE) {
+            if (vt != null && "asymmetrical".equals(vt.model)) {
+                entityType = MillEntities.GENERIC_ASYMM_FEMALE.get();
+            } else {
+                entityType = MillEntities.GENERIC_SYMM_FEMALE.get();
+            }
+        } else {
+            entityType = MillEntities.GENERIC_MALE.get();
+        }
+
+        MillVillager villager = entityType.create(level);
+        if (villager == null) return null;
+
+        // Apply record data
+        villager.setVillagerId(record.getVillagerId());
+        villager.setFirstName(record.firstName != null ? record.firstName : "");
+        villager.setFamilyName(record.familyName != null ? record.familyName : "");
+        villager.setGender(gender);
+        villager.setCultureKey(record.getCultureKey() != null ? record.getCultureKey() : "");
+        villager.housePoint = record.getHousePos() != null ? new Point(record.getHousePos()) : null;
+        villager.townHallPoint = record.getTownHallPos() != null ? new Point(record.getTownHallPos()) : null;
+        villager.isRaider = record.raidingVillage;
+
+        if (record.type != null) {
+            villager.setVillagerTypeKey(record.type);
+        }
+
+        // Copy inventory
+        villager.inventory.clear();
+        for (Map.Entry<String, Integer> entry : record.inventory.entrySet()) {
+            InvItem item = InvItem.get(entry.getKey());
+            if (item != null && entry.getValue() > 0) {
+                villager.inventory.put(item, entry.getValue());
+            }
+        }
+
+        // Apply VillagerType attributes
+        if (vt != null) {
+            villager.getAttribute(Attributes.MAX_HEALTH).setBaseValue(vt.health);
+            villager.setHealth(vt.health);
+            villager.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(vt.baseSpeed);
+            villager.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(vt.baseAttackStrength);
+        }
+
+        return villager;
+    }
+
+    // ========== Network serialization ==========
+
+    public void writeVillagerStreamData(FriendlyByteBuf buf) {
+        buf.writeLong(villagerId);
+        buf.writeUtf(getFirstName());
+        buf.writeUtf(getFamilyName());
+        buf.writeInt(getGender());
+        buf.writeUtf(getCultureKey());
+        buf.writeUtf(vtypeKey != null ? vtypeKey : "");
+        buf.writeBoolean(isRaider);
+        buf.writeBoolean(aggressiveStance);
+        buf.writeUtf(goalKey != null ? goalKey : "");
+        buf.writeFloat(this.getHealth());
+        buf.writeFloat(this.getMaxHealth());
+
+        // Position
+        buf.writeDouble(this.getX());
+        buf.writeDouble(this.getY());
+        buf.writeDouble(this.getZ());
+
+        // House/townhall
+        buf.writeBoolean(housePoint != null);
+        if (housePoint != null) {
+            buf.writeInt(housePoint.x);
+            buf.writeInt(housePoint.y);
+            buf.writeInt(housePoint.z);
+        }
+        buf.writeBoolean(townHallPoint != null);
+        if (townHallPoint != null) {
+            buf.writeInt(townHallPoint.x);
+            buf.writeInt(townHallPoint.y);
+            buf.writeInt(townHallPoint.z);
+        }
+
+        // Speech
+        buf.writeBoolean(speech_key != null);
+        if (speech_key != null) {
+            buf.writeUtf(speech_key);
+            buf.writeInt(speech_variant);
+        }
+
+        // Hired state
+        buf.writeBoolean(hiredBy != null);
+        if (hiredBy != null) {
+            buf.writeUtf(hiredBy);
+        }
+
+        // Inventory size
+        buf.writeInt(inventory.size());
+        for (Map.Entry<InvItem, Integer> entry : inventory.entrySet()) {
+            buf.writeUtf(entry.getKey().key);
+            buf.writeInt(entry.getValue());
+        }
+    }
+
+    public void readVillagerStreamData(FriendlyByteBuf buf) {
+        villagerId = buf.readLong();
+        setFirstName(buf.readUtf());
+        setFamilyName(buf.readUtf());
+        setGender(buf.readInt());
+        setCultureKey(buf.readUtf());
+        String vtKey = buf.readUtf();
+        if (!vtKey.isEmpty()) setVillagerTypeKey(vtKey);
+        isRaider = buf.readBoolean();
+        aggressiveStance = buf.readBoolean();
+        goalKey = buf.readUtf();
+        if (goalKey.isEmpty()) goalKey = null;
+        float hp = buf.readFloat();
+        float maxHp = buf.readFloat();
+        this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(maxHp);
+        this.setHealth(hp);
+
+        // Position
+        this.setPos(buf.readDouble(), buf.readDouble(), buf.readDouble());
+
+        // House/townhall
+        if (buf.readBoolean()) {
+            housePoint = new Point(buf.readInt(), buf.readInt(), buf.readInt());
+        }
+        if (buf.readBoolean()) {
+            townHallPoint = new Point(buf.readInt(), buf.readInt(), buf.readInt());
+        }
+
+        // Speech
+        if (buf.readBoolean()) {
+            speech_key = buf.readUtf();
+            speech_variant = buf.readInt();
+        } else {
+            speech_key = null;
+        }
+
+        // Hired state
+        if (buf.readBoolean()) {
+            hiredBy = buf.readUtf();
+        } else {
+            hiredBy = null;
+        }
+
+        // Inventory
+        inventory.clear();
+        int invSize = buf.readInt();
+        for (int i = 0; i < invSize; i++) {
+            String key = buf.readUtf();
+            int count = buf.readInt();
+            InvItem item = InvItem.get(key);
+            if (item != null && count > 0) {
+                inventory.put(item, count);
+            }
+        }
     }
 
     // ========== Concrete villager subclasses ==========
