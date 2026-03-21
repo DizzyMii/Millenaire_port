@@ -6,9 +6,7 @@ import net.minecraft.data.loot.BlockLootSubProvider;
 import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.level.block.Block;
-import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
-import org.dizzymii.millenaire2.Millenaire2;
 import org.dizzymii.millenaire2.block.MillBlocks;
 
 import java.util.List;

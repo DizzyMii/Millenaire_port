@@ -10,9 +10,9 @@ import net.minecraft.network.FriendlyByteBuf;
  * Provides conversion to/from Minecraft's BlockPos and serialization.
  */
 public class Point {
-    public int x;
-    public int y;
-    public int z;
+    public final int x;
+    public final int y;
+    public final int z;
 
     public Point() {
         this(0, 0, 0);
