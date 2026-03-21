@@ -231,7 +231,10 @@ public abstract class MillVillager extends PathfinderMob {
      * Select a new goal if the current one is finished or invalid.
      */
     private void tickGoalSelection() {
-        if (Goal.goals == null || Goal.goals.isEmpty()) return;
+        if (Goal.goals == null || Goal.goals.isEmpty()) {
+            idleWanderFallback();
+            return;
+        }
 
         // Ensure VillagerType is resolved (needed after NBT load)
         if (vtype == null && vtypeKey != null) {
@@ -318,13 +321,21 @@ public abstract class MillVillager extends PathfinderMob {
             }
             // Random wander near home point
             Point wanderTarget = housePoint != null ? housePoint : townHallPoint;
-            if (wanderTarget != null) {
-                int dx = this.getRandom().nextInt(11) - 5;
-                int dz = this.getRandom().nextInt(11) - 5;
-                Point wander = new Point(wanderTarget.x + dx, wanderTarget.y, wanderTarget.z + dz);
-                this.getNavigation().moveTo(wander.x + 0.5, wander.y, wander.z + 0.5, 0.5);
+            if (wanderTarget == null) {
+                wanderTarget = new Point(this.blockPosition());
             }
+            int dx = this.getRandom().nextInt(11) - 5;
+            int dz = this.getRandom().nextInt(11) - 5;
+            Point wander = new Point(wanderTarget.x + dx, wanderTarget.y, wanderTarget.z + dz);
+            this.getNavigation().moveTo(wander.x + 0.5, wander.y, wander.z + 0.5, 0.5);
         }
+    }
+
+    private void idleWanderFallback() {
+        Point around = new Point(this.blockPosition());
+        int dx = this.getRandom().nextInt(9) - 4;
+        int dz = this.getRandom().nextInt(9) - 4;
+        this.getNavigation().moveTo(around.x + dx + 0.5, around.y, around.z + dz + 0.5, 0.4);
     }
 
     private void setActiveGoal(String key, Goal goal, GoalInformation info) {

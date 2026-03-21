@@ -138,6 +138,13 @@ public class DiplomacyManager {
     public static void checkRaidTrigger(Building townhall, MillWorldData mw) {
         if (!raidsEnabled || !MillConfig.raidsEnabled) return;
         if (townhall.getPos() == null) return;
+        if (townhall.world == null) return;
+
+        long gameTime = townhall.world.getGameTime();
+        if (townhall.lastRaidGameTime > 0
+                && gameTime - townhall.lastRaidGameTime < minTicksBetweenRaids) {
+            return;
+        }
 
         // Count our village's buildings
         int ourBuildingCount = 0;
@@ -151,10 +158,9 @@ public class DiplomacyManager {
             int relation = townhall.getRelation(knownVillagePos);
             if (relation > minRelationForRaid) continue;
 
-            // Check cooldown — use raid history
             // Roll for raid
             if (RANDOM.nextDouble() < raidChancePerCheck) {
-                triggerRaid(townhall, knownVillagePos, mw);
+                startRaid(townhall, knownVillagePos, mw);
                 return; // One raid per check cycle
             }
         }
@@ -163,7 +169,7 @@ public class DiplomacyManager {
     /**
      * Trigger a raid from this village against a target village.
      */
-    private static void triggerRaid(Building attacker, Point targetVillagePos, MillWorldData mw) {
+    public static boolean startRaid(Building attacker, Point targetVillagePos, MillWorldData mw) {
         // Find target townhall
         Building targetTh = null;
         for (Building b : mw.getBuildingsMap().values()) {
@@ -172,11 +178,24 @@ public class DiplomacyManager {
                 break;
             }
         }
-        if (targetTh == null) return;
+        if (targetTh == null) return false;
+
+        if (attacker.getPos() == null) return false;
+        if (attacker.raidTarget != null) return false;
+        if (attacker.lastRaidGameTime > 0 && attacker.world != null
+                && attacker.world.getGameTime() - attacker.lastRaidGameTime < minTicksBetweenRaids) {
+            return false;
+        }
 
         // Mark attacker's village as raiding
         attacker.raidTarget = targetVillagePos;
         targetTh.underAttack = true;
+
+        long now = attacker.world != null ? attacker.world.getGameTime() : 0L;
+        attacker.activeRaidStartTick = now;
+        targetTh.activeRaidStartTick = now;
+        attacker.lastRaidGameTime = now;
+        targetTh.lastRaidGameTime = now;
 
         // Determine raider count
         int raiderCount = Math.min(maxRaiders, attacker.getVillagerRecords().size() / 2);
@@ -187,6 +206,7 @@ public class DiplomacyManager {
         for (VillagerRecord vr : attacker.getVillagerRecords()) {
             if (vr.killed || vr.awayraiding || vr.awayhired) continue;
             vr.awayraiding = true;
+            vr.raidingVillage = true;
             marked++;
             if (marked >= raiderCount) break;
         }
@@ -203,6 +223,90 @@ public class DiplomacyManager {
         if (mw != null) mw.setDirty();
         MillLog.minor("DiplomacyManager", "Raid triggered: " + attackerName
                 + " -> " + targetName + " (" + marked + " raiders)");
+        return true;
+    }
+
+    public static void updateRaidState(Building attacker, MillWorldData mw) {
+        if (attacker.raidTarget == null) return;
+
+        long now = attacker.world != null ? attacker.world.getGameTime() : 0L;
+        if (attacker.activeRaidStartTick == -1L) {
+            attacker.activeRaidStartTick = now;
+        }
+
+        Building targetTh = mw.getBuilding(attacker.raidTarget);
+        if (targetTh == null || !targetTh.isTownhall) {
+            cancelRaid(attacker, mw, true);
+            return;
+        }
+
+        if (now - attacker.activeRaidStartTick < raidDurationTicks) return;
+
+        int attackStrength = getVillageRaidingStrength(attacker);
+        int defendStrength = getVillageDefendingStrength(targetTh);
+        boolean attackerWon = attackStrength >= defendStrength;
+
+        if (attackerWon) {
+            attacker.raidsPerformed.add(targetTh.getName() != null ? targetTh.getName() : "Unknown");
+            targetTh.raidsSuffered.add(attacker.getName() != null ? attacker.getName() : "Unknown");
+        }
+
+        finishRaid(attacker, targetTh, mw);
+    }
+
+    public static void cancelRaid(Building attacker, MillWorldData mw, boolean clearTargetAttackFlag) {
+        if (attacker.raidTarget == null) return;
+        Building target = mw.getBuilding(attacker.raidTarget);
+        if (clearTargetAttackFlag && target != null) {
+            target.underAttack = false;
+            target.activeRaidStartTick = -1L;
+        }
+        clearRaiders(attacker);
+        attacker.raidTarget = null;
+        attacker.activeRaidStartTick = -1L;
+        attacker.lastRaidGameTime = attacker.world != null ? attacker.world.getGameTime() : attacker.lastRaidGameTime;
+        mw.setDirty();
+    }
+
+    public static int getVillageRaidingStrength(Building village) {
+        int strength = 0;
+        for (VillagerRecord vr : village.getVillagerRecords()) {
+            if (vr.killed || vr.awayhired) continue;
+            if (vr.awayraiding || vr.raidingVillage) {
+                strength++;
+            }
+        }
+        return Math.max(strength, 1);
+    }
+
+    public static int getVillageDefendingStrength(Building village) {
+        int strength = 0;
+        for (VillagerRecord vr : village.getVillagerRecords()) {
+            if (!vr.killed && !vr.awayraiding) {
+                strength++;
+            }
+        }
+        return Math.max(strength, 1);
+    }
+
+    private static void finishRaid(Building attacker, Building targetTh, MillWorldData mw) {
+        clearRaiders(attacker);
+        attacker.raidTarget = null;
+        attacker.activeRaidStartTick = -1L;
+        attacker.lastRaidGameTime = attacker.world != null ? attacker.world.getGameTime() : attacker.lastRaidGameTime;
+        targetTh.underAttack = false;
+        targetTh.activeRaidStartTick = -1L;
+        targetTh.lastRaidGameTime = targetTh.world != null ? targetTh.world.getGameTime() : targetTh.lastRaidGameTime;
+        mw.setDirty();
+    }
+
+    private static void clearRaiders(Building village) {
+        for (VillagerRecord vr : village.getVillagerRecords()) {
+            if (vr.awayraiding || vr.raidingVillage) {
+                vr.awayraiding = false;
+                vr.raidingVillage = false;
+            }
+        }
     }
 
     /**

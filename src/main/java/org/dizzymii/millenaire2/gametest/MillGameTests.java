@@ -18,7 +18,9 @@ import org.dizzymii.millenaire2.goal.Goal;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.village.ConstructionIP;
+import org.dizzymii.millenaire2.world.MillWorldData;
 import org.dizzymii.millenaire2.world.UserProfile;
+import org.dizzymii.millenaire2.world.WorldGenVillage;
 
 /**
  * GameTest suite for Millenaire2.
@@ -43,6 +45,44 @@ public class MillGameTests {
         helper.assertFalse(Culture.getCultureByName("japanese") == null, "Japanese culture missing");
         helper.assertFalse(Culture.getCultureByName("mayan") == null, "Mayan culture missing");
         helper.assertFalse(Culture.getCultureByName("byzantines") == null, "Byzantine culture missing");
+
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testMillWorldDataLoadDefaultsEnableGeneration(GameTestHelper helper) {
+        net.minecraft.nbt.CompoundTag root = new net.minecraft.nbt.CompoundTag();
+        MillWorldData loaded = MillWorldData.load(root, helper.getLevel().registryAccess());
+
+        helper.assertTrue(loaded.millenaireEnabled,
+                "MillWorldData should default millenaireEnabled=true when key is missing");
+        helper.assertTrue(loaded.generateVillages,
+                "MillWorldData should default generateVillages=true when key is missing");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 80)
+    public static void testGenerateNewVillageSetsFieldsAndConstruction(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        MillWorldData mw = new MillWorldData();
+        mw.world = level;
+
+        Culture norman = Culture.getCultureByName("norman");
+        helper.assertFalse(norman == null, "Norman culture missing");
+
+        BlockPos origin = helper.absolutePos(new BlockPos(0, 1, 0));
+        boolean generated = WorldGenVillage.generateNewVillage(level, origin, norman, mw, level.random);
+        helper.assertTrue(generated, "Expected village generation to succeed");
+
+        Building townhall = mw.getBuilding(new Point(origin.getX(), origin.getY(), origin.getZ()));
+        helper.assertFalse(townhall == null, "Townhall should be registered in world data");
+        helper.assertTrue(townhall.isTownhall, "Generated building should be townhall");
+        helper.assertTrue(townhall.planSetKey != null && !townhall.planSetKey.isEmpty(),
+                "Townhall planSetKey must be set for expansion");
+        helper.assertTrue(townhall.villageTypeKey != null && !townhall.villageTypeKey.isEmpty(),
+                "Townhall villageTypeKey must be set for expansion");
+        helper.assertTrue(townhall.currentConstruction != null,
+                "Townhall should have queued construction from plan data");
 
         helper.succeed();
     }
@@ -250,6 +290,30 @@ public class MillGameTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 140)
+    public static void testSummonedVillagerHasIdleMovementFallback(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos spawnPos = helper.absolutePos(new BlockPos(2, 1, 2));
+
+        MillVillager villager = MillEntities.GENERIC_MALE.get().create(level);
+        helper.assertFalse(villager == null, "Failed to create villager entity");
+
+        villager.moveTo(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, 0, 0);
+        level.addFreshEntity(villager);
+
+        double startX = villager.getX();
+        double startZ = villager.getZ();
+
+        helper.runAfterDelay(80, () -> {
+            double dx = villager.getX() - startX;
+            double dz = villager.getZ() - startZ;
+            double movedSq = dx * dx + dz * dz;
+            helper.assertTrue(movedSq > 0.04,
+                    "Summoned villager should move via idle fallback, movedSq=" + movedSq);
+            helper.succeed();
+        });
+    }
+
     // ==================== Goal System ====================
 
     @GameTest(template = "empty", timeoutTicks = 40)
@@ -383,6 +447,30 @@ public class MillGameTests {
         helper.succeed();
     }
 
+    // ==================== Parity Contracts ====================
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testParityContractsAllCriticalPass(GameTestHelper helper) {
+        var report = org.dizzymii.millenaire2.parity.ParityContracts.getLastStartupReport();
+        helper.assertFalse(report.isEmpty(), "Parity contract report should not be empty after server start");
+
+        for (var result : report) {
+            if (result.contract().isCritical()) {
+                helper.assertTrue(result.passed(),
+                        "Critical parity contract failed: " + result.contract().getId() + " :: " + result.details());
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testParityContractsReportSize(GameTestHelper helper) {
+        var report = org.dizzymii.millenaire2.parity.ParityContracts.getLastStartupReport();
+        helper.assertTrue(report.size() == org.dizzymii.millenaire2.parity.ParityContract.values().length,
+                "Report should have one entry per ParityContract enum value, got " + report.size());
+        helper.succeed();
+    }
+
     // ==================== DiplomacyManager ====================
 
     @GameTest(template = "empty", timeoutTicks = 40)
@@ -390,6 +478,96 @@ public class MillGameTests {
         helper.assertTrue(
                 org.dizzymii.millenaire2.village.DiplomacyManager.isLoaded(),
                 "DiplomacyManager should be loaded at server start");
+
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testRaidStartMarksTargetAndRaiders(GameTestHelper helper) {
+        org.dizzymii.millenaire2.world.MillWorldData mw = new org.dizzymii.millenaire2.world.MillWorldData();
+        ServerLevel level = helper.getLevel();
+        mw.world = level;
+
+        Building attacker = new Building();
+        attacker.isTownhall = true;
+        attacker.isActive = true;
+        attacker.setName("AttackerTown");
+        attacker.setPos(new Point(0, 64, 0));
+        attacker.setTownHallPos(attacker.getPos());
+        attacker.world = level;
+        attacker.mw = mw;
+
+        Building target = new Building();
+        target.isTownhall = true;
+        target.isActive = true;
+        target.setName("TargetTown");
+        target.setPos(new Point(40, 64, 0));
+        target.setTownHallPos(target.getPos());
+        target.world = level;
+        target.mw = mw;
+
+        org.dizzymii.millenaire2.village.VillagerRecord raider = new org.dizzymii.millenaire2.village.VillagerRecord();
+        raider.setVillagerId(1L);
+        attacker.addVillagerRecord(raider);
+
+        mw.addBuilding(attacker, attacker.getPos());
+        mw.addBuilding(target, target.getPos());
+
+        attacker.setRelation(target.getPos(), -100);
+        target.setRelation(attacker.getPos(), -100);
+
+        boolean started = org.dizzymii.millenaire2.village.DiplomacyManager.startRaid(attacker, target.getPos(), mw);
+        helper.assertTrue(started, "Expected raid to start");
+        helper.assertTrue(attacker.raidTarget != null && attacker.raidTarget.equals(target.getPos()),
+                "Attacker raidTarget should be set to target townhall");
+        helper.assertTrue(target.underAttack, "Target should be underAttack when raid starts");
+        helper.assertTrue(raider.awayraiding, "At least one villager should be marked awayraiding");
+
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testRaidUpdateClearsAttackStateAfterDuration(GameTestHelper helper) {
+        org.dizzymii.millenaire2.world.MillWorldData mw = new org.dizzymii.millenaire2.world.MillWorldData();
+        ServerLevel level = helper.getLevel();
+        mw.world = level;
+
+        Building attacker = new Building();
+        attacker.isTownhall = true;
+        attacker.isActive = true;
+        attacker.setPos(new Point(0, 64, 0));
+        attacker.setTownHallPos(attacker.getPos());
+        attacker.world = level;
+        attacker.mw = mw;
+
+        Building target = new Building();
+        target.isTownhall = true;
+        target.isActive = true;
+        target.setPos(new Point(40, 64, 0));
+        target.setTownHallPos(target.getPos());
+        target.world = level;
+        target.mw = mw;
+
+        org.dizzymii.millenaire2.village.VillagerRecord raider = new org.dizzymii.millenaire2.village.VillagerRecord();
+        raider.setVillagerId(2L);
+        attacker.addVillagerRecord(raider);
+
+        org.dizzymii.millenaire2.village.VillagerRecord defender = new org.dizzymii.millenaire2.village.VillagerRecord();
+        defender.setVillagerId(3L);
+        target.addVillagerRecord(defender);
+
+        mw.addBuilding(attacker, attacker.getPos());
+        mw.addBuilding(target, target.getPos());
+
+        boolean started = org.dizzymii.millenaire2.village.DiplomacyManager.startRaid(attacker, target.getPos(), mw);
+        helper.assertTrue(started, "Expected raid to start");
+
+        attacker.activeRaidStartTick = level.getGameTime() - org.dizzymii.millenaire2.village.DiplomacyManager.raidDurationTicks;
+        org.dizzymii.millenaire2.village.DiplomacyManager.updateRaidState(attacker, mw);
+
+        helper.assertTrue(attacker.raidTarget == null, "Raid target should be cleared after raid resolution");
+        helper.assertFalse(target.underAttack, "Target underAttack should be cleared after raid resolution");
+        helper.assertFalse(raider.awayraiding, "Raider should be returned after raid resolution");
 
         helper.succeed();
     }

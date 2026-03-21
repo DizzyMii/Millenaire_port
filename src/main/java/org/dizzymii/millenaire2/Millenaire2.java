@@ -105,6 +105,7 @@ public class Millenaire2 {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("{} server starting", MODNAME);
+        org.dizzymii.millenaire2.world.WorldGenVillage.resetTriedChunks();
         org.dizzymii.millenaire2.buildingplan.PointType.loadFromServer(event.getServer());
         org.dizzymii.millenaire2.culture.Culture.loadCultures();
         org.dizzymii.millenaire2.world.BiomeCultureMapper.loadFromServer(event.getServer());
@@ -115,8 +116,17 @@ public class Millenaire2 {
         org.dizzymii.millenaire2.quest.Quest.loadAllQuests(questDir);
         // Initialize world data from the overworld
         net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
-        worldData = MillWorldData.get(overworld);
-        LOGGER.info("{} world data loaded: {} buildings", MODNAME, worldData.allBuildings().size());
+        MillWorldData loadedWorldData = MillWorldData.get(overworld);
+        worldData = loadedWorldData;
+        if (MillConfig.generateVillages && !loadedWorldData.generateVillages) {
+            loadedWorldData.generateVillages = true;
+            loadedWorldData.setDirty();
+        }
+        LOGGER.info("{} world data loaded: {} buildings", MODNAME, loadedWorldData.allBuildings().size());
+
+        // Evaluate and log parity contracts
+        var parityReport = org.dizzymii.millenaire2.parity.ParityContracts.evaluateStartupReport(loadedWorldData);
+        org.dizzymii.millenaire2.parity.ParityContracts.logStartupReport(parityReport);
 
         // Register empty GameTest templates
         org.dizzymii.millenaire2.gametest.GameTestSetup.ensureTemplates(overworld);

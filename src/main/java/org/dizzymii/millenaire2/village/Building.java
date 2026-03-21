@@ -86,6 +86,8 @@ public class Building {
     public CopyOnWriteArrayList<String> raidsPerformed = new CopyOnWriteArrayList<>();
     public CopyOnWriteArrayList<String> raidsSuffered = new CopyOnWriteArrayList<>();
     @Nullable public Point raidTarget;
+    public long activeRaidStartTick = -1L;
+    public long lastRaidGameTime = -1L;
 
     @Nullable public UUID controlledBy = null;
     @Nullable public String controlledByName = null;
@@ -268,6 +270,11 @@ public class Building {
         if (isActive && isTownhall && mw != null
                 && tickCounter % DiplomacyManager.raidCheckIntervalTicks == 0) {
             DiplomacyManager.checkRaidTrigger(this, mw);
+        }
+
+        // Raid lifecycle update (resolve active raid, release raiders on completion)
+        if (isActive && isTownhall && mw != null && raidTarget != null && tickCounter % 20 == 0) {
+            DiplomacyManager.updateRaidState(this, mw);
         }
 
         // Diplomacy: relation decay every ~60 minutes (72000 ticks)
@@ -502,6 +509,28 @@ public class Building {
             if (controlledByName != null) tag.putString("controlledByName", controlledByName);
         }
 
+        if (raidTarget != null) {
+            raidTarget.writeToNBT(tag, "raidTarget");
+        }
+        tag.putLong("activeRaidStartTick", activeRaidStartTick);
+        tag.putLong("lastRaidGameTime", lastRaidGameTime);
+
+        ListTag raidsPerformedTag = new ListTag();
+        for (String name : raidsPerformed) {
+            CompoundTag rt = new CompoundTag();
+            rt.putString("name", name);
+            raidsPerformedTag.add(rt);
+        }
+        tag.put("raidsPerformed", raidsPerformedTag);
+
+        ListTag raidsSufferedTag = new ListTag();
+        for (String name : raidsSuffered) {
+            CompoundTag rt = new CompoundTag();
+            rt.putString("name", name);
+            raidsSufferedTag.add(rt);
+        }
+        tag.put("raidsSuffered", raidsSufferedTag);
+
         // Save villager records
         ListTag vrList = new ListTag();
         for (VillagerRecord vr : vrecords.values()) {
@@ -559,6 +588,23 @@ public class Building {
         if (tag.hasUUID("controlledBy")) {
             b.controlledBy = tag.getUUID("controlledBy");
             if (tag.contains("controlledByName")) b.controlledByName = tag.getString("controlledByName");
+        }
+
+        b.raidTarget = Point.readFromNBT(tag, "raidTarget");
+        b.activeRaidStartTick = tag.contains("activeRaidStartTick") ? tag.getLong("activeRaidStartTick") : -1L;
+        b.lastRaidGameTime = tag.contains("lastRaidGameTime") ? tag.getLong("lastRaidGameTime") : -1L;
+
+        if (tag.contains("raidsPerformed", Tag.TAG_LIST)) {
+            ListTag rp = tag.getList("raidsPerformed", Tag.TAG_COMPOUND);
+            for (int i = 0; i < rp.size(); i++) {
+                b.raidsPerformed.add(rp.getCompound(i).getString("name"));
+            }
+        }
+        if (tag.contains("raidsSuffered", Tag.TAG_LIST)) {
+            ListTag rs = tag.getList("raidsSuffered", Tag.TAG_COMPOUND);
+            for (int i = 0; i < rs.size(); i++) {
+                b.raidsSuffered.add(rs.getCompound(i).getString("name"));
+            }
         }
 
         // Load villager records

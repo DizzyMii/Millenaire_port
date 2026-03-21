@@ -5,30 +5,23 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import org.dizzymii.millenaire2.buildingplan.BuildingBlock;
-import org.dizzymii.millenaire2.buildingplan.PngPlanLoader;
+import org.dizzymii.millenaire2.MillConfig;
 import org.dizzymii.millenaire2.culture.BuildingPlan;
 import org.dizzymii.millenaire2.culture.BuildingPlanSet;
 import org.dizzymii.millenaire2.culture.Culture;
 import org.dizzymii.millenaire2.culture.VillageType;
 import org.dizzymii.millenaire2.culture.VillagerType;
 import org.dizzymii.millenaire2.entity.MillVillager;
-import org.dizzymii.millenaire2.util.MillCommonUtilities;
 import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
-import org.dizzymii.millenaire2.util.VirtualDir;
 import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.village.BuildingLocation;
 import org.dizzymii.millenaire2.village.ConstructionIP;
 import org.dizzymii.millenaire2.village.VillagerRecord;
 
 import javax.annotation.Nullable;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Handles village generation in the world — placing town halls, hamlets, lone buildings.
@@ -41,9 +34,8 @@ public class WorldGenVillage {
     private static final int CHUNK_DISTANCE_LOAD_TEST = 8;
     private static final int HAMLET_MAX_DISTANCE = 350;
     private static final int HAMLET_MIN_DISTANCE = 250;
-    private static final double MINIMUM_USABLE_BLOCK_PERC = 0.7;
+    private static final double MINIMUM_USABLE_BLOCK_PERC = 0.45;
     private static final int MIN_DISTANCE_FROM_SPAWN = 200;
-    private static final int MIN_DISTANCE_BETWEEN_VILLAGES = 500;
 
     private static final HashSet<Long> chunkCoordsTried = new HashSet<>();
 
@@ -64,11 +56,12 @@ public class WorldGenVillage {
         if (center.closerThan(spawn, MIN_DISTANCE_FROM_SPAWN)) return false;
 
         // Check distance from existing villages
+        int minVillageDistance = MillConfig.villageMinDistance > 0 ? MillConfig.villageMinDistance : 250;
         Point centerPoint = new Point(center.getX(), 0, center.getZ());
         for (Building b : worldData.allBuildings()) {
             if (b.isTownhall && b.getPos() != null) {
                 double dist = centerPoint.distanceTo(b.getPos());
-                if (dist < MIN_DISTANCE_BETWEEN_VILLAGES) return false;
+                if (dist < minVillageDistance) return false;
             }
         }
 
@@ -128,33 +121,37 @@ public class WorldGenVillage {
         location.length = initialPlan.length;
         location.level = 0;
 
-        // Load blocks from the PNG plan
-        List<BuildingBlock> blocks = loadPlanBlocks(culture, planSet, initialPlan);
-
         // Create a new Building as the townhall
         Building townhall = new Building();
         townhall.isTownhall = true;
         townhall.isActive = true;
         townhall.cultureKey = culture.key;
+        townhall.planSetKey = planSet.key;
+        townhall.villageTypeKey = villageType.key;
+        townhall.buildingLevel = 0;
         townhall.setName(generateVillageName(culture, random));
         townhall.setPos(villagePos);
         townhall.setTownHallPos(villagePos);
         townhall.location = location;
         townhall.mw = worldData;
+        townhall.world = level;
 
-        // Set up construction if we have blocks
-        if (!blocks.isEmpty()) {
-            ConstructionIP cip = new ConstructionIP(location);
+        // Set up construction from already-parsed BuildingPlan data
+        ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, villagePos, level);
+        if (cip != null) {
+            cip.location = location;
             cip.orientation = location.orientation;
-            cip.setBlocks(blocks);
             townhall.currentConstruction = cip;
-            MillLog.minor("WorldGenVillage", "Construction queued: " + blocks.size() + " blocks for " + planSet.key);
+            MillLog.minor("WorldGenVillage", "Construction queued: " + cip.nbBlocksTotal + " blocks for " + planSet.key);
+        } else {
+            MillLog.warn("WorldGenVillage", "Could not build ConstructionIP from plan for " + planSet.key);
         }
 
         // Create initial VillagerRecords from the plan's villager list
         createInitialVillagers(townhall, culture, initialPlan, villagePos, random);
 
         worldData.addBuilding(townhall, villagePos);
+        VillageWallGenerator.generateForTownhall(level, townhall);
 
         MillLog.minor("WorldGenVillage", "Generated new " + culture.key + " " + villageType.key
                 + " village at " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ()
@@ -200,36 +197,6 @@ public class WorldGenVillage {
         }
         // Last resort: first plan set
         return culture.listPlanSets.isEmpty() ? null : culture.listPlanSets.get(0);
-    }
-
-    /**
-     * Load BuildingBlock list from a plan's PNG file via PngPlanLoader.
-     */
-    private static List<BuildingBlock> loadPlanBlocks(Culture culture, BuildingPlanSet planSet,
-                                                       BuildingPlan plan) {
-        // Locate the PNG file
-        File contentDir = MillCommonUtilities.getMillenaireContentDir();
-        File cultureDir = new File(contentDir, "cultures/" + culture.key);
-        VirtualDir buildingsDir = new VirtualDir(new File(cultureDir, "buildings"));
-
-        String fileName = plan.pngFileName;
-        if (fileName == null) {
-            if ("initial".equals(plan.upgradeKey)) {
-                fileName = planSet.key + ".png";
-            } else {
-                fileName = planSet.key + "_" + plan.upgradeKey + ".png";
-            }
-        }
-
-        File pngFile = buildingsDir.getChildFileRecursive(fileName);
-        if (pngFile == null) pngFile = buildingsDir.getChildFile(fileName);
-        if (pngFile == null || !pngFile.exists()) {
-            MillLog.warn("WorldGenVillage", "PNG plan file not found: " + fileName);
-            return new ArrayList<>();
-        }
-
-        Map<String, List<int[]>> specialPositions = new HashMap<>();
-        return PngPlanLoader.loadPlan(pngFile, plan.width, plan.altitudeOffset, specialPositions);
     }
 
     /**

@@ -207,8 +207,8 @@ public class MillWorldData extends SavedData {
 
     public static MillWorldData load(CompoundTag root, HolderLookup.Provider registries) {
         MillWorldData data = new MillWorldData();
-        data.millenaireEnabled = root.getBoolean("enabled");
-        data.generateVillages = root.getBoolean("generateVillages");
+        data.millenaireEnabled = root.contains("enabled") ? root.getBoolean("enabled") : true;
+        data.generateVillages = root.contains("generateVillages") ? root.getBoolean("generateVillages") : true;
         data.lastWorldUpdate = root.getLong("lastUpdate");
 
         // Load buildings
