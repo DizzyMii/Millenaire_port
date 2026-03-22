@@ -68,7 +68,7 @@ public class MillEventController {
 
             // Find the building that owns this locked chest
             Point clickPos = new Point(event.getPos());
-            Building owner = findOwnerBuilding(mw, clickPos);
+            Building owner = mw.getBuildingNear(clickPos, 32);
             if (owner != null && owner.chestLocked) {
                 // Check reputation — only allow access if player has sufficient standing
                 if (event.getEntity() instanceof ServerPlayer sp) {
@@ -136,21 +136,4 @@ public class MillEventController {
         LOGGER.debug("Villager died: " + villager.getFirstName() + " " + villager.getFamilyName());
     }
 
-    // ========== Helpers ==========
-
-    @Nullable
-    private static Building findOwnerBuilding(MillWorldData mw, Point pos) {
-        double closest = Double.MAX_VALUE;
-        Building owner = null;
-        for (Building b : mw.allBuildings()) {
-            Point bPos = b.getPos();
-            if (bPos == null) continue;
-            double dist = bPos.distanceTo(pos);
-            if (dist < 32 && dist < closest) {
-                closest = dist;
-                owner = b;
-            }
-        }
-        return owner;
-    }
 }

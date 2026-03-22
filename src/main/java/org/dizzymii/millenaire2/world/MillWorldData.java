@@ -58,6 +58,11 @@ public class MillWorldData extends SavedData {
     private static final int STALE_CLEANUP_INTERVAL = 12000; // every 10 minutes
     private int cleanupCounter = 0;
 
+    /** Cached set of building positions whose chunks were loaded at last refresh. */
+    private final Set<Point> activePoints = ConcurrentHashMap.newKeySet();
+    private int activeRefreshCounter = 0;
+    private static final int ACTIVE_REFRESH_INTERVAL = 40; // rebuild every 2 seconds
+
     public boolean millenaireEnabled = true;
     public boolean generateVillages = true;
     public long lastWorldUpdate = 0L;
@@ -87,6 +92,7 @@ public class MillWorldData extends SavedData {
     public void addBuilding(Building b, Point p) {
         buildings.put(p, b);
         b.setLevelContext(this.world, this);
+        if (b.isActive) activePoints.add(p);
         setDirty();
     }
 
@@ -109,7 +115,29 @@ public class MillWorldData extends SavedData {
 
     public void removeBuilding(Point p) {
         buildings.remove(p);
+        activePoints.remove(p);
         setDirty();
+    }
+
+    /**
+     * Returns the nearest building within {@code maxDist} blocks of {@code pos},
+     * using a bounding-box pre-filter to avoid calling distanceTo() on distant buildings.
+     */
+    @Nullable
+    public Building getBuildingNear(Point pos, double maxDist) {
+        double closest = maxDist;
+        Building result = null;
+        for (Map.Entry<Point, Building> entry : buildings.entrySet()) {
+            Point bPos = entry.getKey();
+            if (Math.abs(bPos.x - pos.x) > maxDist) continue;
+            if (Math.abs(bPos.z - pos.z) > maxDist) continue;
+            double dist = bPos.distanceTo(pos);
+            if (dist < closest) {
+                closest = dist;
+                result = entry.getValue();
+            }
+        }
+        return result;
     }
 
     // ========== Villager records ==========
@@ -194,13 +222,17 @@ public class MillWorldData extends SavedData {
         if (!(world instanceof net.minecraft.server.level.ServerLevel sl)) return;
         lastWorldUpdate = world.getGameTime();
 
-        for (Map.Entry<Point, Building> entry : buildings.entrySet()) {
-            Point pos = entry.getKey();
-            Building b = entry.getValue();
-            if (!b.isActive) continue;
-            // Skip buildings in unloaded chunks
-            if (!sl.getChunkSource().hasChunk(pos.x >> 4, pos.z >> 4)) continue;
-            b.tick();
+        // Periodically rebuild active set — avoids calling hasChunk() for every building every tick
+        activeRefreshCounter++;
+        if (activeRefreshCounter >= ACTIVE_REFRESH_INTERVAL) {
+            activeRefreshCounter = 0;
+            rebuildActivePoints(sl);
+        }
+
+        // Only tick buildings whose chunks were loaded at last refresh
+        for (Point pos : activePoints) {
+            Building b = buildings.get(pos);
+            if (b != null) b.tick();
         }
 
         // Periodic stale data cleanup
@@ -208,6 +240,17 @@ public class MillWorldData extends SavedData {
         if (cleanupCounter >= STALE_CLEANUP_INTERVAL) {
             cleanupCounter = 0;
             cleanupStaleData(sl);
+        }
+    }
+
+    private void rebuildActivePoints(net.minecraft.server.level.ServerLevel sl) {
+        activePoints.clear();
+        for (Map.Entry<Point, Building> entry : buildings.entrySet()) {
+            Point pos = entry.getKey();
+            Building b = entry.getValue();
+            if (b.isActive && sl.getChunkSource().hasChunk(pos.x >> 4, pos.z >> 4)) {
+                activePoints.add(pos);
+            }
         }
     }
 
