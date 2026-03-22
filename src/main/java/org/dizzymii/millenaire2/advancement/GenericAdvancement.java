@@ -1,11 +1,12 @@
-package org.dizzymii.millenaire2.advancement;
+﻿package org.dizzymii.millenaire2.advancement;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import org.dizzymii.millenaire2.Millenaire2;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import javax.annotation.Nullable;
 
@@ -18,6 +19,7 @@ import javax.annotation.Nullable;
  * awarding all remaining criteria.
  */
 public class GenericAdvancement {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private final String key;
     private final ResourceLocation advancementRL;
@@ -41,7 +43,7 @@ public class GenericAdvancement {
     public void grant(ServerPlayer player) {
         AdvancementHolder holder = getHolder(player);
         if (holder == null) {
-            MillLog.minor("GenericAdvancement", "Advancement not found in tree: " + advancementRL);
+            LOGGER.debug("Advancement not found in tree: " + advancementRL);
             return;
         }
 
@@ -53,7 +55,7 @@ public class GenericAdvancement {
             player.getAdvancements().award(holder, criterion);
         }
 
-        MillLog.minor("GenericAdvancement", "Granted advancement '" + key + "' to " + player.getName().getString());
+        LOGGER.debug("Granted advancement '" + key + "' to " + player.getName().getString());
     }
 
     /**

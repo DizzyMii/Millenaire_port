@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.network;
+﻿package org.dizzymii.millenaire2.network;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
@@ -7,7 +9,6 @@ import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.network.handler.ClientQuestPacketHandler;
 import org.dizzymii.millenaire2.network.handler.ClientTradePacketHandler;
 import org.dizzymii.millenaire2.network.payloads.*;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 
 import javax.annotation.Nullable;
@@ -19,6 +20,7 @@ import java.util.List;
  * Each public method handles a specific dedicated payload type.
  */
 public final class ClientPacketHandler {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     // Client-side cache of village list entries (for GUI display)
     public static final List<VillageListClientEntry> villageListCache = new ArrayList<>();
@@ -87,27 +89,27 @@ public final class ClientPacketHandler {
             villageListCache.add(new VillageListClientEntry(
                     e.pos(), e.cultureKey(), e.name(), e.distance(), e.isLoneBuilding()));
         }
-        MillLog.minor("ClientPacketHandler", "Received village list with " + p.entries().size() + " entries.");
+        LOGGER.debug("Received village list with " + p.entries().size() + " entries.");
     }
 
     // ========== Profile sync ==========
 
     public static void handleProfile(PlayerProfilePayload p) {
-        MillLog.minor("ClientPacketHandler", "Received profile update type: " + p.updateType());
+        LOGGER.debug("Received profile update type: " + p.updateType());
         // Profile data is logged; full client-side caching will use a mirror of UserProfile
     }
 
     // ========== Open GUI ==========
 
     public static void handleOpenGui(OpenGuiPayload p) {
-        MillLog.minor("ClientPacketHandler", "Open GUI request: " + p.guiId() + " entity=" + p.entityId());
+        LOGGER.debug("Open GUI request: " + p.guiId() + " entity=" + p.entityId());
         org.dizzymii.millenaire2.client.ClientGuiHandler.openGui(p.guiId());
     }
 
     // ========== Building sync ==========
 
     public static void handleBuildingSync(BuildingSyncPayload p) {
-        MillLog.minor("ClientPacketHandler", "Building sync: " + p.name() + " at " + p.pos()
+        LOGGER.debug("Building sync: " + p.name() + " at " + p.pos()
                 + " culture=" + p.cultureKey() + " townhall=" + p.isTownhall());
         // Client-side building cache will be updated when client village tracking is implemented
     }
@@ -115,14 +117,14 @@ public final class ClientPacketHandler {
     // ========== Locked chest ==========
 
     public static void handleLockedChest(LockedChestPayload p) {
-        MillLog.minor("ClientPacketHandler", "Locked chest data for entity: " + p.chestEntityId());
+        LOGGER.debug("Locked chest data for entity: " + p.chestEntityId());
         // Chest contents will be displayed in the locked chest GUI screen
     }
 
     // ========== Map info ==========
 
     public static void handleMapInfo(MapInfoPayload p) {
-        MillLog.minor("ClientPacketHandler", "Map info received: " + p.villageCount() + " villages");
+        LOGGER.debug("Map info received: " + p.villageCount() + " villages");
         // Village markers for minimap overlay will be cached here
     }
 

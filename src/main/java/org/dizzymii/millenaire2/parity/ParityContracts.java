@@ -1,11 +1,12 @@
-package org.dizzymii.millenaire2.parity;
+﻿package org.dizzymii.millenaire2.parity;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.MillConfig;
 import org.dizzymii.millenaire2.culture.Culture;
 import org.dizzymii.millenaire2.goal.Goal;
 import org.dizzymii.millenaire2.quest.Quest;
 import org.dizzymii.millenaire2.util.MillCommonUtilities;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.village.DiplomacyManager;
 import org.dizzymii.millenaire2.village.VillageEconomyLoader;
 import org.dizzymii.millenaire2.world.BiomeCultureMapper;
@@ -20,6 +21,7 @@ import java.util.List;
  * Startup parity contract evaluator for rewrite baseline guarantees.
  */
 public final class ParityContracts {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static volatile List<ParityContractResult> lastStartupReport = List.of();
 
@@ -115,18 +117,18 @@ public final class ParityContracts {
         for (ParityContractResult result : report) {
             if (result.passed()) {
                 passed++;
-                MillLog.minor("ParityContracts", "[contract/pass] " + result.contract().getId() + " :: " + result.details());
+                LOGGER.debug("[contract/pass] " + result.contract().getId() + " :: " + result.details());
             } else {
                 failed++;
                 if (result.contract().isCritical()) {
-                    MillLog.error("ParityContracts", "[contract/fail-critical] " + result.contract().getId() + " :: " + result.details());
+                    LOGGER.error("[contract/fail-critical] " + result.contract().getId() + " :: " + result.details());
                 } else {
-                    MillLog.warn("ParityContracts", "[contract/fail] " + result.contract().getId() + " :: " + result.details());
+                    LOGGER.warn("[contract/fail] " + result.contract().getId() + " :: " + result.details());
                 }
             }
         }
 
-        MillLog.major("ParityContracts", "Startup parity contracts: " + passed + " passed, " + failed + " failed.");
+        LOGGER.info("Startup parity contracts: " + passed + " passed, " + failed + " failed.");
     }
 
     private static ParityContractResult check(ParityContract contract, boolean ok, String details) {

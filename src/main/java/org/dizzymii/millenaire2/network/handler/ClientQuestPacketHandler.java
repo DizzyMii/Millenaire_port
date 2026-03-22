@@ -1,7 +1,8 @@
-package org.dizzymii.millenaire2.network.handler;
+﻿package org.dizzymii.millenaire2.network.handler;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.network.payloads.QuestInstancePayload;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import javax.annotation.Nullable;
 
@@ -9,6 +10,7 @@ import javax.annotation.Nullable;
  * Client-side cache and handling for quest instance packets.
  */
 public final class ClientQuestPacketHandler {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     // Client-side cache of quest data (populated by QuestInstancePayload)
     @Nullable public static QuestClientEntry cachedQuest = null;
@@ -21,7 +23,7 @@ public final class ClientQuestPacketHandler {
                 p.stepDescription(), p.stepLabel(), p.rewardMoney(), p.rewardRep(), p.isOffer());
         cachedQuestVillagerEntityId = p.villagerEntityId();
 
-        MillLog.minor("ClientQuestPacketHandler", "Quest sync: " + p.questKey()
+        LOGGER.debug("Quest sync: " + p.questKey()
                 + " step=" + p.stepIndex() + "/" + p.totalSteps() + " offer=" + p.isOffer());
     }
 

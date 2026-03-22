@@ -1,12 +1,13 @@
-package org.dizzymii.millenaire2.client;
+﻿package org.dizzymii.millenaire2.client;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.dizzymii.millenaire2.client.gui.GuiLockedChest;
 import org.dizzymii.millenaire2.client.gui.GuiTrade;
 import org.dizzymii.millenaire2.client.gui.text.*;
 import org.dizzymii.millenaire2.network.MillPacketIds;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import javax.annotation.Nullable;
 
@@ -16,6 +17,7 @@ import javax.annotation.Nullable;
  * Ported from org.millenaire.client.ClientGuiHandler (Forge 1.12.2).
  */
 public class ClientGuiHandler {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     /**
      * Opens a GUI screen based on the given ID. Must be called on the client thread.
@@ -26,7 +28,7 @@ public class ClientGuiHandler {
             Minecraft.getInstance().execute(() ->
                     Minecraft.getInstance().setScreen(screen));
         } else {
-            MillLog.warn("ClientGuiHandler", "Unknown GUI id: " + guiId);
+            LOGGER.warn("Unknown GUI id: " + guiId);
         }
     }
 

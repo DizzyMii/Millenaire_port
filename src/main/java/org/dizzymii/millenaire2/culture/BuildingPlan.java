@@ -1,9 +1,10 @@
-package org.dizzymii.millenaire2.culture;
+﻿package org.dizzymii.millenaire2.culture;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ConfigField;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.FieldDocumentation;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ParameterType;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.VirtualDir;
 
 import javax.imageio.ImageIO;
@@ -22,6 +23,7 @@ import java.util.Map;
  * Ported from org.millenaire.common.buildingplan.BuildingPlan.
  */
 public class BuildingPlan {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     public static final int NORTH_FACING = 0;
     public static final int WEST_FACING = 1;
@@ -176,7 +178,7 @@ public class BuildingPlan {
         }
 
         if (imageFile == null || !imageFile.exists()) {
-            MillLog.warn(this, "Plan image not found: " + fileName + " for " + parentSet.key + "/" + upgradeKey);
+            LOGGER.warn("Plan image not found: " + fileName + " for " + parentSet.key + "/" + upgradeKey);
             return;
         }
 
@@ -186,7 +188,7 @@ public class BuildingPlan {
                 parsePlanImage();
             }
         } catch (Exception e) {
-            MillLog.error(this, "Error loading plan image: " + fileName, e);
+            LOGGER.error("Error loading plan image: " + fileName, e);
         }
     }
 
@@ -221,7 +223,7 @@ public class BuildingPlan {
             }
         }
 
-        MillLog.minor(this, "Parsed plan: " + width + "x" + length + "x" + nbFloors
+        LOGGER.debug("Parsed plan: " + width + "x" + length + "x" + nbFloors
                 + " for " + parentSet.key + "/" + upgradeKey);
     }
 

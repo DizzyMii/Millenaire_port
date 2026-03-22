@@ -1,11 +1,12 @@
-package org.dizzymii.millenaire2.network.handler;
+﻿package org.dizzymii.millenaire2.network.handler;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.util.MillCommonUtilities;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.dizzymii.millenaire2.network.MillPacketIds;
 import org.dizzymii.millenaire2.network.PacketDataHelper;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.world.MillWorldData;
@@ -14,6 +15,7 @@ import org.dizzymii.millenaire2.world.MillWorldData;
  * Handles military relations and raid GUI actions from the client.
  */
 public final class MilitaryPacketHandler {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private MilitaryPacketHandler() {}
 
@@ -28,7 +30,7 @@ public final class MilitaryPacketHandler {
             Point townHallPos = readPoint(r);
             Building townHall = mw.getBuilding(townHallPos);
             if (townHall == null) {
-                MillLog.warn("MilitaryPacketHandler", "Military action: unknown townhall at " + townHallPos);
+                LOGGER.warn("Military action: unknown townhall at " + townHallPos);
                 return;
             }
 
@@ -36,10 +38,10 @@ public final class MilitaryPacketHandler {
                 case MillPacketIds.GUIACTION_MILITARY_RELATIONS -> handleRelations(player, townHall, r);
                 case MillPacketIds.GUIACTION_MILITARY_RAID -> handleRaid(player, townHall, r);
                 case MillPacketIds.GUIACTION_MILITARY_CANCEL_RAID -> handleCancelRaid(player, townHall);
-                default -> MillLog.warn("MilitaryPacketHandler", "Unknown military action: " + actionId);
+                default -> LOGGER.warn("Unknown military action: " + actionId);
             }
         } catch (Exception e) {
-            MillLog.error("MilitaryPacketHandler", "Error handling military action", e);
+            LOGGER.error("Error handling military action", e);
         } finally {
             r.release();
         }

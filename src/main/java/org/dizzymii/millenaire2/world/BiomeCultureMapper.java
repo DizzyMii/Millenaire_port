@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.world;
+﻿package org.dizzymii.millenaire2.world;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -14,7 +16,6 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.biome.Biome;
 import org.dizzymii.millenaire2.culture.Culture;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
@@ -32,6 +33,7 @@ import java.util.Optional;
  * Users and datapacks can override or extend the mapping.
  */
 public class BiomeCultureMapper {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final Map<String, List<WeightedCulture>> BIOME_MAP = new HashMap<>();
     private static final List<WeightedCulture> DEFAULT_CULTURES = new ArrayList<>();
@@ -54,7 +56,7 @@ public class BiomeCultureMapper {
             ResourceLocation loc = ResourceLocation.fromNamespaceAndPath("millenaire2", "worldgen/biome_culture_map.json");
             Optional<Resource> opt = rm.getResource(loc);
             if (opt.isEmpty()) {
-                MillLog.warn("BiomeCultureMapper", "No biome_culture_map.json found, using random culture selection");
+                LOGGER.warn("No biome_culture_map.json found, using random culture selection");
                 return;
             }
 
@@ -78,11 +80,11 @@ public class BiomeCultureMapper {
                 }
 
                 loaded = true;
-                MillLog.minor("BiomeCultureMapper", "Loaded " + BIOME_MAP.size()
+                LOGGER.debug("Loaded " + BIOME_MAP.size()
                         + " biome mappings, " + DEFAULT_CULTURES.size() + " default cultures");
             }
         } catch (Exception e) {
-            MillLog.error("BiomeCultureMapper", "Failed to load biome_culture_map.json", e);
+            LOGGER.error("Failed to load biome_culture_map.json", e);
         }
     }
 

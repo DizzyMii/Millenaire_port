@@ -1,8 +1,9 @@
-package org.dizzymii.millenaire2.world;
+﻿package org.dizzymii.millenaire2.world;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
 
@@ -17,6 +18,7 @@ import java.util.Set;
  * Ported from org.millenaire.common.forge.BuildingChunkLoader (Forge 1.12.2).
  */
 public class BuildingChunkLoader {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final int BUILDING_CHUNK_RADIUS = 1;
     private static final Map<Point, Set<ChunkPos>> loadedChunks = new HashMap<>();
@@ -33,7 +35,7 @@ public class BuildingChunkLoader {
             level.setChunkForced(cp.x, cp.z, true);
         }
         loadedChunks.put(pos, chunks);
-        MillLog.minor("ChunkLoader", "Force-loaded " + chunks.size() + " chunks for building at " + pos);
+        LOGGER.debug("Force-loaded " + chunks.size() + " chunks for building at " + pos);
     }
 
     /**
@@ -48,7 +50,7 @@ public class BuildingChunkLoader {
             for (ChunkPos cp : chunks) {
                 level.setChunkForced(cp.x, cp.z, false);
             }
-            MillLog.minor("ChunkLoader", "Released " + chunks.size() + " chunks for building at " + pos);
+            LOGGER.debug("Released " + chunks.size() + " chunks for building at " + pos);
         }
     }
 
@@ -62,7 +64,7 @@ public class BuildingChunkLoader {
             }
         }
         loadedChunks.clear();
-        MillLog.minor("ChunkLoader", "Released all Millenaire force-loaded chunks.");
+        LOGGER.debug("Released all Millenaire force-loaded chunks.");
     }
 
     /**

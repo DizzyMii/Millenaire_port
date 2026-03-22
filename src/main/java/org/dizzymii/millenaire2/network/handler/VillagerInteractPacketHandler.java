@@ -1,11 +1,12 @@
-package org.dizzymii.millenaire2.network.handler;
+﻿package org.dizzymii.millenaire2.network.handler;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.network.ServerPacketSender;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.world.MillWorldData;
@@ -15,6 +16,7 @@ import org.dizzymii.millenaire2.world.UserProfile;
  * Handles villager right-click interaction from the client.
  */
 public final class VillagerInteractPacketHandler {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private VillagerInteractPacketHandler() {}
 
@@ -23,7 +25,7 @@ public final class VillagerInteractPacketHandler {
 
         Entity entity = player.level().getEntity(entityId);
         if (!(entity instanceof MillVillager villager)) {
-            MillLog.warn("VillagerInteractPacketHandler", "Villager interact: entity " + entityId + " not found");
+            LOGGER.warn("Villager interact: entity " + entityId + " not found");
             return;
         }
 
@@ -46,7 +48,7 @@ public final class VillagerInteractPacketHandler {
 
         // Open trade GUI for the villager
         ServerPacketSender.sendOpenGui(player, 1, villager.getId(), villager.getTownHallPoint());
-        MillLog.minor("VillagerInteractPacketHandler", "Player " + player.getName().getString()
+        LOGGER.debug("Player " + player.getName().getString()
                 + " interacted with villager " + villager.getFirstName());
     }
 }

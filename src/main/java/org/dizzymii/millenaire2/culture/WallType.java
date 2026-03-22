@@ -1,10 +1,11 @@
-package org.dizzymii.millenaire2.culture;
+﻿package org.dizzymii.millenaire2.culture;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ConfigField;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.FieldDocumentation;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ParameterType;
 import org.dizzymii.millenaire2.data.ParametersManager;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.List;
  * Ported from org.millenaire.common.culture.WallType.
  */
 public class WallType {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     public String key;
     public Culture culture;
@@ -53,10 +55,10 @@ public class WallType {
         try {
             Object result = ParametersManager.loadFromFile(file, wt, null, "wall type");
             if (result == null) return null;
-            MillLog.minor(wt, "Loaded wall type: " + wt.key);
+            LOGGER.debug("Loaded wall type: " + wt.key);
             return wt;
         } catch (Exception e) {
-            MillLog.error(null, "Error loading wall type: " + file.getName(), e);
+            LOGGER.error("Error loading wall type: " + file.getName(), e);
             return null;
         }
     }

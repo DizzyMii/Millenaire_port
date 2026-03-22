@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.pathing.atomicstryker;
+﻿package org.dizzymii.millenaire2.pathing.atomicstryker;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
@@ -26,7 +28,6 @@ import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,6 +38,7 @@ import java.util.List;
  * Ported from org.millenaire.common.pathing.atomicstryker.AStarStatic (Forge 1.12.2).
  */
 public class AStarStatic {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     static final int[][] candidates = {
             {0, 0, -1, 1}, {0, 0, 1, 1}, {0, 1, 0, 1}, {1, 0, 0, 1}, {-1, 0, 0, 1},
@@ -265,6 +267,6 @@ public class AStarStatic {
                     net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(b), passable ? "PASS" : "BLOCK"));
         }
         level.setBlock(origin, Blocks.AIR.defaultBlockState(), 2);
-        MillLog.minor(null, sb.toString());
+        LOGGER.debug(sb.toString());
     }
 }

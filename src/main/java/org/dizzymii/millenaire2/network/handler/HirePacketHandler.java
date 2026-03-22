@@ -1,11 +1,12 @@
-package org.dizzymii.millenaire2.network.handler;
+﻿package org.dizzymii.millenaire2.network.handler;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.util.MillCommonUtilities;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.dizzymii.millenaire2.network.MillPacketIds;
 import org.dizzymii.millenaire2.network.PacketDataHelper;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.world.MillWorldData;
 import org.dizzymii.millenaire2.world.UserProfile;
 
@@ -13,6 +14,7 @@ import org.dizzymii.millenaire2.world.UserProfile;
  * Handles hire/release/extend military GUI actions from the client.
  */
 public final class HirePacketHandler {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private HirePacketHandler() {}
 
@@ -30,10 +32,10 @@ public final class HirePacketHandler {
                 case MillPacketIds.GUIACTION_HIRE_RELEASE -> handleRelease(player);
                 case MillPacketIds.GUIACTION_HIRE_EXTEND -> handleExtend(player);
                 case MillPacketIds.GUIACTION_TOGGLE_STANCE -> handleToggleStance(player, r);
-                default -> MillLog.warn("HirePacketHandler", "Unknown hire action: " + actionId);
+                default -> LOGGER.warn("Unknown hire action: " + actionId);
             }
         } catch (Exception e) {
-            MillLog.error("HirePacketHandler", "Error handling hire action", e);
+            LOGGER.error("Error handling hire action", e);
         } finally {
             r.release();
         }
@@ -56,7 +58,7 @@ public final class HirePacketHandler {
             return;
         }
         profile.deniers -= cost;
-        MillLog.minor("HirePacketHandler", "Player " + player.getName().getString()
+        LOGGER.debug("Player " + player.getName().getString()
                 + " hired " + unitType + " for " + cost + " deniers");
         player.sendSystemMessage(MillCommonUtilities.chatMsg("Hired a " + unitType + " for " + cost + " deniers."));
     }

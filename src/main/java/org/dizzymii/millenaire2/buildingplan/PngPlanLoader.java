@@ -1,7 +1,8 @@
-package org.dizzymii.millenaire2.buildingplan;
+﻿package org.dizzymii.millenaire2.buildingplan;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.world.level.block.Blocks;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -16,6 +17,7 @@ import java.util.Map;
  * Ported from org.millenaire.common.buildingplan.PngPlanLoader (Forge 1.12.2).
  */
 public final class PngPlanLoader {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private PngPlanLoader() {}
 
@@ -36,7 +38,7 @@ public final class PngPlanLoader {
         try {
             BufferedImage image = ImageIO.read(pngFile);
             if (image == null) {
-                MillLog.error(null, "PngPlanLoader: Failed to read: " + pngFile.getName());
+                LOGGER.error("PngPlanLoader: Failed to read: " + pngFile.getName());
                 return blocks;
             }
 
@@ -74,10 +76,10 @@ public final class PngPlanLoader {
                 }
             }
 
-            MillLog.minor(null, "PngPlanLoader: " + blocks.size() + " blocks from " + pngFile.getName());
+            LOGGER.debug("PngPlanLoader: " + blocks.size() + " blocks from " + pngFile.getName());
 
         } catch (Exception e) {
-            MillLog.error(null, "PngPlanLoader: error loading: " + pngFile.getName(), e);
+            LOGGER.error("PngPlanLoader: error loading: " + pngFile.getName(), e);
         }
 
         return blocks;
@@ -107,7 +109,7 @@ public final class PngPlanLoader {
             }
             return data;
         } catch (Exception e) {
-            MillLog.error(null, "PngPlanLoader: error reading layers: " + pngFile.getName(), e);
+            LOGGER.error("PngPlanLoader: error reading layers: " + pngFile.getName(), e);
             return new int[0][0][0];
         }
     }

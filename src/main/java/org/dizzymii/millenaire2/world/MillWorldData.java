@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.world;
+﻿package org.dizzymii.millenaire2.world;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -8,7 +10,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.dizzymii.millenaire2.Millenaire2;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.village.VillagerRecord;
@@ -30,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Ported from org.millenaire.common.world.MillWorldData (Forge 1.12.2).
  */
 public class MillWorldData extends SavedData {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final String DATA_NAME = Millenaire2.MODID + "_world";
 
@@ -222,7 +224,7 @@ public class MillWorldData extends SavedData {
             return !buildings.containsKey(housePos);
         });
         setDirty();
-        MillLog.minor("MillWorldData", "Stale data cleanup: " + buildings.size() + " buildings, " + villagerRecords.size() + " records.");
+        LOGGER.debug("Stale data cleanup: " + buildings.size() + " buildings, " + villagerRecords.size() + " records.");
     }
 
     // ========== NBT persistence ==========
@@ -265,7 +267,7 @@ public class MillWorldData extends SavedData {
         }
         root.put(NBT_PROFILES, profileList);
 
-        MillLog.minor("MillWorldData", "Saved " + buildings.size() + " buildings, " + profiles.size() + " profiles.");
+        LOGGER.debug("Saved " + buildings.size() + " buildings, " + profiles.size() + " profiles.");
         return root;
     }
 
@@ -314,7 +316,7 @@ public class MillWorldData extends SavedData {
             }
         }
 
-        MillLog.minor("MillWorldData", "Loaded " + data.buildings.size() + " buildings, " + data.profiles.size() + " profiles.");
+        LOGGER.debug("Loaded " + data.buildings.size() + " buildings, " + data.profiles.size() + " profiles.");
         return data;
     }
 }

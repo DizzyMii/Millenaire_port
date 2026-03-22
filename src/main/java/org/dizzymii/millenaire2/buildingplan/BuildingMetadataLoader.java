@@ -1,7 +1,8 @@
-package org.dizzymii.millenaire2.buildingplan;
+﻿package org.dizzymii.millenaire2.buildingplan;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.util.MillCommonUtilities;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,6 +15,7 @@ import java.util.Map;
  * Ported from org.millenaire.common.buildingplan.BuildingMetadataLoader (Forge 1.12.2).
  */
 public final class BuildingMetadataLoader {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private BuildingMetadataLoader() {}
 
@@ -30,7 +32,7 @@ public final class BuildingMetadataLoader {
                 }
             }
         } catch (IOException e) {
-            MillLog.error(null, "Failed to load building metadata: " + metaFile.getAbsolutePath());
+            LOGGER.error("Failed to load building metadata: " + metaFile.getAbsolutePath());
         }
         return metadata;
     }
@@ -82,7 +84,7 @@ public final class BuildingMetadataLoader {
                     }
                 }
             } catch (NumberFormatException e) {
-                MillLog.warn(null, "BuildingMetadataLoader: bad number for " + key + "=" + value);
+                LOGGER.warn("BuildingMetadataLoader: bad number for " + key + "=" + value);
             }
         }
     }

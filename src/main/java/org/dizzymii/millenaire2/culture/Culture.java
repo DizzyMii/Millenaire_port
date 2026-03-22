@@ -1,12 +1,13 @@
-package org.dizzymii.millenaire2.culture;
+﻿package org.dizzymii.millenaire2.culture;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.data.ConfigAnnotations;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ConfigField;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.FieldDocumentation;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ParameterType;
 import org.dizzymii.millenaire2.data.ParametersManager;
 import org.dizzymii.millenaire2.util.MillCommonUtilities;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.VirtualDir;
 
 import java.io.File;
@@ -20,6 +21,7 @@ import java.util.*;
  * Ported from org.millenaire.common.culture.Culture.
  */
 public class Culture {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     public static final int LANGUAGE_FLUENT = 500;
     public static final int LANGUAGE_MODERATE = 200;
@@ -110,7 +112,7 @@ public class Culture {
         File customCulturesDir = new File(customContentDir, "cultures");
 
         if (!culturesDir.exists()) {
-            MillLog.error(null, "Cultures directory not found: " + culturesDir.getAbsolutePath());
+            LOGGER.error("Cultures directory not found: " + culturesDir.getAbsolutePath());
             return false;
         }
 
@@ -128,7 +130,7 @@ public class Culture {
         }
 
         for (String cultureName : cultureNames) {
-            MillLog.major(null, "Loading culture: " + cultureName);
+            LOGGER.info("Loading culture: " + cultureName);
 
             // Build a VirtualDir merging default + custom (custom overrides default)
             List<File> sources = new ArrayList<>();
@@ -144,7 +146,7 @@ public class Culture {
                 try {
                     vdir = new VirtualDir(sources);
                 } catch (Exception e) {
-                    MillLog.error(null, "Error creating VirtualDir for culture: " + cultureName, e);
+                    LOGGER.error("Error creating VirtualDir for culture: " + cultureName, e);
                     continue;
                 }
             }
@@ -155,7 +157,7 @@ public class Culture {
             LIST_CULTURES.add(culture);
         }
 
-        MillLog.major(null, "Finished loading " + LIST_CULTURES.size() + " cultures.");
+        LOGGER.info("Finished loading " + LIST_CULTURES.size() + " cultures.");
         return !LIST_CULTURES.isEmpty();
     }
 
@@ -208,7 +210,7 @@ public class Culture {
                     }
                 }
             } catch (Exception e) {
-                MillLog.error(this, "Error loading name list: " + file.getName(), e);
+                LOGGER.error("Error loading name list: " + file.getName(), e);
             }
             nameLists.put(listName, names);
         }

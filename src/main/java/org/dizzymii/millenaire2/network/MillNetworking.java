@@ -1,15 +1,17 @@
-package org.dizzymii.millenaire2.network;
+﻿package org.dizzymii.millenaire2.network;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import org.dizzymii.millenaire2.network.payloads.*;
-import org.dizzymii.millenaire2.util.MillLog;
 
 /**
  * Registers all networking payloads for the mod.
  * Called from the mod event bus via RegisterPayloadHandlersEvent.
  */
 public final class MillNetworking {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final String PROTOCOL_VERSION = "2";
 
@@ -130,6 +132,6 @@ public final class MillNetworking {
                 (payload, context) -> context.enqueueWork(() -> ServerPacketHandler.handleDevCommand(payload, context))
         );
 
-        MillLog.major("MillNetworking", "Networking payloads registered (" + PROTOCOL_VERSION + ").");
+        LOGGER.info("Networking payloads registered (" + PROTOCOL_VERSION + ").");
     }
 }

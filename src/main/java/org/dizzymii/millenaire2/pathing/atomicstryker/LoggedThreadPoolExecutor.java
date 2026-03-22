@@ -1,7 +1,8 @@
-package org.dizzymii.millenaire2.pathing.atomicstryker;
+﻿package org.dizzymii.millenaire2.pathing.atomicstryker;
 
-import org.dizzymii.millenaire2.util.MillLog;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -11,6 +12,7 @@ import java.util.concurrent.TimeUnit;
  * Ported from org.millenaire.common.pathing.atomicstryker.LoggedThreadPoolExecutor (Forge 1.12.2).
  */
 public class LoggedThreadPoolExecutor extends ThreadPoolExecutor {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     public LoggedThreadPoolExecutor(int corePoolSize, int maxPoolSize, long keepAliveTime) {
         super(corePoolSize, maxPoolSize, keepAliveTime, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
@@ -20,7 +22,7 @@ public class LoggedThreadPoolExecutor extends ThreadPoolExecutor {
     protected void afterExecute(Runnable r, Throwable t) {
         super.afterExecute(r, t);
         if (t != null) {
-            MillLog.error(null, "Pathfinding worker threw exception: " + t.getMessage());
+            LOGGER.error("Pathfinding worker threw exception: " + t.getMessage());
         }
     }
 }

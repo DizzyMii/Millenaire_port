@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.village;
+﻿package org.dizzymii.millenaire2.village;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -14,7 +16,6 @@ import org.dizzymii.millenaire2.culture.VillagerType;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.item.TradeGood;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.world.MillWorldData;
 
@@ -34,6 +35,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Ported from org.millenaire.common.village.Building (Forge 1.12.2).
  */
 public class Building {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     // ========== Relation constants ==========
     public static final int RELATION_NEUTRAL = 0;
@@ -295,7 +297,7 @@ public class Building {
                 currentConstruction = cip;
                 buildingLevel = nextLevel;
                 if (mw != null) mw.setDirty();
-                MillLog.minor("Building", "Started upgrade to level " + nextLevel + " for: " + name);
+                LOGGER.debug("Started upgrade to level " + nextLevel + " for: " + name);
                 return true;
             }
         }
@@ -346,7 +348,7 @@ public class Building {
                     org.dizzymii.millenaire2.MillConfig.constructionBlocksPerTick());
             if (placed > 0 && mw != null) mw.setDirty();
             if (currentConstruction.isComplete()) {
-                MillLog.minor("Building", "Construction complete for: " + name);
+                LOGGER.debug("Construction complete for: " + name);
                 currentConstruction = null;
                 if (mw != null) mw.setDirty();
             }
@@ -413,7 +415,7 @@ public class Building {
             if (!isSameVillage(b)) continue;
             if (b.canUpgrade()) {
                 if (b.tryUpgrade()) {
-                    MillLog.minor("Building", "Village expansion: upgrading " + b.getName());
+                    LOGGER.debug("Village expansion: upgrading " + b.getName());
                     return;
                 }
             }
@@ -466,7 +468,7 @@ public class Building {
         // Spiral search for a valid site near the townhall
         Point site = findBuildingSite(serverLevel, initialPlan.width, initialPlan.length);
         if (site == null) {
-            MillLog.minor("Building", "Village expansion: no valid site found for " + newPlanSetKey);
+            LOGGER.debug("Village expansion: no valid site found for " + newPlanSetKey);
             return;
         }
 
@@ -495,7 +497,7 @@ public class Building {
             newBuilding.currentConstruction = cip;
             mw.addBuilding(newBuilding, site);
             mw.setDirty();
-            MillLog.minor("Building", "Village expansion: new building " + newPlanSetKey + " at " + site);
+            LOGGER.debug("Village expansion: new building " + newPlanSetKey + " at " + site);
         }
     }
 
@@ -638,7 +640,7 @@ public class Building {
         villager.setTownHallPoint(getTownHallPos());
 
         level.addFreshEntity(villager);
-        MillLog.minor("Building", "Spawned villager: " + vr.firstName + " " + vr.familyName);
+        LOGGER.debug("Spawned villager: " + vr.firstName + " " + vr.familyName);
     }
 
     // ========== NBT persistence ==========

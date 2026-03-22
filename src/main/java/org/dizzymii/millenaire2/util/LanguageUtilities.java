@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.util;
+﻿package org.dizzymii.millenaire2.util;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
@@ -19,6 +21,7 @@ import java.util.Map;
  * Ported from org.millenaire.common.utilities.LanguageUtilities.
  */
 public class LanguageUtilities {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     // Minecraft color formatting codes
     public static final char BLACK = '0';
@@ -61,7 +64,7 @@ public class LanguageUtilities {
             return;
         }
 
-        MillLog.major(null, "Loading language: " + effectiveLanguage);
+        LOGGER.info("Loading language: " + effectiveLanguage);
         loadedLanguage = effectiveLanguage;
 
         List<File> languageDirs = getLanguageDirs();
@@ -92,7 +95,7 @@ public class LanguageUtilities {
             loadedLanguages.put("fr", fr);
         }
 
-        MillLog.major(null, "Language loading complete: " + effectiveLanguage
+        LOGGER.info("Language loading complete: " + effectiveLanguage
                 + " (fallback: " + fallbackLanguageCode + ")");
     }
 
@@ -258,7 +261,7 @@ public class LanguageUtilities {
             }
             reader.close();
         } catch (Exception e) {
-            MillLog.error(null, "Error loading HoF data", e);
+            LOGGER.error("Error loading HoF data", e);
         }
         return hofData;
     }

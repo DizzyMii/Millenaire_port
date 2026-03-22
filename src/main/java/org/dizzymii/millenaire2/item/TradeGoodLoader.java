@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.item;
+﻿package org.dizzymii.millenaire2.item;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -12,7 +14,6 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
@@ -30,6 +31,7 @@ import java.util.Optional;
  * Users and datapacks can override or extend trade offerings.
  */
 public class TradeGoodLoader {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final Map<String, List<TradeGood>> SELL_GOODS = new HashMap<>();
     private static final Map<String, List<TradeGood>> BUY_GOODS = new HashMap<>();
@@ -54,7 +56,7 @@ public class TradeGoodLoader {
             ResourceLocation loc = ResourceLocation.fromNamespaceAndPath("millenaire2", "trade/trade_goods.json");
             Optional<Resource> opt = rm.getResource(loc);
             if (opt.isEmpty()) {
-                MillLog.warn("TradeGoodLoader", "No trade_goods.json found");
+                LOGGER.warn("No trade_goods.json found");
                 return;
             }
 
@@ -88,10 +90,10 @@ public class TradeGoodLoader {
                 }
 
                 loaded = true;
-                MillLog.minor("TradeGoodLoader", "Loaded trade goods for " + SELL_GOODS.size() + " villager types");
+                LOGGER.debug("Loaded trade goods for " + SELL_GOODS.size() + " villager types");
             }
         } catch (Exception e) {
-            MillLog.error("TradeGoodLoader", "Failed to load trade_goods.json", e);
+            LOGGER.error("Failed to load trade_goods.json", e);
         }
     }
 
@@ -106,7 +108,7 @@ public class TradeGoodLoader {
             ResourceLocation rl = ResourceLocation.parse(itemId);
             Item item = BuiltInRegistries.ITEM.get(rl);
             if (item == Items.AIR && !"minecraft:air".equals(itemId)) {
-                MillLog.warn("TradeGoodLoader", "Unknown item: " + itemId);
+                LOGGER.warn("Unknown item: " + itemId);
                 continue;
             }
 

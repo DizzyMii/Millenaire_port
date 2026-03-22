@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.village;
+﻿package org.dizzymii.millenaire2.village;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -9,7 +11,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.dizzymii.millenaire2.item.InvItem;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
@@ -26,6 +27,7 @@ import java.util.Optional;
  * Reads from data/millenaire2/economy/village_economy.json.
  */
 public class VillageEconomyLoader {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     // Expansion thresholds
     public static int upgradeCheckIntervalTicks = 1200;
@@ -57,7 +59,7 @@ public class VillageEconomyLoader {
             ResourceLocation loc = ResourceLocation.fromNamespaceAndPath("millenaire2", "economy/village_economy.json");
             Optional<Resource> opt = rm.getResource(loc);
             if (opt.isEmpty()) {
-                MillLog.warn("VillageEconomyLoader", "No village_economy.json found, using defaults");
+                LOGGER.warn("No village_economy.json found, using defaults");
                 return;
             }
 
@@ -106,12 +108,12 @@ public class VillageEconomyLoader {
                 }
 
                 loaded = true;
-                MillLog.minor("VillageEconomyLoader", "Loaded economy: "
+                LOGGER.debug("Loaded economy: "
                         + PRODUCTION.size() + " production rules, "
                         + CAPACITY.size() + " capacity overrides");
             }
         } catch (Exception e) {
-            MillLog.error("VillageEconomyLoader", "Failed to load village_economy.json", e);
+            LOGGER.error("Failed to load village_economy.json", e);
         }
     }
 

@@ -1,7 +1,8 @@
-package org.dizzymii.millenaire2.client.book;
+﻿package org.dizzymii.millenaire2.client.book;
 
-import org.dizzymii.millenaire2.util.MillLog;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -12,6 +13,7 @@ import java.io.IOException;
  * Ported from org.millenaire.client.book.TravelBookExporter (Forge 1.12.2).
  */
 public class TravelBookExporter {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     /**
      * Export a travel book snapshot to both text and html files.
@@ -22,7 +24,7 @@ public class TravelBookExporter {
         }
 
         if (!outputDir.exists() && !outputDir.mkdirs()) {
-            MillLog.minor("TravelBookExporter", "Failed to create export directory: " + outputDir.getAbsolutePath());
+            LOGGER.debug("Failed to create export directory: " + outputDir.getAbsolutePath());
             return false;
         }
 
@@ -56,10 +58,10 @@ public class TravelBookExporter {
                 writer.newLine();
             }
 
-            MillLog.minor("TravelBookExporter", "Exported book to " + outputFile.getAbsolutePath());
+            LOGGER.debug("Exported book to " + outputFile.getAbsolutePath());
             return true;
         } catch (IOException e) {
-            MillLog.minor("TravelBookExporter", "Failed to export book: " + e.getMessage());
+            LOGGER.debug("Failed to export book: " + e.getMessage());
             return false;
         }
     }
@@ -91,10 +93,10 @@ public class TravelBookExporter {
             }
 
             writer.write("</body></html>");
-            MillLog.minor("TravelBookExporter", "Exported HTML book to " + outputFile.getAbsolutePath());
+            LOGGER.debug("Exported HTML book to " + outputFile.getAbsolutePath());
             return true;
         } catch (IOException e) {
-            MillLog.minor("TravelBookExporter", "Failed to export HTML book: " + e.getMessage());
+            LOGGER.debug("Failed to export HTML book: " + e.getMessage());
             return false;
         }
     }

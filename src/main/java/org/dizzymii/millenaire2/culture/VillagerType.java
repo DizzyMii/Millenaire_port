@@ -1,10 +1,11 @@
-package org.dizzymii.millenaire2.culture;
+﻿package org.dizzymii.millenaire2.culture;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ConfigField;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.FieldDocumentation;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ParameterType;
 import org.dizzymii.millenaire2.data.ParametersManager;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.List;
  * Ported from org.millenaire.common.culture.VillagerType.
  */
 public class VillagerType {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     // --- Tag constants ---
     public static final String TAG_LOCALMERCHANT = "localmerchant";
@@ -193,10 +195,10 @@ public class VillagerType {
             vt.isDefensive = vt.containsTag(TAG_DEFENSIVE);
             vt.noResurrect = vt.containsTag(TAG_NORESURRECT);
 
-            MillLog.minor(vt, "Loaded villager type: " + vt.key);
+            LOGGER.debug("Loaded villager type: " + vt.key);
             return vt;
         } catch (Exception e) {
-            MillLog.error(null, "Error loading villager type: " + file.getName(), e);
+            LOGGER.error("Error loading villager type: " + file.getName(), e);
             return null;
         }
     }

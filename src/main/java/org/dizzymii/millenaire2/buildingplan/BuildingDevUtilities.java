@@ -1,7 +1,8 @@
-package org.dizzymii.millenaire2.buildingplan;
+﻿package org.dizzymii.millenaire2.buildingplan;
 
-import org.dizzymii.millenaire2.util.MillLog;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -13,6 +14,7 @@ import java.util.*;
  * Ported from org.millenaire.common.buildingplan.BuildingDevUtilities (Forge 1.12.2).
  */
 public final class BuildingDevUtilities {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private BuildingDevUtilities() {}
 
@@ -73,12 +75,12 @@ public final class BuildingDevUtilities {
         for (File png : pngFiles) {
             List<String> warnings = validatePlan(png, buildingWidth);
             for (String w : warnings) {
-                MillLog.warn(null, "BuildingDevUtilities: " + w);
+                LOGGER.warn("BuildingDevUtilities: " + w);
             }
             totalWarnings += warnings.size();
         }
 
-        MillLog.minor(null, "Validated " + pngFiles.length + " plans, " + totalWarnings + " warnings.");
+        LOGGER.debug("Validated " + pngFiles.length + " plans, " + totalWarnings + " warnings.");
         return totalWarnings;
     }
 
@@ -102,9 +104,9 @@ public final class BuildingDevUtilities {
                 writer.newLine();
             }
 
-            MillLog.minor(null, "Dumped " + entries.size() + " block mappings to " + outputFile.getName());
+            LOGGER.debug("Dumped " + entries.size() + " block mappings to " + outputFile.getName());
         } catch (IOException e) {
-            MillLog.error(null, "Failed to dump block list: " + e.getMessage(), e);
+            LOGGER.error("Failed to dump block list: " + e.getMessage(), e);
         }
     }
 
@@ -116,9 +118,9 @@ public final class BuildingDevUtilities {
         List<BuildingBlock> blocks = PngPlanLoader.loadPlan(pngFile, buildingWidth, 0, specialPos);
         Map<String, Integer> resources = generateBuildingResources(blocks);
 
-        MillLog.minor(null, "Resource costs for " + pngFile.getName() + ":");
+        LOGGER.debug("Resource costs for " + pngFile.getName() + ":");
         for (Map.Entry<String, Integer> entry : resources.entrySet()) {
-            MillLog.minor(null, "  " + entry.getKey() + ": " + entry.getValue());
+            LOGGER.debug("  " + entry.getKey() + ": " + entry.getValue());
         }
     }
 }

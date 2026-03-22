@@ -1,8 +1,9 @@
-package org.dizzymii.millenaire2.network.handler;
+﻿package org.dizzymii.millenaire2.network.handler;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.client.Minecraft;
 import org.dizzymii.millenaire2.network.payloads.TradeDataPayload;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
  * Client-side cache and handling for trade data packets.
  */
 public final class ClientTradePacketHandler {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     // Client-side cache of trade data (populated by TradeDataPayload before GUI opens)
     public static final List<TradeGoodClientEntry> tradeGoodsCache = new ArrayList<>();
@@ -33,7 +35,7 @@ public final class ClientTradePacketHandler {
             tradeGoodsCache.add(new TradeGoodClientEntry(i, e.itemId(), e.itemCount(),
                     e.buyPrice(), e.sellPrice(), e.adjustedBuy(), e.adjustedSell()));
         }
-        MillLog.minor("ClientTradePacketHandler", "Received trade data: " + goods.size() + " goods, " + cachedDeniers + " deniers");
+        LOGGER.debug("Received trade data: " + goods.size() + " goods, " + cachedDeniers + " deniers");
     }
 
     public static class TradeGoodClientEntry {

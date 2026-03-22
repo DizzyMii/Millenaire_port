@@ -1,15 +1,17 @@
-package org.dizzymii.millenaire2.network.handler;
+﻿package org.dizzymii.millenaire2.network.handler;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.dizzymii.millenaire2.network.MillPacketIds;
 import org.dizzymii.millenaire2.network.PacketDataHelper;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 
 /**
  * Handles import table GUI actions from the client.
  */
 public final class ImportTablePacketHandler {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private ImportTablePacketHandler() {}
 
@@ -20,10 +22,10 @@ public final class ImportTablePacketHandler {
                 case MillPacketIds.GUIACTION_IMPORTTABLE_IMPORTBUILDINGPLAN -> handleImportBuildingPlan(r);
                 case MillPacketIds.GUIACTION_IMPORTTABLE_CHANGESETTINGS -> handleChangeSettings(r);
                 case MillPacketIds.GUIACTION_IMPORTTABLE_CREATEBUILDING -> handleCreateBuilding(r);
-                default -> MillLog.warn("ImportTablePacketHandler", "Unknown import table action: " + actionId);
+                default -> LOGGER.warn("Unknown import table action: " + actionId);
             }
         } catch (Exception e) {
-            MillLog.error("ImportTablePacketHandler", "Error handling import table action", e);
+            LOGGER.error("Error handling import table action", e);
         } finally {
             r.release();
         }
@@ -39,7 +41,7 @@ public final class ImportTablePacketHandler {
         int orientation = r.readInt();
         boolean importMockBlocks = r.readBoolean();
 
-        MillLog.minor("ImportTablePacketHandler", "ImportTable import request: table=" + tablePos
+        LOGGER.debug("ImportTable import request: table=" + tablePos
                 + " source=" + source + " key=" + buildingKey + " all=" + importAll
                 + " var=" + variation + " lvl=" + level + " ori=" + orientation
                 + " mock=" + importMockBlocks);
@@ -55,7 +57,7 @@ public final class ImportTablePacketHandler {
         boolean convertToPreserveGround = r.readBoolean();
         boolean exportRegularChests = r.readBoolean();
 
-        MillLog.minor("ImportTablePacketHandler", "ImportTable settings: table=" + tablePos
+        LOGGER.debug("ImportTable settings: table=" + tablePos
                 + " upgrade=" + upgradeLevel + " ori=" + orientation + " start=" + startingLevel
                 + " snow=" + exportSnow + " mock=" + importMockBlocks
                 + " preserve=" + convertToPreserveGround + " chests=" + exportRegularChests);
@@ -68,7 +70,7 @@ public final class ImportTablePacketHandler {
         int startingLevel = r.readInt();
         boolean clearGround = r.readBoolean();
 
-        MillLog.minor("ImportTablePacketHandler", "ImportTable create building: table=" + tablePos
+        LOGGER.debug("ImportTable create building: table=" + tablePos
                 + " len=" + length + " width=" + width + " start=" + startingLevel
                 + " clear=" + clearGround);
     }

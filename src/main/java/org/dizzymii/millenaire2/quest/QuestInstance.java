@@ -1,6 +1,7 @@
-package org.dizzymii.millenaire2.quest;
+﻿package org.dizzymii.millenaire2.quest;
 
-import org.dizzymii.millenaire2.util.MillLog;
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.world.MillWorldData;
 import org.dizzymii.millenaire2.world.UserProfile;
@@ -14,6 +15,7 @@ import java.util.Map;
  * Ported from org.millenaire.common.quest.QuestInstance (Forge 1.12.2).
  */
 public class QuestInstance {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final int QUEST_LANGUAGE_BONUS = 50;
     private static final String SEP = ";";
@@ -78,11 +80,11 @@ public class QuestInstance {
         currentStepStart = System.currentTimeMillis();
 
         if (currentStep >= quest.steps.size()) {
-            MillLog.minor("QuestInstance", "Quest '" + quest.key + "' completed!");
+            LOGGER.debug("Quest '" + quest.key + "' completed!");
             return true; // quest finished
         }
 
-        MillLog.minor("QuestInstance", "Advanced to step " + currentStep + " of quest '" + quest.key + "'");
+        LOGGER.debug("Advanced to step " + currentStep + " of quest '" + quest.key + "'");
         return false; // more steps remain
     }
 
@@ -104,7 +106,7 @@ public class QuestInstance {
             }
         }
 
-        MillLog.minor("QuestInstance", "Quest '" + quest.key + "' failed at step " + currentStep);
+        LOGGER.debug("Quest '" + quest.key + "' failed at step " + currentStep);
     }
 
     public boolean isExpired(long currentTime) {
@@ -178,7 +180,7 @@ public class QuestInstance {
             qi.uniqueid = uid;
             return qi;
         } catch (Exception e) {
-            MillLog.major("QuestInstance", "Failed to load quest instance from string: " + e.getMessage());
+            LOGGER.info("Failed to load quest instance from string: " + e.getMessage());
             return null;
         }
     }

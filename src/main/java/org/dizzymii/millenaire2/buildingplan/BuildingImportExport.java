@@ -1,10 +1,11 @@
-package org.dizzymii.millenaire2.buildingplan;
+﻿package org.dizzymii.millenaire2.buildingplan;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -22,6 +23,7 @@ import java.util.Map;
  * Ported from org.millenaire.common.buildingplan.BuildingImportExport (Forge 1.12.2).
  */
 public final class BuildingImportExport {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private BuildingImportExport() {}
 
@@ -83,9 +85,9 @@ public final class BuildingImportExport {
         File pngFile = new File(outputDir, name + ".png");
         try {
             ImageIO.write(image, "PNG", pngFile);
-            MillLog.minor(null, "Exported " + blockCount + " blocks to " + pngFile.getName());
+            LOGGER.debug("Exported " + blockCount + " blocks to " + pngFile.getName());
         } catch (IOException e) {
-            MillLog.error(null, "Failed to write building PNG: " + pngFile.getAbsolutePath(), e);
+            LOGGER.error("Failed to write building PNG: " + pngFile.getAbsolutePath(), e);
             return;
         }
 
@@ -102,9 +104,9 @@ public final class BuildingImportExport {
             writer.newLine();
             writer.write("radius=" + Math.max(width, height) / 2);
             writer.newLine();
-            MillLog.minor(null, "Wrote metadata to " + metaFile.getName());
+            LOGGER.debug("Wrote metadata to " + metaFile.getName());
         } catch (IOException e) {
-            MillLog.error(null, "Failed to write metadata: " + metaFile.getAbsolutePath(), e);
+            LOGGER.error("Failed to write metadata: " + metaFile.getAbsolutePath(), e);
         }
     }
 
@@ -116,7 +118,7 @@ public final class BuildingImportExport {
         File metaFile = new File(planDir, planName + ".txt");
 
         if (!pngFile.exists()) {
-            MillLog.error(null, "Plan PNG not found: " + pngFile.getAbsolutePath());
+            LOGGER.error("Plan PNG not found: " + pngFile.getAbsolutePath());
             return;
         }
 
@@ -149,7 +151,7 @@ public final class BuildingImportExport {
             }
         }
 
-        MillLog.minor(null, "Imported " + placed + " blocks for " + planName + " at " + origin);
+        LOGGER.debug("Imported " + placed + " blocks for " + planName + " at " + origin);
     }
 
     /**

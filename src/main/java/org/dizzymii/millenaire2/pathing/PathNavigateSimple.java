@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.pathing;
+﻿package org.dizzymii.millenaire2.pathing;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
@@ -20,6 +22,7 @@ import java.util.concurrent.ExecutorService;
  * Ported from org.millenaire.common.entity.PathNavigateSimple (Forge 1.12.2).
  */
 public class PathNavigateSimple implements IAStarPathedEntity {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final int MAX_ITERATIONS = 5000;
     private static final int PATH_RECALC_TICKS = 40;
@@ -86,8 +89,7 @@ public class PathNavigateSimple implements IAStarPathedEntity {
         if (pathPending) {
             pendingTicks++;
             if (pendingTicks > PATH_PENDING_TIMEOUT_TICKS) {
-                org.dizzymii.millenaire2.util.MillLog.minor("PathNav",
-                        "Path request timed out for " + entity.getName().getString()
+                org.dizzymii.millenaire2.util.LOGGER.debug("Path request timed out for " + entity.getName().getString()
                         + ", falling back to vanilla nav");
                 pathPending = false;
                 pendingTicks = 0;

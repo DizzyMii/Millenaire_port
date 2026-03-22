@@ -1,18 +1,20 @@
-package org.dizzymii.millenaire2.network;
+﻿package org.dizzymii.millenaire2.network;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.network.handler.*;
 import org.dizzymii.millenaire2.network.payloads.*;
-import org.dizzymii.millenaire2.util.MillLog;
 
 /**
  * Server-side handler for client-to-server packets.
  * Each public method handles a specific dedicated payload type.
  */
 public final class ServerPacketHandler {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private ServerPacketHandler() {}
 
@@ -45,13 +47,13 @@ public final class ServerPacketHandler {
         }
 
         ServerPacketSender.sendVillageList(player, entries);
-        MillLog.minor("ServerPacketHandler", "Sent village list (" + entries.size() + " entries) to " + player.getName().getString());
+        LOGGER.debug("Sent village list (" + entries.size() + " entries) to " + player.getName().getString());
     }
 
     // ========== Release number declaration ==========
 
     public static void handleDeclareRelease(DeclareReleasePayload payload, IPayloadContext context) {
-        MillLog.minor("ServerPacketHandler", "Client declared release: " + payload.releaseNumber());
+        LOGGER.debug("Client declared release: " + payload.releaseNumber());
     }
 
     // ========== Dev commands ==========
@@ -61,22 +63,22 @@ public final class ServerPacketHandler {
 
         // Only allow ops
         if (!player.hasPermissions(2)) {
-            MillLog.warn("ServerPacketHandler", "Non-op player tried dev command: " + player.getName().getString());
+            LOGGER.warn("Non-op player tried dev command: " + player.getName().getString());
             return;
         }
 
         int commandId = payload.commandId();
         switch (commandId) {
             case MillPacketIds.DEV_COMMAND_TOGGLE_AUTO_MOVE:
-                MillLog.minor("ServerPacketHandler", "Toggle auto-move for " + player.getName().getString());
+                LOGGER.debug("Toggle auto-move for " + player.getName().getString());
                 toggleNearestVillagerAutoMove(player);
                 break;
             case MillPacketIds.DEV_COMMAND_TEST_PATH:
-                MillLog.minor("ServerPacketHandler", "Test path for " + player.getName().getString());
+                LOGGER.debug("Test path for " + player.getName().getString());
                 triggerTestPathfinding(player);
                 break;
             default:
-                MillLog.warn("ServerPacketHandler", "Unknown dev command: " + commandId);
+                LOGGER.warn("Unknown dev command: " + commandId);
                 break;
         }
     }
@@ -139,7 +141,7 @@ public final class ServerPacketHandler {
                 ImportTablePacketHandler.handle(actionId, data, context);
                 break;
             default:
-                MillLog.warn("ServerPacketHandler", "Unknown GUI action: " + actionId);
+                LOGGER.warn("Unknown GUI action: " + actionId);
                 break;
         }
     }
@@ -148,7 +150,7 @@ public final class ServerPacketHandler {
 
     public static void handleMapInfoRequest(IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Map info requested by " + player.getName().getString());
+        LOGGER.debug("Map info requested by " + player.getName().getString());
         // Map info packet contains village positions and culture markers for the minimap
         // Currently sends empty data — will be populated when MillWorldData tracks village positions
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, new MapInfoPayload(0));
@@ -157,7 +159,7 @@ public final class ServerPacketHandler {
     // ========== Available content ==========
 
     public static void handleAvailableContent(AvailableContentPayload payload, IPayloadContext context) {
-        MillLog.minor("ServerPacketHandler", "Client declared " + payload.contentCount() + " available content packs");
+        LOGGER.debug("Client declared " + payload.contentCount() + " available content packs");
     }
 
     // ========== Dev command helpers ==========
@@ -168,7 +170,7 @@ public final class ServerPacketHandler {
         if (!nearby.isEmpty()) {
             MillVillager nearest = nearby.get(0);
             nearest.setStopMoving(!nearest.isStopMoving());
-            MillLog.minor("ServerPacketHandler", "Toggled auto-move on " + nearest.getFirstName()
+            LOGGER.debug("Toggled auto-move on " + nearest.getFirstName()
                     + " -> stopMoving=" + nearest.isStopMoving());
         }
     }
@@ -179,7 +181,7 @@ public final class ServerPacketHandler {
         if (!nearby.isEmpty()) {
             MillVillager villager = nearby.get(0);
             villager.getNavigation().moveTo(player.getX(), player.getY(), player.getZ(), 1.0);
-            MillLog.minor("ServerPacketHandler", "Test path: " + villager.getFirstName()
+            LOGGER.debug("Test path: " + villager.getFirstName()
                     + " -> player pos");
         }
     }
@@ -188,7 +190,7 @@ public final class ServerPacketHandler {
 
     private static void handleChiefAction(int actionId, byte[] data, IPayloadContext context) {
         if (!(context.player() instanceof ServerPlayer player)) return;
-        MillLog.minor("ServerPacketHandler", "Chief action " + actionId + " from " + player.getName().getString());
+        LOGGER.debug("Chief action " + actionId + " from " + player.getName().getString());
         // Chief actions modify village building priorities, crop selection, diplomacy, etc.
         // Actual village modification deferred to when Village tick system is complete
     }
@@ -226,7 +228,7 @@ public final class ServerPacketHandler {
                         "\u00a7c[Millénaire] Failed to generate village. Check terrain or culture data."));
             }
         } catch (Exception e) {
-            MillLog.error("ServerPacketHandler", "Error handling new village", e);
+            LOGGER.error("Error handling new village", e);
         } finally {
             r.release();
         }
@@ -281,7 +283,7 @@ public final class ServerPacketHandler {
 
         player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
                 "\u00a76[Millénaire]\u00a7r Village '" + villageName + "' removed (" + toRemove.size() + " buildings)."));
-        MillLog.minor("ServerPacketHandler", "Negation wand: removed village '" + villageName
+        LOGGER.debug("Negation wand: removed village '" + villageName
                 + "' (" + toRemove.size() + " buildings) by " + player.getName().getString());
     }
 }

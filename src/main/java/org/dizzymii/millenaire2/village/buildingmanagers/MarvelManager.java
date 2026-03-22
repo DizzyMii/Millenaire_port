@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.village.buildingmanagers;
+﻿package org.dizzymii.millenaire2.village.buildingmanagers;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -9,7 +11,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.dizzymii.millenaire2.item.InvItem;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
 
@@ -23,6 +24,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Ported from org.millenaire.common.village.buildingmanagers.MarvelManager (Forge 1.12.2).
  */
 public class MarvelManager {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final float DONATION_RATIO = 0.5f;
     public static final String NORMAN_MARVEL_COMPLETION_TAG = "normanmarvel_helper";
@@ -63,7 +65,7 @@ public class MarvelManager {
             donationList.add(playerName);
         }
 
-        MillLog.minor("MarvelManager", "Donation from " + playerName + ": " + item.key + " x" + count
+        LOGGER.debug("Donation from " + playerName + ": " + item.key + " x" + count
                 + " (total: " + totalDonationsReceived + "/" + donationsRequired + ")");
 
         // Check completion
@@ -77,7 +79,7 @@ public class MarvelManager {
      */
     private void completeMarvel() {
         marvelComplete = true;
-        MillLog.minor("MarvelManager", "Marvel complete for village at " + townHall.getPos());
+        LOGGER.debug("Marvel complete for village at " + townHall.getPos());
 
         // Fire completion effects (fireworks near town hall)
         if (townHall.getLevel() instanceof ServerLevel level) {

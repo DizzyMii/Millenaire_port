@@ -1,10 +1,11 @@
-package org.dizzymii.millenaire2.culture;
+﻿package org.dizzymii.millenaire2.culture;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ConfigField;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.FieldDocumentation;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ParameterType;
 import org.dizzymii.millenaire2.data.ParametersManager;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.List;
  * Ported from org.millenaire.common.culture.VillageType.
  */
 public class VillageType {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     public String key = null;
     public Culture culture;
@@ -166,10 +168,10 @@ public class VillageType {
             Object result = ParametersManager.loadFromFile(file, vt, null, "village type");
             if (result == null) return null;
 
-            MillLog.minor(vt, "Loaded village type: " + vt.key + " (lone=" + vt.lonebuilding + ")");
+            LOGGER.debug("Loaded village type: " + vt.key + " (lone=" + vt.lonebuilding + ")");
             return vt;
         } catch (Exception e) {
-            MillLog.error(null, "Error loading village type: " + file.getName(), e);
+            LOGGER.error("Error loading village type: " + file.getName(), e);
             return null;
         }
     }

@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.util;
+﻿package org.dizzymii.millenaire2.util;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import java.io.BufferedReader;
 import java.io.File;
 import java.util.ArrayList;
@@ -14,6 +16,7 @@ import java.util.List;
  * Ported from org.millenaire.common.utilities.LanguageData.
  */
 public class LanguageData {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     public final String language;
     public final String topLevelLanguage;
@@ -50,7 +53,7 @@ public class LanguageData {
             loadTextsFromDir(specificDir, "help", help);
         }
 
-        MillLog.minor(this, "Loaded language '" + language + "': "
+        LOGGER.debug("Loaded language '" + language + "': "
                 + strings.size() + " strings, "
                 + questStrings.size() + " quest strings");
     }
@@ -71,7 +74,7 @@ public class LanguageData {
                 strings.put(key, value);
             }
         } catch (Exception e) {
-            MillLog.error(this, "Error loading strings for " + language, e);
+            LOGGER.error("Error loading strings for " + language, e);
         }
 
         // Also load any .txt files in the directory that aren't special files
@@ -94,7 +97,7 @@ public class LanguageData {
                     strings.putIfAbsent(key, value);
                 }
             } catch (Exception e) {
-                MillLog.error(this, "Error loading strings from " + file.getName(), e);
+                LOGGER.error("Error loading strings from " + file.getName(), e);
             }
         }
     }
@@ -116,7 +119,7 @@ public class LanguageData {
                     questStrings.put(key, value);
                 }
             } catch (Exception e) {
-                MillLog.error(this, "Error loading quest strings from " + file.getName(), e);
+                LOGGER.error("Error loading quest strings from " + file.getName(), e);
             }
         }
     }
@@ -161,7 +164,7 @@ public class LanguageData {
             } catch (NumberFormatException e) {
                 // Skip files that don't have numeric IDs
             } catch (Exception e) {
-                MillLog.error(this, "Error loading " + prefix + " from " + file.getName(), e);
+                LOGGER.error("Error loading " + prefix + " from " + file.getName(), e);
             }
         }
     }

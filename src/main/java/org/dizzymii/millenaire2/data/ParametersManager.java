@@ -1,10 +1,11 @@
-package org.dizzymii.millenaire2.data;
+﻿package org.dizzymii.millenaire2.data;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ConfigField;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.FieldDocumentation;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ParameterType;
 import org.dizzymii.millenaire2.util.MillCommonUtilities;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,6 +20,7 @@ import java.util.*;
  * Ported from org.millenaire.common.annotedparameters.ParametersManager.
  */
 public class ParametersManager {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final Map<String, Map<String, AnnotedParam>> parametersCache = new HashMap<>();
     private static final Map<String, Map<String, List<AnnotedParam>>> parametersCacheByCategory = new HashMap<>();
@@ -153,7 +155,7 @@ public class ParametersManager {
                     }
                 }
             } catch (Exception e) {
-                MillLog.error(target, "Error parsing value '" + value + "' for param " + configName + ": " + e.getMessage());
+                LOGGER.error("Error parsing value '" + value + "' for param " + configName + ": " + e.getMessage());
             }
         }
 
@@ -215,7 +217,7 @@ public class ParametersManager {
                     }
                 }
                 if (temp.length < 2) {
-                    MillLog.error(null, "Invalid line in " + fileType + ": " + file.getName() + ": " + line);
+                    LOGGER.error("Invalid line in " + fileType + ": " + file.getName() + ": " + line);
                     continue;
                 }
 
@@ -225,16 +227,16 @@ public class ParametersManager {
                 if (params.containsKey(key)) {
                     params.get(key).parseValue(target, value);
                 } else {
-                    MillLog.warn(null, "Unknown param in " + fileType + " " + file.getName() + ": " + key);
+                    LOGGER.warn("Unknown param in " + fileType + " " + file.getName() + ": " + key);
                 }
             }
         } catch (Exception e) {
-            MillLog.error(null, "Error loading " + fileType + " from " + file.getName(), e);
+            LOGGER.error("Error loading " + fileType + " from " + file.getName(), e);
             return null;
         }
 
         if (oldSeparatorWarning) {
-            MillLog.warn(target, "File " + file.getName() + " uses legacy ':' separator. Please convert to '='.");
+            LOGGER.warn("File " + file.getName() + " uses legacy ':' separator. Please convert to '='.");
         }
 
         return target;
@@ -251,7 +253,7 @@ public class ParametersManager {
 
             String[] temp = line.split("=", 2);
             if (temp.length < 2) {
-                MillLog.error(null, "Invalid line in " + fileType + " " + fileName + ": " + line);
+                LOGGER.error("Invalid line in " + fileType + " " + fileName + ": " + line);
                 continue;
             }
 
@@ -266,7 +268,7 @@ public class ParametersManager {
             if (params.containsKey(key)) {
                 params.get(key).parseValue(target, value);
             } else {
-                MillLog.warn(null, "Unknown prefixed param in " + fileType + " " + fileName + ": " + key);
+                LOGGER.warn("Unknown prefixed param in " + fileType + " " + fileName + ": " + key);
             }
         }
     }
@@ -323,7 +325,7 @@ public class ParametersManager {
             byCategory.computeIfAbsent(expCat, k -> new ArrayList<>()).add(param);
 
             if (byName.containsKey(param.configName)) {
-                MillLog.error(targetClass, "Duplicate parameter: " + param.configName);
+                LOGGER.error("Duplicate parameter: " + param.configName);
             }
             byName.put(param.configName, param);
         }

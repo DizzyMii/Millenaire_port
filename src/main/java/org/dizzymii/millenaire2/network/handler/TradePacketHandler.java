@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.network.handler;
+﻿package org.dizzymii.millenaire2.network.handler;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
@@ -9,7 +11,6 @@ import org.dizzymii.millenaire2.item.TradeGood;
 import org.dizzymii.millenaire2.network.MillPacketIds;
 import org.dizzymii.millenaire2.network.PacketDataHelper;
 import org.dizzymii.millenaire2.util.MillCommonUtilities;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.world.MillWorldData;
@@ -22,6 +23,7 @@ import java.util.List;
  * Handles trade buy/sell GUI actions from the client.
  */
 public final class TradePacketHandler {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private TradePacketHandler() {}
 
@@ -35,20 +37,20 @@ public final class TradePacketHandler {
 
             Entity entity = player.level().getEntity(entityId);
             if (!(entity instanceof MillVillager villager)) {
-                MillLog.warn("TradePacketHandler", "Trade: villager entity " + entityId + " not found");
+                LOGGER.warn("Trade: villager entity " + entityId + " not found");
                 return;
             }
 
             Building building = villager.getHomeBuilding();
             if (building == null) building = villager.getTownHallBuilding();
             if (building == null) {
-                MillLog.warn("TradePacketHandler", "Trade: no building for villager " + villager.getFirstName());
+                LOGGER.warn("Trade: no building for villager " + villager.getFirstName());
                 return;
             }
 
             List<TradeGood> goods = building.getTradeGoods();
             if (goodIndex < 0 || goodIndex >= goods.size()) {
-                MillLog.warn("TradePacketHandler", "Trade: invalid good index " + goodIndex);
+                LOGGER.warn("Trade: invalid good index " + goodIndex);
                 return;
             }
 
@@ -67,7 +69,7 @@ public final class TradePacketHandler {
                 executeSell(player, profile, good, reputation, villagePos, mw);
             }
         } catch (Exception e) {
-            MillLog.error("TradePacketHandler", "Error handling trade action", e);
+            LOGGER.error("Error handling trade action", e);
         } finally {
             r.release();
         }
@@ -95,7 +97,7 @@ public final class TradePacketHandler {
         mw.setDirty();
 
         player.sendSystemMessage(MillCommonUtilities.chatMsg("Bought " + good.item.getHoverName().getString() + " for " + price + " deniers"));
-        MillLog.minor("TradePacketHandler", "Trade buy: " + player.getName().getString()
+        LOGGER.debug("Trade buy: " + player.getName().getString()
                 + " bought " + good.item.getHoverName().getString() + " for " + price + "d");
     }
 
@@ -123,7 +125,7 @@ public final class TradePacketHandler {
         mw.setDirty();
 
         player.sendSystemMessage(MillCommonUtilities.chatMsg("Sold " + good.item.getHoverName().getString() + " for " + price + " deniers"));
-        MillLog.minor("TradePacketHandler", "Trade sell: " + player.getName().getString()
+        LOGGER.debug("Trade sell: " + player.getName().getString()
                 + " sold " + good.item.getHoverName().getString() + " for " + price + "d");
     }
 

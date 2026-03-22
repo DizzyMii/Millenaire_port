@@ -1,8 +1,9 @@
-package org.dizzymii.millenaire2.client;
+﻿package org.dizzymii.millenaire2.client;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.client.Minecraft;
 import org.dizzymii.millenaire2.client.book.BookManager;
-import org.dizzymii.millenaire2.util.MillLog;
 
 /**
  * Client-side proxy for registering renderers, key bindings, and client events.
@@ -10,14 +11,15 @@ import org.dizzymii.millenaire2.util.MillLog;
  * Ported from org.millenaire.client.ClientProxy (Forge 1.12.2).
  */
 public class ClientProxy {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     /**
      * Perform client-side initialization: load books, set up overlay state.
      */
     public static void init() {
-        MillLog.minor("ClientProxy", "Initializing client-side systems...");
+        LOGGER.debug("Initializing client-side systems...");
         BookManager.loadBooks();
-        MillLog.minor("ClientProxy", "Client initialization complete.");
+        LOGGER.debug("Client initialization complete.");
     }
 
     /**

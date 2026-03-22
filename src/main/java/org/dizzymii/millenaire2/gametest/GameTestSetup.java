@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.gametest;
+﻿package org.dizzymii.millenaire2.gametest;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntTag;
@@ -10,13 +12,13 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import org.dizzymii.millenaire2.Millenaire2;
-import org.dizzymii.millenaire2.util.MillLog;
 
 /**
  * Registers empty structure templates for GameTests so they don't need .nbt files.
  * Called during server start, before GameTests attempt to load templates.
  */
 public class GameTestSetup {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static boolean initialized = false;
 
@@ -56,9 +58,9 @@ public class GameTestSetup {
                     level.registryAccess().lookupOrThrow(Registries.BLOCK),
                     tag);
 
-            MillLog.major(null, "GameTest: registered empty structure template");
+            LOGGER.info("GameTest: registered empty structure template");
         } catch (Exception e) {
-            MillLog.error(null, "GameTest: failed to register empty template", e);
+            LOGGER.error("GameTest: failed to register empty template", e);
         }
     }
 }

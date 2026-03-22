@@ -1,4 +1,4 @@
-package org.dizzymii.millenaire2.config;
+﻿package org.dizzymii.millenaire2.config;
 
 /**
  * All mod configuration values — distances, logging levels, feature toggles.
@@ -7,6 +7,7 @@ package org.dizzymii.millenaire2.config;
  * These are static defaults. Future phases will wire them to NeoForge's config system.
  */
 public class MillConfigValues {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     // --- Radius settings ---
     public static int KeepActiveRadius = 200;
@@ -91,11 +92,11 @@ public class MillConfigValues {
     public static void loadConfig() {
         // NeoForge config wiring: values are read from the NeoForge config system
         // in a later phase. For now, all values use their static defaults above.
-        org.dizzymii.millenaire2.util.MillLog.minor("Config", "MillConfigValues loaded (defaults)");
+        org.dizzymii.millenaire2.util.LOGGER.debug("MillConfigValues loaded (defaults)");
     }
 
     public static void saveConfig() {
         // NeoForge config system auto-persists; this method is a compatibility stub.
-        org.dizzymii.millenaire2.util.MillLog.minor("Config", "MillConfigValues saved");
+        org.dizzymii.millenaire2.util.LOGGER.debug("MillConfigValues saved");
     }
 }

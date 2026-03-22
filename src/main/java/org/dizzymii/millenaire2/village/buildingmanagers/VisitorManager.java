@@ -1,10 +1,11 @@
-package org.dizzymii.millenaire2.village.buildingmanagers;
+﻿package org.dizzymii.millenaire2.village.buildingmanagers;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.village.VillagerRecord;
@@ -16,6 +17,7 @@ import java.util.Random;
  * Ported from org.millenaire.common.village.buildingmanagers.VisitorManager (Forge 1.12.2).
  */
 public class VisitorManager {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final int MERCHANT_SPAWN_CHANCE = 200;
     private static final int VISITOR_SPAWN_CHANCE = 150;
@@ -120,7 +122,7 @@ public class VisitorManager {
 
         level.addFreshEntity(merchant);
         building.merchantRecord = vr;
-        MillLog.minor("VisitorManager", "Spawned merchant at " + pos);
+        LOGGER.debug("Spawned merchant at " + pos);
     }
 
     private void spawnVisitor(ServerLevel level, Point pos) {
@@ -136,7 +138,7 @@ public class VisitorManager {
 
         level.addFreshEntity(visitor);
         visitorCount++;
-        MillLog.minor("VisitorManager", "Spawned visitor at " + pos + " (total: " + visitorCount + ")");
+        LOGGER.debug("Spawned visitor at " + pos + " (total: " + visitorCount + ")");
     }
 
     private void despawnMerchant(ServerLevel level, VillagerRecord vr) {

@@ -1,11 +1,12 @@
-package org.dizzymii.millenaire2.network.handler;
+﻿package org.dizzymii.millenaire2.network.handler;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.util.MillCommonUtilities;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.dizzymii.millenaire2.network.MillPacketIds;
 import org.dizzymii.millenaire2.network.PacketDataHelper;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.village.BuildingLocation;
@@ -18,6 +19,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Handles building project GUI actions from the client.
  */
 public final class BuildingProjectPacketHandler {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private BuildingProjectPacketHandler() {}
 
@@ -32,7 +34,7 @@ public final class BuildingProjectPacketHandler {
             Point townHallPos = readPoint(r);
             Building townHall = mw.getBuilding(townHallPos);
             if (townHall == null) {
-                MillLog.warn("BuildingProjectPacketHandler", "Building project action: unknown townhall at " + townHallPos);
+                LOGGER.warn("Building project action: unknown townhall at " + townHallPos);
                 return;
             }
 
@@ -42,10 +44,10 @@ public final class BuildingProjectPacketHandler {
                 case MillPacketIds.GUIACTION_UPDATE_CUSTOM_BUILDING_PROJECT -> handleUpdateCustom(player, mw, r);
                 case MillPacketIds.GUIACTION_CONTROLLEDBUILDING_TOGGLEALLOWED -> handleToggleAllowed(player, townHall, r);
                 case MillPacketIds.GUIACTION_CONTROLLEDBUILDING_FORGET -> handleForget(player, townHall, r);
-                default -> MillLog.warn("BuildingProjectPacketHandler", "Unknown building project action: " + actionId);
+                default -> LOGGER.warn("Unknown building project action: " + actionId);
             }
         } catch (Exception e) {
-            MillLog.error("BuildingProjectPacketHandler", "Error handling building project action", e);
+            LOGGER.error("Error handling building project action", e);
         } finally {
             r.release();
         }

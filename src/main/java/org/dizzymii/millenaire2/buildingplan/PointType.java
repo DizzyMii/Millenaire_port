@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.buildingplan;
+﻿package org.dizzymii.millenaire2.buildingplan;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -13,7 +15,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.dizzymii.millenaire2.block.MillBlocks;
 import org.dizzymii.millenaire2.item.InvItem;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
@@ -29,6 +30,7 @@ import java.util.Optional;
  * Ported from org.millenaire.common.buildingplan.PointType (Forge 1.12.2).
  */
 public class PointType {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     public static final String SUBTYPE_SIGN = "sign";
     public static final String SUBTYPE_MAINCHEST = "mainchest";
@@ -145,10 +147,10 @@ public class PointType {
                 boolean isSecondStep = parts.length > 2 && "2".equals(parts[2].trim());
                 registerBlock(colour, blockId, block, isSecondStep);
             } else {
-                MillLog.warn(null, "PointType: unknown block: " + blockId);
+                LOGGER.warn("PointType: unknown block: " + blockId);
             }
         } catch (Exception e) {
-            MillLog.warn(null, "PointType: failed to parse colour point: " + line);
+            LOGGER.warn("PointType: failed to parse colour point: " + line);
         }
     }
 
@@ -195,10 +197,10 @@ public class PointType {
                                         registerBlock(colour, blockId, block, second);
                                         count++;
                                     } else {
-                                        MillLog.warn(null, "PointType JSON: unknown block: " + blockId);
+                                        LOGGER.warn("PointType JSON: unknown block: " + blockId);
                                     }
                                 } catch (Exception e) {
-                                    MillLog.warn(null, "PointType JSON: bad block entry: " + entry.getKey());
+                                    LOGGER.warn("PointType JSON: bad block entry: " + entry.getKey());
                                 }
                             }
                         }
@@ -212,17 +214,17 @@ public class PointType {
                                     registerSpecial(colour, type);
                                     count++;
                                 } catch (Exception e) {
-                                    MillLog.warn(null, "PointType JSON: bad special entry: " + entry.getKey());
+                                    LOGGER.warn("PointType JSON: bad special entry: " + entry.getKey());
                                 }
                             }
                         }
 
-                        MillLog.minor(null, "PointType: loaded " + count + " colour mappings from JSON datapack");
+                        LOGGER.debug("PointType: loaded " + count + " colour mappings from JSON datapack");
                         loaded = true;
                     }
                 }
             } catch (Exception e) {
-                MillLog.error(null, "PointType: failed to load JSON colour map, using defaults", e);
+                LOGGER.error("PointType: failed to load JSON colour map, using defaults", e);
             }
         }
         if (!loaded) {
@@ -463,6 +465,6 @@ public class PointType {
         registerSpecial(0x484038, SpecialPointTypeList.bfreepaintedbrick);
         registerSpecial(0x70A050, SpecialPointTypeList.bfreegrass_block);
 
-        MillLog.minor(null, "PointType: registered " + colourPoints.size() + " default colour mappings");
+        LOGGER.debug("PointType: registered " + colourPoints.size() + " default colour mappings");
     }
 }

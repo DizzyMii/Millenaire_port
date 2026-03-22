@@ -1,7 +1,8 @@
-package org.dizzymii.millenaire2.entity;
+﻿package org.dizzymii.millenaire2.entity;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.item.InvItem;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,6 +18,7 @@ import java.util.Map;
  * to priority values for each villager config key.
  */
 public class VillagerConfig {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final String DEFAULT = "default";
 
@@ -131,6 +133,6 @@ public class VillagerConfig {
     public static void initDefaultConfig() {
         DEFAULT_CONFIG = new VillagerConfig(DEFAULT);
         villagerConfigs.put(DEFAULT, DEFAULT_CONFIG);
-        MillLog.major("VillagerConfig", "Default villager config initialised.");
+        LOGGER.info("Default villager config initialised.");
     }
 }

@@ -1,12 +1,13 @@
-package org.dizzymii.millenaire2.item;
+﻿package org.dizzymii.millenaire2.item;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.dizzymii.millenaire2.util.LegacyBlockMapping;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +20,7 @@ import java.util.Map;
  * Ported from org.millenaire.common.item.InvItem.
  */
 public class InvItem {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     /** Registry of all known InvItems by their Millénaire key. */
     private static final Map<String, InvItem> ITEMS = new HashMap<>();
@@ -71,10 +73,10 @@ public class InvItem {
             ResourceLocation rl = ResourceLocation.parse(itemId);
             item = BuiltInRegistries.ITEM.get(rl);
             if (item == Items.AIR && !"minecraft:air".equals(itemId)) {
-                MillLog.warn(this, "Could not resolve item: " + key + " -> " + itemId);
+                LOGGER.warn("Could not resolve item: " + key + " -> " + itemId);
             }
         } catch (Exception e) {
-            MillLog.error(this, "Failed to resolve item: " + key + " -> " + itemId, e);
+            LOGGER.error("Failed to resolve item: " + key + " -> " + itemId, e);
             item = Items.AIR;
         }
     }

@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.util;
+﻿package org.dizzymii.millenaire2.util;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -17,6 +19,7 @@ import java.util.Map;
  * Ported from org.millenaire.common.utilities.virtualdir.VirtualDir.
  */
 public class VirtualDir {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private final List<File> sourceDirs;
     private Map<String, File> recursiveChildrenCache = null;
     private List<File> recursiveChildrenListCache = null;
@@ -59,7 +62,7 @@ public class VirtualDir {
         try {
             return new VirtualDir(childSourceDir);
         } catch (Exception e) {
-            MillLog.printException(new MillLog.MillenaireException("Failed to create child VirtualDir: " + childDirectory, e));
+            LOGGER.error("Failed to create child VirtualDir: {}", childDirectory, e);
             return null;
         }
     }

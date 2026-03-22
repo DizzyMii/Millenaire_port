@@ -1,8 +1,9 @@
-package org.dizzymii.millenaire2.data;
+﻿package org.dizzymii.millenaire2.data;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.Millenaire2;
 import org.dizzymii.millenaire2.util.MillCommonUtilities;
-import org.dizzymii.millenaire2.util.MillLog;
 
 import java.io.*;
 import java.net.URI;
@@ -19,6 +20,7 @@ import java.util.stream.Stream;
  * Ported from org.millenaire.common.deployer.ContentDeployer.
  */
 public class ContentDeployer {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final String DATA_PREFIX = "data/millenaire2/millenaire/";
 
@@ -35,18 +37,18 @@ public class ContentDeployer {
 
             if (!contentDir.exists()) {
                 needsDeploy = true;
-                MillLog.major(null, "Deploying Millénaire content (directory not found).");
+                LOGGER.info("Deploying Millénaire content (directory not found).");
             } else if (!versionFile.exists()) {
                 needsDeploy = true;
-                MillLog.major(null, "Deploying Millénaire content (no version file).");
+                LOGGER.info("Deploying Millénaire content (no version file).");
             } else {
                 try (BufferedReader reader = MillCommonUtilities.getReader(versionFile)) {
                     String version = reader.readLine();
                     if (!Millenaire2.VERSION.equals(version)) {
                         needsDeploy = true;
-                        MillLog.major(null, "Redeploying Millénaire content (version " + version + " -> " + Millenaire2.VERSION + ").");
+                        LOGGER.info("Redeploying Millénaire content (version " + version + " -> " + Millenaire2.VERSION + ").");
                     } else {
-                        MillLog.major(null, "Millénaire content already at version " + version + ", no redeployment needed.");
+                        LOGGER.info("Millénaire content already at version " + version + ", no redeployment needed.");
                     }
                 }
             }
@@ -60,10 +62,10 @@ public class ContentDeployer {
                     writer.write(Millenaire2.VERSION);
                 }
 
-                MillLog.major(null, "Deployed Millénaire content in " + (System.currentTimeMillis() - startTime) + " ms.");
+                LOGGER.info("Deployed Millénaire content in " + (System.currentTimeMillis() - startTime) + " ms.");
             }
         } catch (Exception e) {
-            MillLog.error(null, "Error deploying Millénaire content", e);
+            LOGGER.error("Error deploying Millénaire content", e);
         }
     }
 
@@ -73,7 +75,7 @@ public class ContentDeployer {
     private static void deployFromResources(File contentDir) throws IOException {
         URL resourceUrl = ContentDeployer.class.getClassLoader().getResource(DATA_PREFIX);
         if (resourceUrl == null) {
-            MillLog.error(null, "Could not find resource path: " + DATA_PREFIX);
+            LOGGER.error("Could not find resource path: " + DATA_PREFIX);
             return;
         }
 
@@ -113,12 +115,12 @@ public class ContentDeployer {
                             }
                         }
                     } catch (IOException e) {
-                        MillLog.error(null, "Error copying resource: " + source, e);
+                        LOGGER.error("Error copying resource: " + source, e);
                     }
                 });
             }
         } catch (Exception e) {
-            MillLog.error(null, "Error accessing mod resources for deployment", e);
+            LOGGER.error("Error accessing mod resources for deployment", e);
         }
     }
 }

@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.pathing.atomicstryker;
+﻿package org.dizzymii.millenaire2.pathing.atomicstryker;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.world.level.Level;
 
 import java.util.HashMap;
@@ -14,6 +16,7 @@ import java.util.Set;
  * Ported from org.millenaire.common.pathing.atomicstryker.AStarWorker (Forge 1.12.2).
  */
 public class AStarWorker implements Runnable {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     protected final Level level;
     protected final IAStarPathedEntity entity;
@@ -99,8 +102,7 @@ public class AStarWorker implements Runnable {
             }
         }
 
-        org.dizzymii.millenaire2.util.MillLog.minor("AStarWorker",
-                "Path search exhausted " + iterations + "/" + maxIterations + " iterations without result"
+        org.dizzymii.millenaire2.util.LOGGER.debug("Path search exhausted " + iterations + "/" + maxIterations + " iterations without result"
                 + " from (" + startNode.x + "," + startNode.y + "," + startNode.z + ")"
                 + " to (" + primaryTarget.x + "," + primaryTarget.y + "," + primaryTarget.z + ")");
         return null; // No path found

@@ -1,8 +1,9 @@
-package org.dizzymii.millenaire2.buildingplan;
+﻿package org.dizzymii.millenaire2.buildingplan;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.resources.ResourceLocation;
 import org.dizzymii.millenaire2.culture.Culture;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.VirtualDir;
 
 import java.io.File;
@@ -17,6 +18,7 @@ import java.util.Map;
  * Ported from org.millenaire.common.buildingplan.BuildingCustomPlan (Forge 1.12.2).
  */
 public class BuildingCustomPlan implements IBuildingPlan {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     public final Culture culture;
     public String nativeName;
@@ -80,7 +82,7 @@ public class BuildingCustomPlan implements IBuildingPlan {
                 plans.add(plan);
             }
         }
-        MillLog.minor(null, "Loaded " + plans.size() + " custom buildings for " + culture.key);
+        LOGGER.debug("Loaded " + plans.size() + " custom buildings for " + culture.key);
         return plans;
     }
 
@@ -95,7 +97,7 @@ public class BuildingCustomPlan implements IBuildingPlan {
             BuildingMetadataLoader.applyMetadata(plan, meta);
             return plan;
         } catch (Exception e) {
-            MillLog.error(null, "Failed to load custom building: " + file.getName(), e);
+            LOGGER.error("Failed to load custom building: " + file.getName(), e);
             return null;
         }
     }

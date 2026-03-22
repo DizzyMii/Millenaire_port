@@ -1,11 +1,12 @@
-package org.dizzymii.millenaire2.culture;
+﻿package org.dizzymii.millenaire2.culture;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ConfigField;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.FieldDocumentation;
 import org.dizzymii.millenaire2.data.ConfigAnnotations.ParameterType;
 import org.dizzymii.millenaire2.data.ParametersManager;
 import org.dizzymii.millenaire2.util.MillCommonUtilities;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.VirtualDir;
 
 import java.io.BufferedReader;
@@ -26,6 +27,7 @@ import java.util.Map;
  * Ported from org.millenaire.common.buildingplan.BuildingPlanSet.
  */
 public class BuildingPlanSet {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     public String key;
     public Culture culture;
@@ -157,10 +159,10 @@ public class BuildingPlanSet {
             // Load upgrade plans: initial, upgrade1, upgrade2, ...
             loadUpgradePlans(lines, bps, buildingsDir);
 
-            MillLog.minor(bps, "Loaded building plan set: " + bps.key + " (" + bps.plans.size() + " levels)");
+            LOGGER.debug("Loaded building plan set: " + bps.key + " (" + bps.plans.size() + " levels)");
             return bps;
         } catch (Exception e) {
-            MillLog.error(null, "Error loading building plan set: " + file.getName(), e);
+            LOGGER.error("Error loading building plan set: " + file.getName(), e);
             return null;
         }
     }

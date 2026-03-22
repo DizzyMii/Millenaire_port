@@ -1,6 +1,7 @@
-package org.dizzymii.millenaire2.quest;
+﻿package org.dizzymii.millenaire2.quest;
 
-import org.dizzymii.millenaire2.util.MillLog;
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.world.MillWorldData;
 import org.dizzymii.millenaire2.world.UserProfile;
@@ -19,6 +20,7 @@ import java.util.Map;
  * Ported from org.millenaire.common.quest.Quest (Forge 1.12.2).
  */
 public class Quest {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     public static HashMap<String, Quest> quests = new HashMap<>();
 
@@ -103,12 +105,12 @@ public class Quest {
                 }
             }
         } catch (Exception e) {
-            MillLog.major("Quest", "Failed to load quest file: " + file.getName() + " — " + e.getMessage());
+            LOGGER.info("Failed to load quest file: " + file.getName() + " — " + e.getMessage());
             return null;
         }
 
         quests.put(quest.key, quest);
-        MillLog.minor("Quest", "Loaded quest '" + quest.key + "' with " + quest.steps.size() + " steps.");
+        LOGGER.debug("Loaded quest '" + quest.key + "' with " + quest.steps.size() + " steps.");
         return quest;
     }
 
@@ -214,6 +216,6 @@ public class Quest {
         for (File f : files) {
             loadQuest(f);
         }
-        MillLog.minor("Quest", "Loaded " + quests.size() + " quests from " + questDir.getAbsolutePath());
+        LOGGER.debug("Loaded " + quests.size() + " quests from " + questDir.getAbsolutePath());
     }
 }

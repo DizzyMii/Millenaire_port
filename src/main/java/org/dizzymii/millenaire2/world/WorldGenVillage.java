@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.world;
+﻿package org.dizzymii.millenaire2.world;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -12,7 +14,6 @@ import org.dizzymii.millenaire2.culture.Culture;
 import org.dizzymii.millenaire2.culture.VillageType;
 import org.dizzymii.millenaire2.culture.VillagerType;
 import org.dizzymii.millenaire2.entity.MillVillager;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.village.BuildingLocation;
@@ -28,6 +29,7 @@ import java.util.List;
  * Ported from org.millenaire.common.world.WorldGenVillage (Forge 1.12.2).
  */
 public class WorldGenVillage {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final int HAMLET_ATTEMPT_ANGLE_STEPS = 36;
     private static final int CHUNK_DISTANCE_LOAD_TEST = 8;
@@ -51,7 +53,7 @@ public class WorldGenVillage {
         // Check spawn protection radius
         BlockPos spawn = level.getSharedSpawnPos();
         if (center.closerThan(spawn, MIN_DISTANCE_FROM_SPAWN)) {
-            MillLog.minor("WorldGenVillage", "Rejected chunk (" + chunkX + "," + chunkZ + "): too close to spawn");
+            LOGGER.debug("Rejected chunk (" + chunkX + "," + chunkZ + "): too close to spawn");
             return false;
         }
 
@@ -62,7 +64,7 @@ public class WorldGenVillage {
             if (b.isTownhall && b.getPos() != null) {
                 double dist = centerPoint.distanceTo(b.getPos());
                 if (dist < minVillageDistance) {
-                    MillLog.minor("WorldGenVillage", "Rejected chunk (" + chunkX + "," + chunkZ + "): too close to existing village at " + b.getPos() + " (dist=" + (int)dist + ")");
+                    LOGGER.debug("Rejected chunk (" + chunkX + "," + chunkZ + "): too close to existing village at " + b.getPos() + " (dist=" + (int)dist + ")");
                     return false;
                 }
             }
@@ -71,7 +73,7 @@ public class WorldGenVillage {
         // Find suitable ground level
         int groundY = findGroundLevel(level, center);
         if (groundY < 0) {
-            MillLog.minor("WorldGenVillage", "Rejected chunk (" + chunkX + "," + chunkZ + "): no valid ground level");
+            LOGGER.debug("Rejected chunk (" + chunkX + "," + chunkZ + "): no valid ground level");
             return false;
         }
 
@@ -80,17 +82,17 @@ public class WorldGenVillage {
         // Evaluate terrain suitability
         double usable = evaluateTerrainFlat(level, groundPos, 16);
         if (usable < MINIMUM_USABLE_BLOCK_PERC) {
-            MillLog.minor("WorldGenVillage", "Rejected chunk (" + chunkX + "," + chunkZ + "): terrain too rough (usable=" + String.format("%.2f", usable) + ")");
+            LOGGER.debug("Rejected chunk (" + chunkX + "," + chunkZ + "): terrain too rough (usable=" + String.format("%.2f", usable) + ")");
             return false;
         }
 
         // Pick a culture based on biome mapping (data-driven)
         Culture culture = BiomeCultureMapper.selectCulture(level, groundPos, random);
         if (culture == null) {
-            MillLog.minor("WorldGenVillage", "Rejected chunk (" + chunkX + "," + chunkZ + "): no culture for biome");
+            LOGGER.debug("Rejected chunk (" + chunkX + "," + chunkZ + "): no culture for biome");
             return false;
         }
-        MillLog.minor("WorldGenVillage", "Attempting village generation at chunk (" + chunkX + "," + chunkZ + ") culture=" + culture.key);
+        LOGGER.debug("Attempting village generation at chunk (" + chunkX + "," + chunkZ + ") culture=" + culture.key);
 
         return generateNewVillage(level, groundPos, culture, worldData, random);
     }
@@ -105,20 +107,20 @@ public class WorldGenVillage {
         // Pick a village type from this culture
         VillageType villageType = pickVillageType(culture, random);
         if (villageType == null) {
-            MillLog.warn("WorldGenVillage", "No village types for culture: " + culture.key);
+            LOGGER.warn("No village types for culture: " + culture.key);
             return false;
         }
 
         // Resolve centre building plan set
         BuildingPlanSet planSet = resolveCentrePlanSet(culture, villageType);
         if (planSet == null) {
-            MillLog.warn("WorldGenVillage", "No centre building plan for village type: " + villageType.key);
+            LOGGER.warn("No centre building plan for village type: " + villageType.key);
             return false;
         }
 
         BuildingPlan initialPlan = planSet.getInitialPlan();
         if (initialPlan == null || !initialPlan.hasImage()) {
-            MillLog.warn("WorldGenVillage", "No initial plan image for: " + planSet.key);
+            LOGGER.warn("No initial plan image for: " + planSet.key);
             return false;
         }
 
@@ -154,9 +156,9 @@ public class WorldGenVillage {
             cip.location = location;
             cip.orientation = location.orientation;
             townhall.currentConstruction = cip;
-            MillLog.minor("WorldGenVillage", "Construction queued: " + cip.nbBlocksTotal + " blocks for " + planSet.key);
+            LOGGER.debug("Construction queued: " + cip.nbBlocksTotal + " blocks for " + planSet.key);
         } else {
-            MillLog.warn("WorldGenVillage", "Could not build ConstructionIP from plan for " + planSet.key);
+            LOGGER.warn("Could not build ConstructionIP from plan for " + planSet.key);
         }
 
         // Create initial VillagerRecords from the plan's villager list
@@ -165,7 +167,7 @@ public class WorldGenVillage {
         worldData.addBuilding(townhall, villagePos);
         VillageWallGenerator.generateForTownhall(level, townhall);
 
-        MillLog.minor("WorldGenVillage", "Generated new " + culture.key + " " + villageType.key
+        LOGGER.debug("Generated new " + culture.key + " " + villageType.key
                 + " village at " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ()
                 + " (" + townhall.getVillagerRecords().size() + " villagers)");
         return true;
@@ -304,7 +306,7 @@ public class WorldGenVillage {
 
             worldData.addBuilding(hamlet, hamletPoint);
 
-            MillLog.minor("WorldGenVillage", "Generated hamlet at " + hx + ", " + groundY + ", " + hz);
+            LOGGER.debug("Generated hamlet at " + hx + ", " + groundY + ", " + hz);
             return hamlet;
         }
         return null;
@@ -329,7 +331,7 @@ public class WorldGenVillage {
 
         worldData.addBuilding(lone, bldgPos);
 
-        MillLog.minor("WorldGenVillage", "Generated lone building at " +
+        LOGGER.debug("Generated lone building at " +
                 pos.getX() + ", " + groundY + ", " + pos.getZ());
         return true;
     }

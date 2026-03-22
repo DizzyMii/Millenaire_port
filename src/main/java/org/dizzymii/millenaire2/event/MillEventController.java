@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.event;
+﻿package org.dizzymii.millenaire2.event;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -13,7 +15,6 @@ import net.neoforged.neoforge.event.level.LevelEvent;
 import org.dizzymii.millenaire2.Millenaire2;
 import org.dizzymii.millenaire2.block.MillBlocks;
 import org.dizzymii.millenaire2.entity.MillVillager;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.village.VillagerRecord;
@@ -29,6 +30,7 @@ import java.util.UUID;
  */
 @EventBusSubscriber(modid = Millenaire2.MODID)
 public class MillEventController {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     @SubscribeEvent
     public static void onLevelLoad(LevelEvent.Load event) {
@@ -38,7 +40,7 @@ public class MillEventController {
         if (serverLevel.dimension() != ServerLevel.OVERWORLD) return;
 
         MillWorldData mw = MillWorldData.get(serverLevel);
-        MillLog.minor("MillEventController", "Level loaded — " + mw.allBuildings().size() + " buildings tracked.");
+        LOGGER.debug("Level loaded — " + mw.allBuildings().size() + " buildings tracked.");
     }
 
     @SubscribeEvent
@@ -51,7 +53,7 @@ public class MillEventController {
         // but we mark dirty to ensure latest state is flushed.
         MillWorldData mw = MillWorldData.get(serverLevel);
         mw.setDirty();
-        MillLog.minor("MillEventController", "Level unloading — marked MillWorldData dirty for save.");
+        LOGGER.debug("Level unloading — marked MillWorldData dirty for save.");
     }
 
     @SubscribeEvent
@@ -126,13 +128,12 @@ public class MillEventController {
                 int currentRep = profile.getCultureReputation(cultureKey);
                 profile.setCultureReputation(cultureKey, currentRep - 16);
             }
-            MillLog.minor("MillEventController",
-                    sp.getGameProfile().getName() + " killed villager " + villager.getFirstName()
+            LOGGER.debug(sp.getGameProfile().getName() + " killed villager " + villager.getFirstName()
                             + " — reputation penalty applied.");
         }
 
         mw.setDirty();
-        MillLog.minor("MillEventController", "Villager died: " + villager.getFirstName() + " " + villager.getFamilyName());
+        LOGGER.debug("Villager died: " + villager.getFirstName() + " " + villager.getFamilyName());
     }
 
     // ========== Helpers ==========

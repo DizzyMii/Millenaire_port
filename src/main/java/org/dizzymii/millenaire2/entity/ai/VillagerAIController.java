@@ -1,9 +1,10 @@
-package org.dizzymii.millenaire2.entity.ai;
+﻿package org.dizzymii.millenaire2.entity.ai;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.goal.Goal;
 import org.dizzymii.millenaire2.goal.GoalInformation;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 
 import javax.annotation.Nullable;
@@ -14,6 +15,7 @@ import java.util.HashMap;
  * Extracted from MillVillager to keep the entity class focused on entity definition, data, and NBT.
  */
 public class VillagerAIController {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final int GOAL_TICK_INTERVAL = 20;
     private static final int STUCK_THRESHOLD_TICKS = 200;
@@ -80,7 +82,7 @@ public class VillagerAIController {
         if (currentGoal != null && movedSq < STUCK_DISTANCE_SQ) {
             stuckCounter++;
             if (stuckCounter >= STUCK_THRESHOLD_TICKS / GOAL_TICK_INTERVAL) {
-                MillLog.minor(villager, "Villager stuck (" + stuckCounter + " checks), clearing goal: " + villager.getGoalKey());
+                LOGGER.debug("Villager stuck (" + stuckCounter + " checks), clearing goal: " + villager.getGoalKey());
                 clearGoal();
                 stuckCounter = 0;
                 villager.teleportTo(
@@ -111,7 +113,7 @@ public class VillagerAIController {
                     clearGoal();
                 }
             } catch (Exception e) {
-                MillLog.error(villager, "Error checking goal validity: " + villager.getGoalKey(), e);
+                LOGGER.error("Error checking goal validity: " + villager.getGoalKey(), e);
                 clearGoal();
             }
         }
@@ -162,7 +164,7 @@ public class VillagerAIController {
                 return true;
             }
         } catch (Exception e) {
-            MillLog.error(villager, "Error in tryGoal(" + key + ")", e);
+            LOGGER.error("Error in tryGoal(" + key + ")", e);
         }
         return false;
     }
@@ -273,7 +275,7 @@ public class VillagerAIController {
                 villager.setActionStart(villager.level().getGameTime());
             }
         } catch (Exception e) {
-            MillLog.error(villager, "Error executing goal: " + villager.getGoalKey(), e);
+            LOGGER.error("Error executing goal: " + villager.getGoalKey(), e);
             clearGoal();
         }
     }

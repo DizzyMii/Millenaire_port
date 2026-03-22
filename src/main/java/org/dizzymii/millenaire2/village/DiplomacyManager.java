@@ -1,5 +1,7 @@
-package org.dizzymii.millenaire2.village;
+﻿package org.dizzymii.millenaire2.village;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -9,7 +11,6 @@ import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.dizzymii.millenaire2.MillConfig;
 import org.dizzymii.millenaire2.entity.MillVillager;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.world.MillWorldData;
 
@@ -26,6 +27,7 @@ import java.util.Optional;
  * Configuration loaded from data/millenaire2/economy/diplomacy.json.
  */
 public class DiplomacyManager {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     // Relation change amounts (loaded from JSON)
     public static int initialRelation = 0;
@@ -63,7 +65,7 @@ public class DiplomacyManager {
             ResourceLocation loc = ResourceLocation.fromNamespaceAndPath("millenaire2", "economy/diplomacy.json");
             Optional<Resource> opt = rm.getResource(loc);
             if (opt.isEmpty()) {
-                MillLog.warn("DiplomacyManager", "No diplomacy.json found, using defaults");
+                LOGGER.warn("No diplomacy.json found, using defaults");
                 return;
             }
 
@@ -105,11 +107,11 @@ public class DiplomacyManager {
                 }
 
                 loaded = true;
-                MillLog.minor("DiplomacyManager", "Loaded diplomacy config: "
+                LOGGER.debug("Loaded diplomacy config: "
                         + CULTURE_AFFINITIES.size() + " culture affinities");
             }
         } catch (Exception e) {
-            MillLog.error("DiplomacyManager", "Failed to load diplomacy.json", e);
+            LOGGER.error("Failed to load diplomacy.json", e);
         }
     }
 
@@ -219,7 +221,7 @@ public class DiplomacyManager {
         targetTh.raidsSuffered.add(attackerName);
 
         if (mw != null) mw.setDirty();
-        MillLog.minor("DiplomacyManager", "Raid triggered: " + attackerName
+        LOGGER.debug("Raid triggered: " + attackerName
                 + " -> " + targetName + " (" + marked + " raiders)");
         return true;
     }
