@@ -20,7 +20,6 @@ import org.dizzymii.millenaire2.village.ConstructionIP;
 import org.dizzymii.millenaire2.village.VillagerRecord;
 
 import javax.annotation.Nullable;
-import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -37,8 +36,6 @@ public class WorldGenVillage {
     private static final double MINIMUM_USABLE_BLOCK_PERC = 0.45;
     private static final int MIN_DISTANCE_FROM_SPAWN = 200;
 
-    private static final HashSet<Long> chunkCoordsTried = new HashSet<>();
-
     /**
      * Attempts to generate a new village near the given chunk coordinates.
      * Called from server tick when a player explores new terrain.
@@ -46,8 +43,8 @@ public class WorldGenVillage {
     public static boolean attemptVillageGeneration(ServerLevel level, int chunkX, int chunkZ,
                                                      RandomSource random, MillWorldData worldData) {
         long chunkKey = chunkKey(chunkX, chunkZ);
-        if (chunkCoordsTried.contains(chunkKey)) return false;
-        chunkCoordsTried.add(chunkKey);
+        if (worldData.hasTriedChunk(chunkKey)) return false;
+        worldData.markChunkTried(chunkKey);
 
         BlockPos center = new BlockPos(chunkX * 16 + 8, 0, chunkZ * 16 + 8);
 
@@ -377,7 +374,4 @@ public class WorldGenVillage {
         return ((long) chunkX << 32) | (chunkZ & 0xFFFFFFFFL);
     }
 
-    public static void resetTriedChunks() {
-        chunkCoordsTried.clear();
-    }
 }

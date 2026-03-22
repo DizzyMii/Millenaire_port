@@ -16,8 +16,11 @@ import org.dizzymii.millenaire2.village.VillagerRecord;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,9 +42,11 @@ public class MillWorldData extends SavedData {
     private static final String NBT_GLOBAL_TAGS = "globalTags";
     private static final String NBT_TAG = "tag";
     private static final String NBT_PROFILES = "profiles";
+    private static final String NBT_TRIED_CHUNKS = "triedChunks";
 
     // ========== Fields ==========
     private final ConcurrentHashMap<Point, Building> buildings = new ConcurrentHashMap<>();
+    private final Set<Long> triedChunkKeys = Collections.synchronizedSet(new HashSet<>());
     private final ConcurrentHashMap<Long, VillagerRecord> villagerRecords = new ConcurrentHashMap<>();
     public final List<String> globalTags = new ArrayList<>();
     public ConcurrentHashMap<UUID, UserProfile> profiles = new ConcurrentHashMap<>();
@@ -145,6 +150,20 @@ public class MillWorldData extends SavedData {
 
     // ========== Global tags ==========
 
+    // ========== Tried chunk tracking (village generation dedup) ==========
+
+    public boolean hasTriedChunk(long chunkKey) {
+        return triedChunkKeys.contains(chunkKey);
+    }
+
+    public void markChunkTried(long chunkKey) {
+        triedChunkKeys.add(chunkKey);
+    }
+
+    public void clearTriedChunks() {
+        triedChunkKeys.clear();
+    }
+
     public boolean hasGlobalTag(String tag) {
         return globalTags.contains(tag);
     }
@@ -232,6 +251,12 @@ public class MillWorldData extends SavedData {
         }
         root.put(NBT_GLOBAL_TAGS, tagList);
 
+        // Save tried chunk keys
+        long[] chunkArr = new long[triedChunkKeys.size()];
+        int ci = 0;
+        for (long k : triedChunkKeys) chunkArr[ci++] = k;
+        root.putLongArray(NBT_TRIED_CHUNKS, chunkArr);
+
         // Save player profiles
         ListTag profileList = new ListTag();
         for (Map.Entry<UUID, UserProfile> entry : profiles.entrySet()) {
@@ -279,6 +304,13 @@ public class MillWorldData extends SavedData {
                 if (p.uuid != null) {
                     data.profiles.put(p.uuid, p);
                 }
+            }
+        }
+
+        // Load tried chunk keys
+        if (root.contains(NBT_TRIED_CHUNKS)) {
+            for (long k : root.getLongArray(NBT_TRIED_CHUNKS)) {
+                data.triedChunkKeys.add(k);
             }
         }
 

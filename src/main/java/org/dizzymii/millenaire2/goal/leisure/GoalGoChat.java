@@ -25,10 +25,10 @@ public class GoalGoChat extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        v.stopMoving = true;
-        long elapsed = v.level().getGameTime() - v.goalStarted;
+        v.setStopMoving(true);
+        long elapsed = v.level().getGameTime() - v.getGoalStarted();
         if (elapsed > 200) { // ~10 seconds
-            v.stopMoving = false;
+            v.setStopMoving(false);
             return true;
         }
         return false;

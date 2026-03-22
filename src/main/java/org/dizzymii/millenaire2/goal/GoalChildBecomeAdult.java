@@ -10,7 +10,7 @@ public class GoalChildBecomeAdult extends Goal {
 
     @Override
     public GoalInformation getDestination(MillVillager v) {
-        Point home = v.housePoint;
+        Point home = v.getHousePoint();
         if (home != null) {
             return new GoalInformation(home, 3);
         }
@@ -20,12 +20,12 @@ public class GoalChildBecomeAdult extends Goal {
     @Override
     public boolean performAction(MillVillager v) {
         // Transition child to adult using the altkey from VillagerType
-        if (v.vtype != null && v.vtype.altkey != null) {
+        if (v.getVillagerType() != null && v.getVillagerType().altkey != null) {
             org.dizzymii.millenaire2.culture.Culture culture = v.getCulture();
             if (culture != null) {
-                org.dizzymii.millenaire2.culture.VillagerType adultType = culture.getVillagerType(v.vtype.altkey);
+                org.dizzymii.millenaire2.culture.VillagerType adultType = culture.getVillagerType(v.getVillagerType().altkey);
                 if (adultType != null) {
-                    v.vtype = adultType;
+                    v.setVillagerType(adultType);
                     v.refreshDimensions(); // Update bounding box for adult size
                 }
             }

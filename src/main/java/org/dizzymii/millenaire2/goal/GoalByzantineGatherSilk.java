@@ -11,7 +11,7 @@ public class GoalByzantineGatherSilk extends Goal {
 
     @Override
     public GoalInformation getDestination(MillVillager v) {
-        Point home = v.housePoint;
+        Point home = v.getHousePoint();
         if (home != null) {
             return new GoalInformation(home, 3);
         }

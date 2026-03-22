@@ -38,18 +38,18 @@ public class MillVillagerRenderer extends HumanoidMobRenderer<MillVillager, Mill
         if (!this.shouldShowName(entity)) return;
 
         // Render speech bubble above the name if active
-        if (entity.speech_key != null && entity.level() != null) {
-            long elapsed = entity.level().getGameTime() - entity.speech_started;
+        if (entity.getSpeechKey() != null && entity.level() != null) {
+            long elapsed = entity.level().getGameTime() - entity.getSpeechStarted();
             if (elapsed >= 0 && elapsed < SPEECH_DISPLAY_TICKS) {
                 String speechText = org.dizzymii.millenaire2.util.VillageUtilities
-                        .getVillagerSentence("", entity.speech_key);
+                        .getVillagerSentence("", entity.getSpeechKey());
                 poseStack.pushPose();
                 poseStack.translate(0, 0.25, 0);
                 super.renderNameTag(entity, Component.literal("\u00a7e" + speechText),
                         poseStack, buffer, packedLight, partialTick);
                 poseStack.popPose();
             } else {
-                entity.speech_key = null;
+                entity.setSpeechKey(null);
             }
         }
 
@@ -59,8 +59,8 @@ public class MillVillagerRenderer extends HumanoidMobRenderer<MillVillager, Mill
     @Override
     protected void scale(MillVillager entity, PoseStack poseStack, float partialTickTime) {
         // Apply villager-type-specific scale if available
-        if (entity.vtype != null && entity.vtype.baseScale != 1.0f) {
-            float s = entity.vtype.baseScale;
+        if (entity.getVillagerType() != null && entity.getVillagerType().baseScale != 1.0f) {
+            float s = entity.getVillagerType().baseScale;
             poseStack.scale(s, s, s);
         }
     }

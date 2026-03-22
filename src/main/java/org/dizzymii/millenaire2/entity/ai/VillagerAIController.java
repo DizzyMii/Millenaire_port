@@ -50,7 +50,7 @@ public class VillagerAIController {
         goalTickCounter++;
         if (goalTickCounter >= GOAL_TICK_INTERVAL) {
             goalTickCounter = 0;
-            villager.currentPhase = computeDayPhase();
+            villager.setCurrentPhase(computeDayPhase());
             tickStuckDetection();
             tickGoalSelection();
         }
@@ -80,7 +80,7 @@ public class VillagerAIController {
         if (currentGoal != null && movedSq < STUCK_DISTANCE_SQ) {
             stuckCounter++;
             if (stuckCounter >= STUCK_THRESHOLD_TICKS / GOAL_TICK_INTERVAL) {
-                MillLog.minor(villager, "Villager stuck (" + stuckCounter + " checks), clearing goal: " + villager.goalKey);
+                MillLog.minor(villager, "Villager stuck (" + stuckCounter + " checks), clearing goal: " + villager.getGoalKey());
                 clearGoal();
                 stuckCounter = 0;
                 villager.teleportTo(
@@ -96,22 +96,22 @@ public class VillagerAIController {
     // --- Goal selection ---
 
     private void tickGoalSelection() {
-        if (Goal.goals == null || Goal.goals.isEmpty()) {
+        if (!Goal.isInitialized()) {
             idleWanderFallback();
             return;
         }
 
-        if (villager.vtype == null && villager.vtypeKey != null) {
+        if (villager.getVillagerType() == null && villager.getVtypeKey() != null) {
             villager.resolveVillagerType();
         }
 
-        if (currentGoal != null && villager.goalKey != null) {
+        if (currentGoal != null && villager.getGoalKey() != null) {
             try {
                 if (!currentGoal.isStillValid(villager)) {
                     clearGoal();
                 }
             } catch (Exception e) {
-                MillLog.error(villager, "Error checking goal validity: " + villager.goalKey, e);
+                MillLog.error(villager, "Error checking goal validity: " + villager.getGoalKey(), e);
                 clearGoal();
             }
         }
@@ -122,7 +122,7 @@ public class VillagerAIController {
     }
 
     private void selectNewGoal() {
-        switch (villager.currentPhase) {
+        switch (villager.getCurrentPhase()) {
             case NIGHT -> selectNightGoal();
             case MORNING -> selectMorningGoal();
             case WORK, AFTERNOON -> selectWorkGoal();
@@ -131,8 +131,8 @@ public class VillagerAIController {
     }
 
     private void selectNightGoal() {
-        if (tryGoal("sleep", Goal.sleep)) return;
-        if (tryGoal("hide", Goal.hide)) return;
+        if (tryGoal("sleep", Goal.get("sleep"))) return;
+        if (tryGoal("hide", Goal.get("hide"))) return;
         navigateTowardsHome();
     }
 
@@ -143,13 +143,13 @@ public class VillagerAIController {
 
     private void selectWorkGoal() {
         if (tryVtypeGoals(false)) return;
-        if (tryGoal("construction", Goal.construction)) return;
-        if (tryGoal("gosocialise", Goal.gosocialise)) return;
+        if (tryGoal("construction", Goal.get("construction"))) return;
+        if (tryGoal("gosocialise", Goal.get("gosocialise"))) return;
         idleWander();
     }
 
     private void selectEveningGoal() {
-        if (tryGoal("gosocialise", Goal.gosocialise)) return;
+        if (tryGoal("gosocialise", Goal.get("gosocialise"))) return;
         navigateTowardsHome();
     }
 
@@ -168,9 +168,9 @@ public class VillagerAIController {
     }
 
     private boolean tryVtypeGoals(boolean nightOnly) {
-        if (villager.vtype == null || villager.vtype.goals.isEmpty()) return false;
-        for (String gKey : villager.vtype.goals) {
-            Goal g = Goal.goals.get(gKey);
+        if (villager.getVillagerType() == null || villager.getVillagerType().goals.isEmpty()) return false;
+        for (String gKey : villager.getVillagerType().goals) {
+            Goal g = Goal.get(gKey);
             if (g == null) continue;
             if (nightOnly && !g.canBeDoneAtNight()) continue;
             if (!nightOnly && !g.canBeDoneInDayTime()) continue;
@@ -193,7 +193,7 @@ public class VillagerAIController {
     // --- Navigation helpers ---
 
     private void navigateTowardsHome() {
-        Point target = villager.housePoint != null ? villager.housePoint : villager.townHallPoint;
+        Point target = villager.getHousePoint() != null ? villager.getHousePoint() : villager.getTownHallPoint();
         if (target != null) {
             villager.getNavigation().moveTo(target.x + 0.5, target.y, target.z + 0.5, 0.5);
         } else {
@@ -202,8 +202,8 @@ public class VillagerAIController {
     }
 
     private void idleWander() {
-        Point around = villager.housePoint != null ? villager.housePoint
-                : (villager.townHallPoint != null ? villager.townHallPoint : new Point(villager.blockPosition()));
+        Point around = villager.getHousePoint() != null ? villager.getHousePoint()
+                : (villager.getTownHallPoint() != null ? villager.getTownHallPoint() : new Point(villager.blockPosition()));
         int dx = villager.getRandom().nextInt(11) - 5;
         int dz = villager.getRandom().nextInt(11) - 5;
         villager.getNavigation().moveTo(around.x + dx + 0.5, around.y, around.z + dz + 0.5, 0.4);
@@ -216,11 +216,11 @@ public class VillagerAIController {
     // --- Goal state management ---
 
     public void setActiveGoal(String key, Goal goal, GoalInformation info) {
-        villager.goalKey = key;
+        villager.setGoalKey(key);
         this.currentGoal = goal;
         this.goalInformation = info;
         this.goalStarted = villager.level().getGameTime();
-        villager.actionStart = villager.level().getGameTime();
+        villager.setActionStart(villager.level().getGameTime());
         villager.setGoalKeySync(key);
 
         if (info.targetPoint != null) {
@@ -237,11 +237,11 @@ public class VillagerAIController {
         if (currentGoal != null) {
             lastGoalTime.put(currentGoal, villager.level().getGameTime());
         }
-        villager.goalKey = null;
+        villager.setGoalKey(null);
         this.currentGoal = null;
         this.goalInformation = null;
         this.pathDestPoint = null;
-        villager.actionStart = 0;
+        villager.setActionStart(0);
         villager.setGoalKeySync("");
     }
 
@@ -263,17 +263,17 @@ public class VillagerAIController {
 
         try {
             int duration = currentGoal.actionDuration(villager);
-            if ((villager.level().getGameTime() - villager.actionStart) < duration) {
+            if ((villager.level().getGameTime() - villager.getActionStart()) < duration) {
                 return;
             }
             boolean finished = currentGoal.performAction(villager);
             if (finished) {
                 clearGoal();
             } else {
-                villager.actionStart = villager.level().getGameTime();
+                villager.setActionStart(villager.level().getGameTime());
             }
         } catch (Exception e) {
-            MillLog.error(villager, "Error executing goal: " + villager.goalKey, e);
+            MillLog.error(villager, "Error executing goal: " + villager.getGoalKey(), e);
             clearGoal();
         }
     }
@@ -283,8 +283,6 @@ public class VillagerAIController {
     /** Called after NBT load to restore the active goal object from a persisted key. */
     public void restoreGoalFromKey(String key) {
         if (key == null || key.isEmpty()) return;
-        if (Goal.goals != null) {
-            this.currentGoal = Goal.goals.get(key);
-        }
+        this.currentGoal = Goal.get(key);
     }
 }

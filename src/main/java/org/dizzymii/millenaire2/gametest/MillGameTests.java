@@ -319,15 +319,15 @@ public class MillGameTests {
     @GameTest(template = "empty", timeoutTicks = 40)
     public static void testGoalSystemInitialized(GameTestHelper helper) {
         // Goal.initGoals() should have been called at startup
-        helper.assertFalse(Goal.goals == null, "Goal registry is null");
-        helper.assertTrue(Goal.goals.size() > 0,
+        helper.assertTrue(Goal.isInitialized(), "Goal registry is null or empty");
+        helper.assertTrue(Goal.registeredCount() > 0,
                 "No goals registered");
 
         // Check core goals exist
-        helper.assertFalse(Goal.sleep == null, "sleep goal missing");
-        helper.assertFalse(Goal.hide == null, "hide goal missing");
-        helper.assertFalse(Goal.construction == null, "construction goal missing");
-        helper.assertFalse(Goal.beSeller == null, "beSeller goal missing");
+        helper.assertFalse(Goal.get("sleep") == null, "sleep goal missing");
+        helper.assertFalse(Goal.get("hide") == null, "hide goal missing");
+        helper.assertFalse(Goal.get("construction") == null, "construction goal missing");
+        helper.assertFalse(Goal.get("beseller") == null, "beSeller goal missing");
 
         helper.succeed();
     }

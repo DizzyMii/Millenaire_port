@@ -30,7 +30,7 @@ public final class VillagerTextureHelper {
             if (cached != null) return cached;
         }
 
-        VillagerType vtype = villager.vtype;
+        VillagerType vtype = villager.getVillagerType();
         if (vtype != null && !vtype.textures.isEmpty()) {
             List<String> textures = vtype.textures;
             // Deterministic pick based on villager ID for consistency

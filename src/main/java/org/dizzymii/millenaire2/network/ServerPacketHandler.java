@@ -167,9 +167,9 @@ public final class ServerPacketHandler {
                 MillVillager.class, player.getBoundingBox().inflate(16));
         if (!nearby.isEmpty()) {
             MillVillager nearest = nearby.get(0);
-            nearest.stopMoving = !nearest.stopMoving;
+            nearest.setStopMoving(!nearest.isStopMoving());
             MillLog.minor("ServerPacketHandler", "Toggled auto-move on " + nearest.getFirstName()
-                    + " -> stopMoving=" + nearest.stopMoving);
+                    + " -> stopMoving=" + nearest.isStopMoving());
         }
     }
 

@@ -10,7 +10,7 @@ public class GoalSleep extends Goal {
 
     @Override
     public GoalInformation getDestination(MillVillager villager) {
-        Point home = villager.housePoint;
+        Point home = villager.getHousePoint();
         if (home != null) {
             return new GoalInformation(home, 3);
         }
@@ -20,9 +20,9 @@ public class GoalSleep extends Goal {
     @Override
     public boolean performAction(MillVillager villager) {
         // At home — just stay put until daytime
-        villager.stopMoving = true;
+        villager.setStopMoving(true);
         if (villager.level().isDay()) {
-            villager.stopMoving = false;
+            villager.setStopMoving(false);
             return true; // Done sleeping
         }
         return false; // Keep sleeping

@@ -10,7 +10,7 @@ public class GoalHide extends Goal {
 
     @Override
     public GoalInformation getDestination(MillVillager villager) {
-        Point home = villager.housePoint;
+        Point home = villager.getHousePoint();
         if (home != null) {
             return new GoalInformation(home, 3);
         }
@@ -19,11 +19,11 @@ public class GoalHide extends Goal {
 
     @Override
     public boolean performAction(MillVillager villager) {
-        villager.stopMoving = true;
+        villager.setStopMoving(true);
         // Stay hidden for a while, then check if danger has passed
-        long elapsed = villager.level().getGameTime() - villager.goalStarted;
+        long elapsed = villager.level().getGameTime() - villager.getGoalStarted();
         if (elapsed > 600) { // ~30 seconds
-            villager.stopMoving = false;
+            villager.setStopMoving(false);
             return true;
         }
         return false;

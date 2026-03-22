@@ -45,7 +45,7 @@ public final class VillagerInteractPacketHandler {
         }
 
         // Open trade GUI for the villager
-        ServerPacketSender.sendOpenGui(player, 1, villager.getId(), villager.townHallPoint);
+        ServerPacketSender.sendOpenGui(player, 1, villager.getId(), villager.getTownHallPoint());
         MillLog.minor("VillagerInteractPacketHandler", "Player " + player.getName().getString()
                 + " interacted with villager " + villager.getFirstName());
     }

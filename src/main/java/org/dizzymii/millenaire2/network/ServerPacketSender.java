@@ -37,12 +37,12 @@ public final class ServerPacketSender {
         return new VillagerSyncPayload(
                 villager.getId(), villager.getVillagerId(),
                 villager.getFirstName(), villager.getFamilyName(), villager.getGender(),
-                villager.getCultureKey(), villager.vtypeKey, villager.goalKey,
-                villager.isRaider, villager.aggressiveStance,
+                villager.getCultureKey(), villager.getVtypeKey(), villager.getGoalKey() != null ? villager.getGoalKey() : "",
+                villager.isRaider(), villager.isAggressiveStance(),
                 (float) villager.getX(), (float) villager.getY(), (float) villager.getZ(),
-                villager.isUsingBow, villager.isUsingHandToHand,
-                villager.speech_key, villager.speech_variant, villager.speech_started,
-                villager.housePoint, villager.townHallPoint
+                villager.isUsingBow(), villager.isUsingHandToHand(),
+                villager.getSpeechKey() != null ? villager.getSpeechKey() : "", villager.getSpeechVariant(), villager.getSpeechStarted(),
+                villager.getHousePoint(), villager.getTownHallPoint()
         );
     }
 

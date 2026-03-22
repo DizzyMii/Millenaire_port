@@ -12,7 +12,7 @@ public class GoalBuildPath extends Goal {
 
     @Override
     public GoalInformation getDestination(MillVillager v) {
-        Point th = v.townHallPoint;
+        Point th = v.getTownHallPoint();
         if (th != null) {
             return new GoalInformation(th, 5);
         }

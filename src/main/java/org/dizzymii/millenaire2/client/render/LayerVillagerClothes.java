@@ -30,7 +30,7 @@ public class LayerVillagerClothes<T extends MillVillager, M extends HumanoidMode
     public void render(PoseStack poseStack, MultiBufferSource buffer,
                        int packedLight, T entity, float limbSwing, float limbSwingAmount,
                        float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
-        VillagerType vtype = entity.vtype;
+        VillagerType vtype = entity.getVillagerType();
         if (vtype == null) return;
 
         // Resolve clothing texture from villager type

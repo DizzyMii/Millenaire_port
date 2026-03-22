@@ -12,8 +12,8 @@ public class GoalGetResourcesForBuild extends Goal {
 
     @Override
     public GoalInformation getDestination(MillVillager v) {
-        Point th = v.townHallPoint;
-        if (th != null && v.constructionJobId >= 0) {
+        Point th = v.getTownHallPoint();
+        if (th != null && v.getConstructionJobId() >= 0) {
             return new GoalInformation(th, 4);
         }
         return null;

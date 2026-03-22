@@ -13,7 +13,7 @@ public class GoalBeSeller extends Goal {
     @Override
     public GoalInformation getDestination(MillVillager villager) throws Exception {
         // Seller should go to their house (which is the shop)
-        Point home = villager.housePoint;
+        Point home = villager.getHousePoint();
         if (home != null) {
             return new GoalInformation(home, 3);
         }
@@ -23,10 +23,10 @@ public class GoalBeSeller extends Goal {
     @Override
     public boolean performAction(MillVillager villager) throws Exception {
         // Stand at shop and wait — goal completes after a while to allow other goals
-        villager.stopMoving = true;
-        long elapsed = villager.level().getGameTime() - villager.goalStarted;
+        villager.setStopMoving(true);
+        long elapsed = villager.level().getGameTime() - villager.getGoalStarted();
         if (elapsed > 1200) { // ~60 seconds
-            villager.stopMoving = false;
+            villager.setStopMoving(false);
             return true;
         }
         return false;

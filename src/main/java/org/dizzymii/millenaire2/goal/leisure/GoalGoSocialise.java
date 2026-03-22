@@ -17,7 +17,7 @@ public class GoalGoSocialise extends Goal {
     @Override
     public GoalInformation getDestination(MillVillager v) {
         // Head toward the townhall area as the social gathering point
-        Point th = v.townHallPoint;
+        Point th = v.getTownHallPoint();
         if (th != null) {
             return new GoalInformation(th, 8);
         }
@@ -30,7 +30,7 @@ public class GoalGoSocialise extends Goal {
         AABB area = v.getBoundingBox().inflate(10);
         List<MillVillager> nearby = v.level().getEntitiesOfClass(MillVillager.class, area, e -> e != v);
         // Socialising happens by proximity; just wait a bit
-        long elapsed = v.level().getGameTime() - v.goalStarted;
+        long elapsed = v.level().getGameTime() - v.getGoalStarted();
         if (elapsed > 400) { // ~20 seconds
             return true;
         }

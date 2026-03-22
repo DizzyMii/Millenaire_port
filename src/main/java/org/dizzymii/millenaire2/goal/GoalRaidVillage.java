@@ -13,7 +13,7 @@ public class GoalRaidVillage extends Goal {
     @Override
     public GoalInformation getDestination(MillVillager v) {
         // Raid villagers head toward their own townhall area (raid coordinator assigns target later)
-        Point th = v.townHallPoint;
+        Point th = v.getTownHallPoint();
         if (th != null) {
             return new GoalInformation(th, 10);
         }

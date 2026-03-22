@@ -20,7 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 
 /**
  * Manages inter-village diplomacy: relation changes, culture affinities, and raid triggering.
@@ -52,7 +51,6 @@ public class DiplomacyManager {
     // Culture affinities: "cultureA-cultureB" -> relation modifier
     private static final Map<String, Integer> CULTURE_AFFINITIES = new HashMap<>();
 
-    private static final Random RANDOM = new Random();
     private static boolean loaded = false;
 
     public static void loadFromServer(@Nullable MinecraftServer server) {
@@ -159,7 +157,7 @@ public class DiplomacyManager {
             if (relation > minRelationForRaid) continue;
 
             // Roll for raid
-            if (RANDOM.nextDouble() < raidChancePerCheck) {
+            if (townhall.getLevel().getRandom().nextDouble() < raidChancePerCheck) {
                 startRaid(townhall, knownVillagePos, mw);
                 return; // One raid per check cycle
             }

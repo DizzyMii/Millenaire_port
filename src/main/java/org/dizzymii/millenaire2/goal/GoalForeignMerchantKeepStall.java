@@ -10,7 +10,7 @@ public class GoalForeignMerchantKeepStall extends Goal {
 
     @Override
     public GoalInformation getDestination(MillVillager v) {
-        Point home = v.housePoint;
+        Point home = v.getHousePoint();
         if (home != null) {
             return new GoalInformation(home, 2);
         }
@@ -19,10 +19,10 @@ public class GoalForeignMerchantKeepStall extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        v.stopMoving = true;
-        long elapsed = v.level().getGameTime() - v.goalStarted;
+        v.setStopMoving(true);
+        long elapsed = v.level().getGameTime() - v.getGoalStarted();
         if (elapsed > 600) {
-            v.stopMoving = false;
+            v.setStopMoving(false);
             return true;
         }
         return false;

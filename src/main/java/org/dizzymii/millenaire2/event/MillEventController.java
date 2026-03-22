@@ -103,7 +103,7 @@ public class MillEventController {
         }
 
         // Update the owning building
-        Point thPoint = villager.townHallPoint;
+        Point thPoint = villager.getTownHallPoint();
         if (thPoint != null) {
             Building b = mw.getBuilding(thPoint);
             if (b != null) {

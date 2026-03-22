@@ -39,16 +39,16 @@ public final class ClientPacketHandler {
             villager.setGender(p.gender());
             villager.setCultureKey(p.cultureKey());
             villager.setVillagerTypeKey(p.vtypeKey());
-            villager.goalKey = p.goalKey();
-            villager.isRaider = p.isRaider();
-            villager.aggressiveStance = p.aggressiveStance();
-            villager.isUsingBow = p.usingBow();
-            villager.isUsingHandToHand = p.usingHandToHand();
-            villager.speech_key = p.speechKey();
-            villager.speech_variant = p.speechVariant();
-            villager.speech_started = p.speechStarted();
-            villager.housePoint = p.housePoint();
-            villager.townHallPoint = p.townHallPoint();
+            villager.setGoalKey(p.goalKey());
+            villager.setRaider(p.isRaider());
+            villager.setAggressiveStance(p.aggressiveStance());
+            villager.setUsingBow(p.usingBow());
+            villager.setUsingHandToHand(p.usingHandToHand());
+            villager.setSpeechKey(p.speechKey());
+            villager.setSpeechVariant(p.speechVariant());
+            villager.setSpeechStarted(p.speechStarted());
+            villager.setHousePoint(p.housePoint());
+            villager.setTownHallPoint(p.townHallPoint());
         }
     }
 
@@ -60,9 +60,9 @@ public final class ClientPacketHandler {
 
         Entity entity = mc.level.getEntity(p.entityId());
         if (entity instanceof MillVillager villager) {
-            villager.speech_key = p.speechKey();
-            villager.speech_variant = p.variant();
-            villager.speech_started = mc.level.getGameTime();
+            villager.setSpeechKey(p.speechKey());
+            villager.setSpeechVariant(p.variant());
+            villager.setSpeechStarted(mc.level.getGameTime());
         }
     }
 

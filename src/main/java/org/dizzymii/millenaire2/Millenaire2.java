@@ -77,7 +77,6 @@ public class Millenaire2 {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("{} server starting", MODNAME);
-        org.dizzymii.millenaire2.world.WorldGenVillage.resetTriedChunks();
         org.dizzymii.millenaire2.buildingplan.PointType.loadFromServer(event.getServer());
         org.dizzymii.millenaire2.culture.Culture.loadCultures();
         org.dizzymii.millenaire2.world.BiomeCultureMapper.loadFromServer(event.getServer());
@@ -89,6 +88,7 @@ public class Millenaire2 {
         // Initialize world data from the overworld
         net.minecraft.server.level.ServerLevel overworld = event.getServer().overworld();
         MillWorldData loadedWorldData = MillWorldData.get(overworld);
+        loadedWorldData.clearTriedChunks();
         if (MillConfig.generateVillages() && !loadedWorldData.generateVillages) {
             loadedWorldData.generateVillages = true;
             loadedWorldData.setDirty();

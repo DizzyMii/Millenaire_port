@@ -6,8 +6,12 @@ import org.dizzymii.millenaire2.pathing.atomicstryker.AStarConfig;
 import org.dizzymii.millenaire2.util.Point;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
 
 /**
  * Abstract base class for all villager goals/AI tasks.
@@ -16,19 +20,7 @@ import java.util.List;
 public abstract class Goal {
 
     public static final int STANDARD_DELAY = 2000;
-    public static HashMap<String, Goal> goals;
-
-    // --- Well-known goal instances ---
-    public static Goal beSeller;
-    public static Goal construction;
-    public static Goal deliverGoodsHousehold;
-    public static Goal getResourcesForBuild;
-    public static Goal raidVillage;
-    public static Goal defendVillage;
-    public static Goal hide;
-    public static Goal sleep;
-    public static Goal gettool;
-    public static Goal gosocialise;
+    private static Map<String, Goal> goals;
 
     // --- Pathfinding configs ---
     public static final AStarConfig JPS_CONFIG_TIGHT = new AStarConfig(true, false, false, false, true);
@@ -62,86 +54,89 @@ public abstract class Goal {
     public int maximumHour = -1;
     public boolean travelBookShow = true;
 
+    // --- Registry accessors ---
+
+    @Nullable
+    public static Goal get(String key) {
+        return goals != null ? goals.get(key) : null;
+    }
+
+    public static boolean isInitialized() {
+        return goals != null && !goals.isEmpty();
+    }
+
+    public static int registeredCount() {
+        return goals != null ? goals.size() : 0;
+    }
+
     public static void initGoals() {
-        goals = new HashMap<>();
+        HashMap<String, Goal> mutable = new HashMap<>();
 
         // Core goals
-        sleep = new GoalSleep();
-        registerGoal("sleep", sleep);
-
-        hide = new GoalHide();
-        registerGoal("hide", hide);
-
-        defendVillage = new GoalDefendVillage();
-        registerGoal("defendvillage", defendVillage);
-
-        beSeller = new GoalBeSeller();
-        registerGoal("beseller", beSeller);
-
-        construction = new GoalConstructionStepByStep();
-        registerGoal("construction", construction);
-
-        deliverGoodsHousehold = new GoalDeliverGoodsHousehold();
-        registerGoal("delivergoodshousehold", deliverGoodsHousehold);
-
-        getResourcesForBuild = new GoalGetResourcesForBuild();
-        registerGoal("getresourcesforbuild", getResourcesForBuild);
-
-        gettool = new GoalGetTool();
-        registerGoal("gettool", gettool);
-
-        gosocialise = new org.dizzymii.millenaire2.goal.leisure.GoalGoSocialise();
-        registerGoal("gosocialise", gosocialise);
+        register(mutable, "sleep", new GoalSleep());
+        register(mutable, "hide", new GoalHide());
+        register(mutable, "defendvillage", new GoalDefendVillage());
+        register(mutable, "beseller", new GoalBeSeller());
+        register(mutable, "construction", new GoalConstructionStepByStep());
+        register(mutable, "delivergoodshousehold", new GoalDeliverGoodsHousehold());
+        register(mutable, "getresourcesforbuild", new GoalGetResourcesForBuild());
+        register(mutable, "gettool", new GoalGetTool());
+        register(mutable, "gosocialise", new org.dizzymii.millenaire2.goal.leisure.GoalGoSocialise());
 
         // Agriculture & gathering
-        registerGoal("gathergoods", new GoalGatherGoods());
-        registerGoal("bringbackresourceshome", new GoalBringBackResourcesHome());
-        registerGoal("getgoodsforhousehold", new GoalGetGoodsForHousehold());
-        registerGoal("deliverresourcesshop", new GoalDeliverResourcesShop());
-        registerGoal("getresourcesforshops", new GoalGetResourcesForShops());
-        registerGoal("lumbermanchoptrees", new GoalLumbermanChopTrees());
-        registerGoal("lumbermanplantsaplings", new GoalLumbermanPlantSaplings());
-        registerGoal("fish", new GoalFish());
-        registerGoal("breedanimals", new GoalBreedAnimals());
+        register(mutable, "gathergoods", new GoalGatherGoods());
+        register(mutable, "bringbackresourceshome", new GoalBringBackResourcesHome());
+        register(mutable, "getgoodsforhousehold", new GoalGetGoodsForHousehold());
+        register(mutable, "deliverresourcesshop", new GoalDeliverResourcesShop());
+        register(mutable, "getresourcesforshops", new GoalGetResourcesForShops());
+        register(mutable, "lumbermanchoptrees", new GoalLumbermanChopTrees());
+        register(mutable, "lumbermanplantsaplings", new GoalLumbermanPlantSaplings());
+        register(mutable, "fish", new GoalFish());
+        register(mutable, "breedanimals", new GoalBreedAnimals());
 
         // Culture-specific
-        registerGoal("indiandrybrick", new GoalIndianDryBrick());
-        registerGoal("indiangatherbrick", new GoalIndianGatherBrick());
-        registerGoal("indianharvestsugarcane", new GoalIndianHarvestSugarCane());
-        registerGoal("indianplantsugarcane", new GoalIndianPlantSugarCane());
-        registerGoal("harvestcacao", new GoalHarvestCacao());
-        registerGoal("harvestwarts", new GoalHarvestWarts());
-        registerGoal("byzantinegathersilk", new GoalByzantineGatherSilk());
-        registerGoal("byzantinegathersnails", new GoalByzantineGatherSnails());
-        registerGoal("fishinuit", new GoalFishInuit());
+        register(mutable, "indiandrybrick", new GoalIndianDryBrick());
+        register(mutable, "indiangatherbrick", new GoalIndianGatherBrick());
+        register(mutable, "indianharvestsugarcane", new GoalIndianHarvestSugarCane());
+        register(mutable, "indianplantsugarcane", new GoalIndianPlantSugarCane());
+        register(mutable, "harvestcacao", new GoalHarvestCacao());
+        register(mutable, "harvestwarts", new GoalHarvestWarts());
+        register(mutable, "byzantinegathersilk", new GoalByzantineGatherSilk());
+        register(mutable, "byzantinegathersnails", new GoalByzantineGatherSnails());
+        register(mutable, "fishinuit", new GoalFishInuit());
 
         // Combat & military
-        registerGoal("huntmonster", new GoalHuntMonster());
-        Goal rv = new GoalRaidVillage();
-        raidVillage = rv;
-        registerGoal("raidvillage", rv);
+        register(mutable, "huntmonster", new GoalHuntMonster());
+        register(mutable, "raidvillage", new GoalRaidVillage());
 
         // Building & path
-        registerGoal("buildpath", new GoalBuildPath());
-        registerGoal("clearoldpath", new GoalClearOldPath());
+        register(mutable, "buildpath", new GoalBuildPath());
+        register(mutable, "clearoldpath", new GoalClearOldPath());
 
         // Trade & merchant
-        registerGoal("foreignmerchantkeepstall", new GoalForeignMerchantKeepStall());
-        registerGoal("merchantvisitbuilding", new GoalMerchantVisitBuilding());
-        registerGoal("merchantvisitinn", new GoalMerchantVisitInn());
+        register(mutable, "foreignmerchantkeepstall", new GoalForeignMerchantKeepStall());
+        register(mutable, "merchantvisitbuilding", new GoalMerchantVisitBuilding());
+        register(mutable, "merchantvisitinn", new GoalMerchantVisitInn());
 
         // Brewing & crafting
-        registerGoal("brewpotions", new GoalBrewPotions());
-        registerGoal("bepujaperformer", new GoalBePujaPerformer());
+        register(mutable, "brewpotions", new GoalBrewPotions());
+        register(mutable, "bepujaperformer", new GoalBePujaPerformer());
 
         // Child
-        registerGoal("childbecomeadult", new GoalChildBecomeAdult());
+        register(mutable, "childbecomeadult", new GoalChildBecomeAdult());
 
         // Leisure
-        registerGoal("gochat", new org.dizzymii.millenaire2.goal.leisure.GoalGoChat());
-        registerGoal("gorest", new org.dizzymii.millenaire2.goal.leisure.GoalGoRest());
+        register(mutable, "gochat", new org.dizzymii.millenaire2.goal.leisure.GoalGoChat());
+        register(mutable, "gorest", new org.dizzymii.millenaire2.goal.leisure.GoalGoRest());
 
-        org.dizzymii.millenaire2.goal.generic.GoalGeneric.loadGenericGoals();
+        org.dizzymii.millenaire2.goal.generic.GoalGeneric.loadGenericGoals(mutable);
+
+        goals = Collections.unmodifiableMap(mutable);
+    }
+
+    private static void register(HashMap<String, Goal> map, String key, Goal goal) {
+        goal.key = key;
+        map.put(key, goal);
     }
 
     // --- Abstract methods ---
@@ -176,9 +171,9 @@ public abstract class Goal {
     @Override
     public String toString() { return key != null ? key : super.toString(); }
 
-    // --- Helper to register a goal ---
-    protected static void registerGoal(String key, Goal goal) {
+    /** Called from GoalGeneric during init to add additional goals to the mutable build map. */
+    protected static void registerGoal(HashMap<String, Goal> map, String key, Goal goal) {
         goal.key = key;
-        goals.put(key, goal);
+        map.put(key, goal);
     }
 }

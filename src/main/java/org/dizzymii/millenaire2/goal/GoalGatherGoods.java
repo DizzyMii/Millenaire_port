@@ -14,7 +14,7 @@ public class GoalGatherGoods extends Goal {
     @Override
     public GoalInformation getDestination(MillVillager v) {
         // Go to townhall area to pick up gathering assignments
-        Point th = v.townHallPoint;
+        Point th = v.getTownHallPoint();
         if (th != null) {
             return new GoalInformation(th, 5);
         }

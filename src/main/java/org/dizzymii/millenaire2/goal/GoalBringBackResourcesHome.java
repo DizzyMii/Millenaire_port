@@ -15,7 +15,7 @@ public class GoalBringBackResourcesHome extends Goal {
     @Override
     public GoalInformation getDestination(MillVillager v) {
         if (v.villagerInventory.getAll().isEmpty()) return null;
-        Point home = v.housePoint;
+        Point home = v.getHousePoint();
         if (home != null) {
             return new GoalInformation(home, 3);
         }

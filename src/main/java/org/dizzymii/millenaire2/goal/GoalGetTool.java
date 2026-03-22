@@ -10,7 +10,7 @@ public class GoalGetTool extends Goal {
 
     @Override
     public GoalInformation getDestination(MillVillager v) {
-        Point home = v.housePoint;
+        Point home = v.getHousePoint();
         if (home != null) {
             return new GoalInformation(home, 3);
         }
@@ -20,10 +20,10 @@ public class GoalGetTool extends Goal {
     @Override
     public boolean performAction(MillVillager v) {
         // Equip a tool from the home building if the villager type needs tool categories
-        if (v.vtype != null && !v.vtype.toolsCategoriesNeeded.isEmpty()) {
+        if (v.getVillagerType() != null && !v.getVillagerType().toolsCategoriesNeeded.isEmpty()) {
             org.dizzymii.millenaire2.village.Building home = v.getHomeBuilding();
             if (home != null) {
-                for (String toolCat : v.vtype.toolsCategoriesNeeded) {
+                for (String toolCat : v.getVillagerType().toolsCategoriesNeeded) {
                     org.dizzymii.millenaire2.item.InvItem tool = org.dizzymii.millenaire2.item.InvItem.get(toolCat);
                     if (tool != null && v.countInv(tool) == 0 && home.resManager.takeGoods(tool, 1)) {
                         v.addToInv(tool, 1);

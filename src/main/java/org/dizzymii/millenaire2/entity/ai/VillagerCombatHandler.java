@@ -27,14 +27,15 @@ public final class VillagerCombatHandler {
      */
     public static void onHurt(MillVillager villager, DamageSource source) {
         if (source.getEntity() instanceof Player) {
-            villager.lastAttackByPlayer = true;
+            villager.setLastAttackByPlayer(true);
         }
 
-        if (villager.vtype != null && villager.vtype.helpInAttacks && Goal.defendVillage != null) {
+        Goal defend = Goal.get("defendvillage");
+        if (villager.getVillagerType() != null && villager.getVillagerType().helpInAttacks && defend != null) {
             try {
-                GoalInformation info = Goal.defendVillage.getDestination(villager);
+                GoalInformation info = defend.getDestination(villager);
                 if (info != null && info.hasTarget()) {
-                    villager.getAIController().setActiveGoal("defendvillage", Goal.defendVillage, info);
+                    villager.getAIController().setActiveGoal("defendvillage", defend, info);
                 }
             } catch (Exception ignored) {}
         }

@@ -22,7 +22,7 @@ public class GoalFishInuit extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        long elapsed = v.level().getGameTime() - v.goalStarted;
+        long elapsed = v.level().getGameTime() - v.getGoalStarted();
         if (elapsed > 200) {
             InvItem fish = InvItem.get("minecraft:cod");
             if (fish != null) v.addToInv(fish, 1 + v.level().random.nextInt(2));

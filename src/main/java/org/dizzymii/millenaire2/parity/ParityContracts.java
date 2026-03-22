@@ -58,7 +58,7 @@ public final class ParityContracts {
                 "cultures=" + Culture.LIST_CULTURES.size()
         ));
 
-        int goalCount = Goal.goals != null ? Goal.goals.size() : 0;
+        int goalCount = Goal.registeredCount();
         results.add(check(
                 ParityContract.GOALS_INITIALIZED,
                 goalCount > 0,

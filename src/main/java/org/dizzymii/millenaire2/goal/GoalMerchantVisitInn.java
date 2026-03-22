@@ -11,7 +11,7 @@ public class GoalMerchantVisitInn extends Goal {
     @Override
     public GoalInformation getDestination(MillVillager v) {
         // Go to townhall area (inn location resolved from village buildings when available)
-        Point th = v.townHallPoint;
+        Point th = v.getTownHallPoint();
         if (th != null) {
             return new GoalInformation(th, 5);
         }
@@ -20,10 +20,10 @@ public class GoalMerchantVisitInn extends Goal {
 
     @Override
     public boolean performAction(MillVillager v) {
-        v.stopMoving = true;
-        long elapsed = v.level().getGameTime() - v.goalStarted;
+        v.setStopMoving(true);
+        long elapsed = v.level().getGameTime() - v.getGoalStarted();
         if (elapsed > 400) {
-            v.stopMoving = false;
+            v.setStopMoving(false);
             return true;
         }
         return false;
