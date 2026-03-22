@@ -31,6 +31,10 @@ public class MillCommonUtilities {
         return chatPrefix().append(Component.literal(message).withStyle(ChatFormatting.RESET));
     }
 
+    public static MutableComponent chatMsg(Component body) {
+        return chatPrefix().append(body.copy().withStyle(ChatFormatting.RESET));
+    }
+
     public static MutableComponent chatError(String message) {
         return Component.literal("[Millénaire] ").withStyle(ChatFormatting.DARK_RED)
                 .append(Component.literal(message).withStyle(ChatFormatting.RESET));

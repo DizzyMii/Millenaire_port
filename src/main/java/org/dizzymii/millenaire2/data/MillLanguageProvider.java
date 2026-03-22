@@ -395,6 +395,27 @@ public class MillLanguageProvider extends LanguageProvider {
         addItem(MillItems.PARCHMENT_VILLAGE_SCROLL, "Village Scroll");
         addItem(MillItems.PARCHMENT_SADHU, "Sadhu Parchment");
 
+        // ===== Commands =====
+        add("millenaire2.command.error.player_only", "This command can only be run by a player.");
+        add("millenaire2.command.error.village_not_found", "Village '%s' not found.");
+        add("millenaire2.command.error.culture_not_found", "Culture '%s' not found.");
+        add("millenaire2.command.error.culture_not_found_reload", "Culture '%s' not found after reload.");
+        add("millenaire2.command.listvillages.none", "No active villages found.");
+        add("millenaire2.command.listvillages.header", "Active villages (%s):");
+        add("millenaire2.command.listvillages.entry", "  %s (%s) at %s \u2014 %s villagers");
+        add("millenaire2.command.tp.success", "Teleported to %s.");
+        add("millenaire2.command.reputation.success", "Reputation with %s set to %s.");
+        add("millenaire2.command.spawn.success", "Spawned %s village at %s.");
+        add("millenaire2.command.rename.success", "Renamed '%s' to '%s'.");
+        add("millenaire2.command.control.released", "Released control of %s.");
+        add("millenaire2.command.control.taken", "Now controlling %s.");
+        add("millenaire2.command.importculture.success", "Reloaded culture '%s' successfully.");
+        add("millenaire2.command.debug.resetvillagers.success", "Reset %s killed villager records. They will respawn.");
+        add("millenaire2.command.debug.resendprofiles.success", "Marked %s profiles for resync.");
+
+        // ===== Misc UI =====
+        add("millenaire2.chest.locked", "This chest is locked. You need a better reputation to access it.");
+
         // ===== Container Titles =====
         add("container.millenaire2.fire_pit", "Fire Pit");
         add("container.millenaire2.locked_chest", "Locked Chest");

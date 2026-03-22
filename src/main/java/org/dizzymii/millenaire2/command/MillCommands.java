@@ -4,8 +4,10 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -31,6 +33,19 @@ import java.util.List;
 @EventBusSubscriber(modid = Millenaire2.MODID)
 public class MillCommands {
 
+    private static final SuggestionProvider<CommandSourceStack> SUGGEST_VILLAGE_NAMES =
+            (ctx, builder) -> {
+                MillWorldData mw = MillWorldData.get(ctx.getSource().getLevel());
+                return SharedSuggestionProvider.suggest(
+                        mw.allBuildings().stream()
+                                .filter(b -> b.isTownhall && b.getName() != null)
+                                .map(Building::getName),
+                        builder);
+            };
+
+    private static final SuggestionProvider<CommandSourceStack> SUGGEST_CULTURE_NAMES =
+            (ctx, builder) -> SharedSuggestionProvider.suggest(Culture.getAllCultureKeys(), builder);
+
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
@@ -43,6 +58,7 @@ public class MillCommands {
                 .then(Commands.literal("tp")
                         .requires(src -> src.hasPermission(2))
                         .then(Commands.argument("village", StringArgumentType.greedyString())
+                                .suggests(SUGGEST_VILLAGE_NAMES)
                                 .executes(MillCommands::cmdTeleport)
                         )
                 )
@@ -50,6 +66,7 @@ public class MillCommands {
                         .requires(src -> src.hasPermission(2))
                         .then(Commands.argument("amount", IntegerArgumentType.integer())
                                 .then(Commands.argument("village", StringArgumentType.greedyString())
+                                        .suggests(SUGGEST_VILLAGE_NAMES)
                                         .executes(MillCommands::cmdReputation)
                                 )
                         )
@@ -57,24 +74,30 @@ public class MillCommands {
                 .then(Commands.literal("spawn")
                         .requires(src -> src.hasPermission(2))
                         .then(Commands.argument("culture", StringArgumentType.string())
+                                .suggests(SUGGEST_CULTURE_NAMES)
                                 .executes(MillCommands::cmdSpawn)
                         )
                 )
                 .then(Commands.literal("rename")
                         .requires(src -> src.hasPermission(2))
-                        .then(Commands.argument("village", StringArgumentType.greedyString())
-                                .executes(MillCommands::cmdRename)
+                        .then(Commands.argument("village", StringArgumentType.word())
+                                .suggests(SUGGEST_VILLAGE_NAMES)
+                                .then(Commands.argument("newname", StringArgumentType.greedyString())
+                                        .executes(MillCommands::cmdRename)
+                                )
                         )
                 )
                 .then(Commands.literal("control")
                         .requires(src -> src.hasPermission(2))
                         .then(Commands.argument("village", StringArgumentType.greedyString())
+                                .suggests(SUGGEST_VILLAGE_NAMES)
                                 .executes(MillCommands::cmdControl)
                         )
                 )
                 .then(Commands.literal("importculture")
                         .requires(src -> src.hasPermission(2))
                         .then(Commands.argument("culture", StringArgumentType.string())
+                                .suggests(SUGGEST_CULTURE_NAMES)
                                 .executes(MillCommands::cmdImportCulture)
                         )
                 )
@@ -101,19 +124,21 @@ public class MillCommands {
         }
 
         if (townhalls.isEmpty()) {
-            ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("No active villages found."), false);
+            ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg(
+                    Component.translatable("millenaire2.command.listvillages.none")), false);
             return 1;
         }
 
-        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Active villages (" + townhalls.size() + ":)"), false);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg(
+                Component.translatable("millenaire2.command.listvillages.header", townhalls.size())), false);
         for (Building th : townhalls) {
-            String name = th.getName() != null ? th.getName() : "Unknown";
+            String name = th.getName() != null ? th.getName() : "?";
             String culture = th.cultureKey != null ? th.cultureKey : "?";
             Point pos = th.getPos();
             String posStr = pos != null ? ("[" + pos.x + ", " + pos.y + ", " + pos.z + "]") : "[?]";
             int villagerCount = th.getVillagerRecords().size();
-            ctx.getSource().sendSuccess(() -> Component.literal(
-                    "  §e" + name + "§r (" + culture + ") at " + posStr + " — " + villagerCount + " villagers"
+            ctx.getSource().sendSuccess(() -> Component.translatable(
+                    "millenaire2.command.listvillages.entry", name, culture, posStr, villagerCount
             ), false);
         }
         return townhalls.size();
@@ -121,31 +146,32 @@ public class MillCommands {
 
     private static int cmdTeleport(CommandContext<CommandSourceStack> ctx) {
         if (!(ctx.getSource().getEntity() instanceof ServerPlayer player)) {
-            ctx.getSource().sendFailure(Component.literal("This command can only be run by a player."));
+            ctx.getSource().sendFailure(Component.translatable("millenaire2.command.error.player_only"));
             return 0;
         }
         String villageName = StringArgumentType.getString(ctx, "village");
         Building target = findVillageByName(ctx, villageName);
         if (target == null || target.getPos() == null) {
-            ctx.getSource().sendFailure(Component.literal("Village '" + villageName + "' not found."));
+            ctx.getSource().sendFailure(Component.translatable("millenaire2.command.error.village_not_found", villageName));
             return 0;
         }
         Point pos = target.getPos();
         player.teleportTo(pos.x + 0.5, pos.y + 1.0, pos.z + 0.5);
-        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Teleported to " + target.getName()), false);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg(
+                Component.translatable("millenaire2.command.tp.success", target.getName())), false);
         return 1;
     }
 
     private static int cmdReputation(CommandContext<CommandSourceStack> ctx) {
         if (!(ctx.getSource().getEntity() instanceof ServerPlayer player)) {
-            ctx.getSource().sendFailure(Component.literal("This command can only be run by a player."));
+            ctx.getSource().sendFailure(Component.translatable("millenaire2.command.error.player_only"));
             return 0;
         }
         int amount = IntegerArgumentType.getInteger(ctx, "amount");
         String villageName = StringArgumentType.getString(ctx, "village");
         Building target = findVillageByName(ctx, villageName);
         if (target == null || target.getTownHallPos() == null) {
-            ctx.getSource().sendFailure(Component.literal("Village '" + villageName + "' not found."));
+            ctx.getSource().sendFailure(Component.translatable("millenaire2.command.error.village_not_found", villageName));
             return 0;
         }
         MillWorldData mw = MillWorldData.get(ctx.getSource().getLevel());
@@ -153,7 +179,8 @@ public class MillCommands {
         profile.adjustVillageReputation(target.getTownHallPos(), amount);
         int newRep = profile.getVillageReputation(target.getTownHallPos());
         mw.setDirty();
-        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Reputation with " + target.getName() + " set to " + newRep), true);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg(
+                Component.translatable("millenaire2.command.reputation.success", target.getName(), newRep)), true);
         return 1;
     }
 
@@ -161,7 +188,7 @@ public class MillCommands {
         String cultureName = StringArgumentType.getString(ctx, "culture");
         Culture culture = Culture.getCultureByName(cultureName);
         if (culture == null) {
-            ctx.getSource().sendFailure(Component.literal("Culture '" + cultureName + "' not found."));
+            ctx.getSource().sendFailure(Component.translatable("millenaire2.command.error.culture_not_found", cultureName));
             return 0;
         }
         MillWorldData mw = MillWorldData.get(ctx.getSource().getLevel());
@@ -181,52 +208,49 @@ public class MillCommands {
         th.setLevelContext(ctx.getSource().getLevel(), mw);
 
         mw.addBuilding(th, spawnPoint);
-        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Spawned " + cultureName + " village at " + spawnPoint), true);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg(
+                Component.translatable("millenaire2.command.spawn.success", cultureName, spawnPoint)), true);
         return 1;
     }
 
     private static int cmdRename(CommandContext<CommandSourceStack> ctx) {
-        String input = StringArgumentType.getString(ctx, "village");
-        // Format: "OldName NewName" — split on last space
-        int lastSpace = input.lastIndexOf(' ');
-        if (lastSpace <= 0) {
-            ctx.getSource().sendFailure(Component.literal("Usage: /millenaire rename <old name> <new name>"));
-            return 0;
-        }
-        String oldName = input.substring(0, lastSpace).trim();
-        String newName = input.substring(lastSpace + 1).trim();
-        Building target = findVillageByName(ctx, oldName);
+        String villageName = StringArgumentType.getString(ctx, "village");
+        String newName = StringArgumentType.getString(ctx, "newname");
+        Building target = findVillageByName(ctx, villageName);
         if (target == null) {
-            ctx.getSource().sendFailure(Component.literal("Village '" + oldName + "' not found."));
+            ctx.getSource().sendFailure(Component.translatable("millenaire2.command.error.village_not_found", villageName));
             return 0;
         }
         target.setName(newName);
         MillWorldData mw = MillWorldData.get(ctx.getSource().getLevel());
         mw.setDirty();
-        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Renamed '" + oldName + "' to '" + newName + "'"), true);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg(
+                Component.translatable("millenaire2.command.rename.success", villageName, newName)), true);
         return 1;
     }
 
     private static int cmdControl(CommandContext<CommandSourceStack> ctx) {
         if (!(ctx.getSource().getEntity() instanceof ServerPlayer player)) {
-            ctx.getSource().sendFailure(Component.literal("This command can only be run by a player."));
+            ctx.getSource().sendFailure(Component.translatable("millenaire2.command.error.player_only"));
             return 0;
         }
         String villageName = StringArgumentType.getString(ctx, "village");
         Building target = findVillageByName(ctx, villageName);
         if (target == null) {
-            ctx.getSource().sendFailure(Component.literal("Village '" + villageName + "' not found."));
+            ctx.getSource().sendFailure(Component.translatable("millenaire2.command.error.village_not_found", villageName));
             return 0;
         }
         // Toggle control
         if (target.controlledBy != null && target.controlledBy.equals(player.getUUID())) {
             target.controlledBy = null;
             target.controlledByName = null;
-            ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Released control of " + target.getName()), true);
+            ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg(
+                    Component.translatable("millenaire2.command.control.released", target.getName())), true);
         } else {
             target.controlledBy = player.getUUID();
             target.controlledByName = player.getGameProfile().getName();
-            ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Now controlling " + target.getName()), true);
+            ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg(
+                    Component.translatable("millenaire2.command.control.taken", target.getName())), true);
         }
         MillWorldData mw = MillWorldData.get(ctx.getSource().getLevel());
         mw.setDirty();
@@ -239,10 +263,11 @@ public class MillCommands {
         Culture.loadCultures();
         Culture culture = Culture.getCultureByName(cultureName);
         if (culture == null) {
-            ctx.getSource().sendFailure(Component.literal("Culture '" + cultureName + "' not found after reload."));
+            ctx.getSource().sendFailure(Component.translatable("millenaire2.command.error.culture_not_found_reload", cultureName));
             return 0;
         }
-        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Reloaded culture '" + cultureName + "' successfully."), true);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg(
+                Component.translatable("millenaire2.command.importculture.success", cultureName)), true);
         return 1;
     }
 
@@ -259,7 +284,8 @@ public class MillCommands {
         }
         mw.setDirty();
         final int resetCount = count;
-        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Reset " + resetCount + " killed villager records. They will respawn."), true);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg(
+                Component.translatable("millenaire2.command.debug.resetvillagers.success", resetCount)), true);
         return 1;
     }
 
@@ -268,7 +294,8 @@ public class MillCommands {
         int count = mw.profiles.size();
         // Mark dirty so profiles are re-saved
         mw.setDirty();
-        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Marked " + count + " profiles for resync."), true);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg(
+                Component.translatable("millenaire2.command.debug.resendprofiles.success", count)), true);
         return 1;
     }
 
