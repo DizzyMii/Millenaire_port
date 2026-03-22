@@ -1,11 +1,7 @@
 package org.dizzymii.millenaire2;
 
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-@EventBusSubscriber(modid = Millenaire2.MODID, bus = EventBusSubscriber.Bus.MOD)
 public class MillConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
@@ -83,62 +79,22 @@ public class MillConfig {
 
     static final ModConfigSpec SPEC = BUILDER.build();
 
-    // --- Runtime values (cached on config load) ---
-    private static boolean generateVillages;
-    private static boolean stopDefaultVillages;
-    private static int villageMinDistance;
-    private static int villageMaxDistance;
-    private static boolean displayVillagerNames;
-    private static int villagerNamesDistance;
-    private static boolean languageLearning;
-    private static boolean displayStartText;
-    private static int logGeneral;
-    private static int logWorldGeneration;
-    private static int logConstruction;
-    private static int logVillager;
-    private static boolean raidsEnabled;
-    private static boolean useCustomPathing;
-    private static int constructionBlocksPerTick;
-    private static boolean generateHelpData;
-    private static boolean devMode;
-
-    // --- Accessors ---
-    public static boolean generateVillages() { return generateVillages; }
-    public static boolean stopDefaultVillages() { return stopDefaultVillages; }
-    public static int villageMinDistance() { return villageMinDistance; }
-    public static int villageMaxDistance() { return villageMaxDistance; }
-    public static boolean displayVillagerNames() { return displayVillagerNames; }
-    public static int villagerNamesDistance() { return villagerNamesDistance; }
-    public static boolean languageLearning() { return languageLearning; }
-    public static boolean displayStartText() { return displayStartText; }
-    public static int logGeneral() { return logGeneral; }
-    public static int logWorldGeneration() { return logWorldGeneration; }
-    public static int logConstruction() { return logConstruction; }
-    public static int logVillager() { return logVillager; }
-    public static boolean raidsEnabled() { return raidsEnabled; }
-    public static boolean useCustomPathing() { return useCustomPathing; }
-    public static int constructionBlocksPerTick() { return constructionBlocksPerTick; }
-    public static boolean generateHelpData() { return generateHelpData; }
-    public static boolean devMode() { return devMode; }
-
-    @SubscribeEvent
-    static void onLoad(final ModConfigEvent event) {
-        generateVillages = GENERATE_VILLAGES.get();
-        stopDefaultVillages = STOP_DEFAULT_VILLAGES.get();
-        villageMinDistance = VILLAGE_MIN_DISTANCE.get();
-        villageMaxDistance = VILLAGE_MAX_DISTANCE.get();
-        displayVillagerNames = DISPLAY_VILLAGER_NAMES.get();
-        villagerNamesDistance = VILLAGER_NAMES_DISTANCE.get();
-        languageLearning = LANGUAGE_LEARNING.get();
-        displayStartText = DISPLAY_START_TEXT.get();
-        logGeneral = LOG_GENERAL.get();
-        logWorldGeneration = LOG_WORLD_GEN.get();
-        logConstruction = LOG_CONSTRUCTION.get();
-        logVillager = LOG_VILLAGER.get();
-        raidsEnabled = RAIDS_ENABLED.get();
-        useCustomPathing = USE_CUSTOM_PATHING.get();
-        constructionBlocksPerTick = CONSTRUCTION_BLOCKS_PER_TICK.get();
-        generateHelpData = GENERATE_HELP_DATA.get();
-        devMode = DEV_MODE.get();
-    }
+    // --- Accessors (read directly from spec; always current, no mutable cache) ---
+    public static boolean generateVillages() { return GENERATE_VILLAGES.get(); }
+    public static boolean stopDefaultVillages() { return STOP_DEFAULT_VILLAGES.get(); }
+    public static int villageMinDistance() { return VILLAGE_MIN_DISTANCE.get(); }
+    public static int villageMaxDistance() { return VILLAGE_MAX_DISTANCE.get(); }
+    public static boolean displayVillagerNames() { return DISPLAY_VILLAGER_NAMES.get(); }
+    public static int villagerNamesDistance() { return VILLAGER_NAMES_DISTANCE.get(); }
+    public static boolean languageLearning() { return LANGUAGE_LEARNING.get(); }
+    public static boolean displayStartText() { return DISPLAY_START_TEXT.get(); }
+    public static int logGeneral() { return LOG_GENERAL.get(); }
+    public static int logWorldGeneration() { return LOG_WORLD_GEN.get(); }
+    public static int logConstruction() { return LOG_CONSTRUCTION.get(); }
+    public static int logVillager() { return LOG_VILLAGER.get(); }
+    public static boolean raidsEnabled() { return RAIDS_ENABLED.get(); }
+    public static boolean useCustomPathing() { return USE_CUSTOM_PATHING.get(); }
+    public static int constructionBlocksPerTick() { return CONSTRUCTION_BLOCKS_PER_TICK.get(); }
+    public static boolean generateHelpData() { return GENERATE_HELP_DATA.get(); }
+    public static boolean devMode() { return DEV_MODE.get(); }
 }
