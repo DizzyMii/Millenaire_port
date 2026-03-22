@@ -89,8 +89,7 @@ public class PathNavigateSimple implements IAStarPathedEntity {
         if (pathPending) {
             pendingTicks++;
             if (pendingTicks > PATH_PENDING_TIMEOUT_TICKS) {
-                org.dizzymii.millenaire2.util.LOGGER.debug("Path request timed out for " + entity.getName().getString()
-                        + ", falling back to vanilla nav");
+                LOGGER.debug("Path request timed out for {}, falling back to vanilla nav", entity.getName().getString());
                 pathPending = false;
                 pendingTicks = 0;
                 if (lastRequestedTarget != null) {

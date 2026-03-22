@@ -102,7 +102,7 @@ public class AStarWorker implements Runnable {
             }
         }
 
-        org.dizzymii.millenaire2.util.LOGGER.debug("Path search exhausted " + iterations + "/" + maxIterations + " iterations without result"
+        LOGGER.debug("Path search exhausted " + iterations + "/" + maxIterations + " iterations without result"
                 + " from (" + startNode.x + "," + startNode.y + "," + startNode.z + ")"
                 + " to (" + primaryTarget.x + "," + primaryTarget.y + "," + primaryTarget.z + ")");
         return null; // No path found

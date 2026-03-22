@@ -14,7 +14,7 @@ public class ItemPaintBucket extends Item {
     public net.minecraft.world.InteractionResult useOn(net.minecraft.world.item.context.UseOnContext ctx) {
         // Paint bucket recolors Millenaire blocks; logs the action for now
         if (!ctx.getLevel().isClientSide) {
-            org.dizzymii.millenaire2.util.LOGGER.debug("Paint used at " + ctx.getClickedPos() + " by " + (ctx.getPlayer() != null ? ctx.getPlayer().getName().getString() : "unknown"));
+            LOGGER.debug("Paint used at {} by {}", ctx.getClickedPos(), ctx.getPlayer() != null ? ctx.getPlayer().getName().getString() : "unknown");
         }
         return net.minecraft.world.InteractionResult.sidedSuccess(ctx.getLevel().isClientSide);
     }

@@ -1,7 +1,6 @@
 package org.dizzymii.millenaire2.advancement;
 
 import net.minecraft.server.level.ServerPlayer;
-import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.world.UserProfile;
 
 import java.util.HashMap;

@@ -92,11 +92,11 @@ public class MillConfigValues {
     public static void loadConfig() {
         // NeoForge config wiring: values are read from the NeoForge config system
         // in a later phase. For now, all values use their static defaults above.
-        org.dizzymii.millenaire2.util.LOGGER.debug("MillConfigValues loaded (defaults)");
+        LOGGER.debug("MillConfigValues loaded (defaults)");
     }
 
     public static void saveConfig() {
         // NeoForge config system auto-persists; this method is a compatibility stub.
-        org.dizzymii.millenaire2.util.LOGGER.debug("MillConfigValues saved");
+        LOGGER.debug("MillConfigValues saved");
     }
 }
