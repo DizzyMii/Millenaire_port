@@ -2,6 +2,7 @@ package org.dizzymii.millenaire2.network.handler;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.chat.Component;
+import org.dizzymii.millenaire2.util.MillCommonUtilities;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.dizzymii.millenaire2.network.MillPacketIds;
 import org.dizzymii.millenaire2.network.PacketDataHelper;
@@ -78,9 +79,9 @@ public final class QuestPacketHandler {
                 profile.deniers += lastStep.rewardMoney;
             }
             profile.questInstances.remove(active);
-            player.sendSystemMessage(Component.literal("\u00a76[Mill\u00e9naire]\u00a7r Quest '" + questKey + "' completed!"));
+            player.sendSystemMessage(MillCommonUtilities.chatMsg("Quest '" + questKey + "' completed!"));
         } else {
-            player.sendSystemMessage(Component.literal("\u00a76[Mill\u00e9naire]\u00a7r Quest step completed."));
+            player.sendSystemMessage(MillCommonUtilities.chatMsg("Quest step completed."));
         }
         mw.setDirty();
     }
@@ -88,7 +89,7 @@ public final class QuestPacketHandler {
     private static void handleRefuse(ServerPlayer player, UserProfile profile, String questKey, MillWorldData mw) {
         // Remove quest instance if it exists
         profile.questInstances.removeIf(qi -> qi.quest != null && questKey.equals(qi.quest.key));
-        player.sendSystemMessage(Component.literal("\u00a76[Mill\u00e9naire]\u00a7r Quest declined."));
+        player.sendSystemMessage(MillCommonUtilities.chatMsg("Quest declined."));
         mw.setDirty();
     }
 }

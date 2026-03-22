@@ -1,6 +1,6 @@
 package org.dizzymii.millenaire2.network.handler;
 
-import net.minecraft.network.chat.Component;
+import org.dizzymii.millenaire2.util.MillCommonUtilities;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.dizzymii.millenaire2.network.MillPacketIds;
@@ -73,14 +73,14 @@ public final class BuildingProjectPacketHandler {
                 .computeIfAbsent(BuildingProject.EnumProjects.PLAYER, k -> new CopyOnWriteArrayList<>())
                 .add(bp);
 
-        player.sendSystemMessage(Component.literal("§6[Millénaire]§r Project requested: " + planKey));
+        player.sendSystemMessage(MillCommonUtilities.chatMsg("Project requested: " + planKey));
     }
 
     private static void handleUpdateCustom(ServerPlayer player, MillWorldData mw, PacketDataHelper.Reader r) {
         Point buildingPos = readPoint(r);
         Building existing = mw.getBuilding(buildingPos);
         if (existing != null) {
-            player.sendSystemMessage(Component.literal("§6[Millénaire]§r Custom building updated."));
+            player.sendSystemMessage(MillCommonUtilities.chatMsg("Custom building updated."));
         }
     }
 
@@ -101,8 +101,7 @@ public final class BuildingProjectPacketHandler {
             }
         }
         if (changed) {
-            player.sendSystemMessage(Component.literal(
-                    "§6[Millénaire]§r Project upgrades " + (allow ? "allowed" : "forbidden") + "."));
+            player.sendSystemMessage(MillCommonUtilities.chatMsg("Project upgrades " + (allow ? "allowed" : "forbidden") + "."));
         }
     }
 
@@ -124,7 +123,7 @@ public final class BuildingProjectPacketHandler {
         }
         changed |= townHall.buildingsBought.remove(projectKey);
         if (changed) {
-            player.sendSystemMessage(Component.literal("§6[Millénaire]§r Project forgotten: " + projectKey));
+            player.sendSystemMessage(MillCommonUtilities.chatMsg("Project forgotten: " + projectKey));
         }
     }
 

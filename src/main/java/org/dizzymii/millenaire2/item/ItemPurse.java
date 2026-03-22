@@ -1,6 +1,7 @@
 package org.dizzymii.millenaire2.item;
 
 import net.minecraft.world.item.Item;
+import org.dizzymii.millenaire2.util.MillCommonUtilities;
 
 public class ItemPurse extends Item {
     public ItemPurse(Properties props) {
@@ -16,8 +17,7 @@ public class ItemPurse extends Item {
             // Display denier count stored in NBT
             int deniers = stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
                     net.minecraft.world.item.component.CustomData.EMPTY).copyTag().getInt("deniers");
-            player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                    "\u00a76[Mill\u00e9naire]\u00a7r Purse contains " + deniers + " deniers"));
+            player.sendSystemMessage(MillCommonUtilities.chatMsg("Purse contains " + deniers + " deniers"));
         }
         return net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }

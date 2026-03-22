@@ -1,5 +1,8 @@
 package org.dizzymii.millenaire2.util;
 
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.fml.loading.FMLPaths;
 
@@ -19,6 +22,19 @@ import java.util.Random;
 public class MillCommonUtilities {
 
     private static final Random random = new Random();
+
+    public static MutableComponent chatPrefix() {
+        return Component.literal("[Millénaire] ").withStyle(ChatFormatting.GOLD);
+    }
+
+    public static MutableComponent chatMsg(String message) {
+        return chatPrefix().append(Component.literal(message).withStyle(ChatFormatting.RESET));
+    }
+
+    public static MutableComponent chatError(String message) {
+        return Component.literal("[Millénaire] ").withStyle(ChatFormatting.DARK_RED)
+                .append(Component.literal(message).withStyle(ChatFormatting.RESET));
+    }
 
     /**
      * Returns the root Millénaire content directory (game_dir/millenaire2/).

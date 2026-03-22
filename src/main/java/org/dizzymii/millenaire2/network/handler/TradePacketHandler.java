@@ -8,6 +8,7 @@ import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.item.TradeGood;
 import org.dizzymii.millenaire2.network.MillPacketIds;
 import org.dizzymii.millenaire2.network.PacketDataHelper;
+import org.dizzymii.millenaire2.util.MillCommonUtilities;
 import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
@@ -78,14 +79,12 @@ public final class TradePacketHandler {
         if (price <= 0 || good.item.isEmpty()) return;
 
         if (profile.deniers < price) {
-            player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                    "§c[Millénaire]§r Not enough deniers! Need " + price + ", have " + profile.deniers));
+            player.sendSystemMessage(MillCommonUtilities.chatError("Not enough deniers! Need " + price + ", have " + profile.deniers));
             return;
         }
 
         if (!player.getInventory().add(good.item.copy())) {
-            player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                    "§c[Millénaire]§r Inventory full!"));
+            player.sendSystemMessage(MillCommonUtilities.chatError("Inventory full!"));
             return;
         }
 
@@ -95,9 +94,7 @@ public final class TradePacketHandler {
         }
         mw.setDirty();
 
-        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                "§6[Millénaire]§r Bought " + good.item.getHoverName().getString()
-                        + " for " + price + " deniers"));
+        player.sendSystemMessage(MillCommonUtilities.chatMsg("Bought " + good.item.getHoverName().getString() + " for " + price + " deniers"));
         MillLog.minor("TradePacketHandler", "Trade buy: " + player.getName().getString()
                 + " bought " + good.item.getHoverName().getString() + " for " + price + "d");
     }
@@ -109,8 +106,7 @@ public final class TradePacketHandler {
 
         int slot = findItemSlot(player, good.item);
         if (slot < 0) {
-            player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                    "§c[Millénaire]§r You don't have that item!"));
+            player.sendSystemMessage(MillCommonUtilities.chatError("You don't have that item!"));
             return;
         }
 
@@ -126,9 +122,7 @@ public final class TradePacketHandler {
         }
         mw.setDirty();
 
-        player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                "§6[Millénaire]§r Sold " + good.item.getHoverName().getString()
-                        + " for " + price + " deniers"));
+        player.sendSystemMessage(MillCommonUtilities.chatMsg("Sold " + good.item.getHoverName().getString() + " for " + price + " deniers"));
         MillLog.minor("TradePacketHandler", "Trade sell: " + player.getName().getString()
                 + " sold " + good.item.getHoverName().getString() + " for " + price + "d");
     }

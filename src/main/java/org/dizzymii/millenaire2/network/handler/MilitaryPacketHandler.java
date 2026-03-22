@@ -1,6 +1,6 @@
 package org.dizzymii.millenaire2.network.handler;
 
-import net.minecraft.network.chat.Component;
+import org.dizzymii.millenaire2.util.MillCommonUtilities;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.dizzymii.millenaire2.network.MillPacketIds;
@@ -50,18 +50,18 @@ public final class MilitaryPacketHandler {
         int amount = r.readInt();
         int current = townHall.getRelation(targetPos);
         townHall.setRelation(targetPos, current + amount);
-        player.sendSystemMessage(Component.literal("§6[Millénaire]§r Relation adjusted by " + amount + "."));
+        player.sendSystemMessage(MillCommonUtilities.chatMsg("Relation adjusted by " + amount + "."));
     }
 
     private static void handleRaid(ServerPlayer player, Building townHall, PacketDataHelper.Reader r) {
         Point targetPos = readPoint(r);
         townHall.raidTarget = targetPos;
-        player.sendSystemMessage(Component.literal("§6[Millénaire]§r Raid planned on " + targetPos));
+        player.sendSystemMessage(MillCommonUtilities.chatMsg("Raid planned on " + targetPos));
     }
 
     private static void handleCancelRaid(ServerPlayer player, Building townHall) {
         townHall.raidTarget = null;
-        player.sendSystemMessage(Component.literal("§6[Millénaire]§r Raid plan canceled."));
+        player.sendSystemMessage(MillCommonUtilities.chatMsg("Raid plan canceled."));
     }
 
     private static Point readPoint(PacketDataHelper.Reader r) {

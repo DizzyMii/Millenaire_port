@@ -17,12 +17,12 @@ import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.village.VillagerRecord;
 import org.dizzymii.millenaire2.world.MillWorldData;
+import org.dizzymii.millenaire2.util.MillCommonUtilities;
 import org.dizzymii.millenaire2.world.UserProfile;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Registers all Millenaire commands using NeoForge's Brigadier event.
@@ -101,11 +101,11 @@ public class MillCommands {
         }
 
         if (townhalls.isEmpty()) {
-            ctx.getSource().sendSuccess(() -> Component.literal("§6[Millénaire]§r No active villages found."), false);
+            ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("No active villages found."), false);
             return 1;
         }
 
-        ctx.getSource().sendSuccess(() -> Component.literal("§6[Millénaire]§r Active villages (" + townhalls.size() + "):"), false);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Active villages (" + townhalls.size() + ":)"), false);
         for (Building th : townhalls) {
             String name = th.getName() != null ? th.getName() : "Unknown";
             String culture = th.cultureKey != null ? th.cultureKey : "?";
@@ -132,7 +132,7 @@ public class MillCommands {
         }
         Point pos = target.getPos();
         player.teleportTo(pos.x + 0.5, pos.y + 1.0, pos.z + 0.5);
-        ctx.getSource().sendSuccess(() -> Component.literal("§6[Millénaire]§r Teleported to " + target.getName()), false);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Teleported to " + target.getName()), false);
         return 1;
     }
 
@@ -153,9 +153,7 @@ public class MillCommands {
         profile.adjustVillageReputation(target.getTownHallPos(), amount);
         int newRep = profile.getVillageReputation(target.getTownHallPos());
         mw.setDirty();
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "§6[Millénaire]§r Reputation with " + target.getName() + " set to " + newRep
-        ), true);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Reputation with " + target.getName() + " set to " + newRep), true);
         return 1;
     }
 
@@ -183,9 +181,7 @@ public class MillCommands {
         th.setLevelContext(ctx.getSource().getLevel(), mw);
 
         mw.addBuilding(th, spawnPoint);
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "§6[Millénaire]§r Spawned " + cultureName + " village at " + spawnPoint
-        ), true);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Spawned " + cultureName + " village at " + spawnPoint), true);
         return 1;
     }
 
@@ -207,9 +203,7 @@ public class MillCommands {
         target.setName(newName);
         MillWorldData mw = MillWorldData.get(ctx.getSource().getLevel());
         mw.setDirty();
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "§6[Millénaire]§r Renamed '" + oldName + "' to '" + newName + "'"
-        ), true);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Renamed '" + oldName + "' to '" + newName + "'"), true);
         return 1;
     }
 
@@ -228,15 +222,11 @@ public class MillCommands {
         if (target.controlledBy != null && target.controlledBy.equals(player.getUUID())) {
             target.controlledBy = null;
             target.controlledByName = null;
-            ctx.getSource().sendSuccess(() -> Component.literal(
-                    "§6[Millénaire]§r Released control of " + target.getName()
-            ), true);
+            ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Released control of " + target.getName()), true);
         } else {
             target.controlledBy = player.getUUID();
             target.controlledByName = player.getGameProfile().getName();
-            ctx.getSource().sendSuccess(() -> Component.literal(
-                    "§6[Millénaire]§r Now controlling " + target.getName()
-            ), true);
+            ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Now controlling " + target.getName()), true);
         }
         MillWorldData mw = MillWorldData.get(ctx.getSource().getLevel());
         mw.setDirty();
@@ -252,9 +242,7 @@ public class MillCommands {
             ctx.getSource().sendFailure(Component.literal("Culture '" + cultureName + "' not found after reload."));
             return 0;
         }
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "§6[Millénaire]§r Reloaded culture '" + cultureName + "' successfully."
-        ), true);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Reloaded culture '" + cultureName + "' successfully."), true);
         return 1;
     }
 
@@ -271,9 +259,7 @@ public class MillCommands {
         }
         mw.setDirty();
         final int resetCount = count;
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "§6[Millénaire]§r Reset " + resetCount + " killed villager records. They will respawn."
-        ), true);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Reset " + resetCount + " killed villager records. They will respawn."), true);
         return 1;
     }
 
@@ -282,9 +268,7 @@ public class MillCommands {
         int count = mw.profiles.size();
         // Mark dirty so profiles are re-saved
         mw.setDirty();
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "§6[Millénaire]§r Marked " + count + " profiles for resync."
-        ), true);
+        ctx.getSource().sendSuccess(() -> MillCommonUtilities.chatMsg("Marked " + count + " profiles for resync."), true);
         return 1;
     }
 

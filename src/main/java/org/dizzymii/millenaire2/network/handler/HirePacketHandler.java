@@ -1,6 +1,6 @@
 package org.dizzymii.millenaire2.network.handler;
 
-import net.minecraft.network.chat.Component;
+import org.dizzymii.millenaire2.util.MillCommonUtilities;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.dizzymii.millenaire2.network.MillPacketIds;
@@ -48,33 +48,30 @@ public final class HirePacketHandler {
             default -> 0;
         };
         if (cost == 0) {
-            player.sendSystemMessage(Component.literal("\u00a7c[Millénaire] Unknown unit type: " + unitType));
+            player.sendSystemMessage(MillCommonUtilities.chatError("Unknown unit type: " + unitType));
             return;
         }
         if (profile.deniers < cost) {
-            player.sendSystemMessage(Component.literal(
-                    "\u00a7c[Millénaire] Not enough deniers (need " + cost + ", have " + profile.deniers + ")"));
+            player.sendSystemMessage(MillCommonUtilities.chatError("Not enough deniers (need " + cost + ", have " + profile.deniers + ")"));
             return;
         }
         profile.deniers -= cost;
         MillLog.minor("HirePacketHandler", "Player " + player.getName().getString()
                 + " hired " + unitType + " for " + cost + " deniers");
-        player.sendSystemMessage(Component.literal(
-                "\u00a76[Millénaire]\u00a7r Hired a " + unitType + " for " + cost + " deniers."));
+        player.sendSystemMessage(MillCommonUtilities.chatMsg("Hired a " + unitType + " for " + cost + " deniers."));
     }
 
     private static void handleRelease(ServerPlayer player) {
-        player.sendSystemMessage(Component.literal("\u00a76[Millénaire]\u00a7r Hired soldier released."));
+        player.sendSystemMessage(MillCommonUtilities.chatMsg("Hired soldier released."));
     }
 
     private static void handleExtend(ServerPlayer player) {
-        player.sendSystemMessage(Component.literal("\u00a76[Millénaire]\u00a7r Hire extended."));
+        player.sendSystemMessage(MillCommonUtilities.chatMsg("Hire extended."));
     }
 
     private static void handleToggleStance(ServerPlayer player, PacketDataHelper.Reader r) {
         int stance = r.readInt();
         String stanceName = stance == 0 ? "Patrol" : "Defend";
-        player.sendSystemMessage(Component.literal(
-                "\u00a76[Millénaire]\u00a7r Military stance set to: " + stanceName));
+        player.sendSystemMessage(MillCommonUtilities.chatMsg("Military stance set to: " + stanceName));
     }
 }

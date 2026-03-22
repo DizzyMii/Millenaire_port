@@ -3,6 +3,7 @@ package org.dizzymii.millenaire2.entity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import org.dizzymii.millenaire2.util.MillCommonUtilities;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -82,53 +83,53 @@ public abstract class MillVillager extends PathfinderMob {
         EVENING,    // 16000-17999: socialise, go home
     }
 
-    public DayPhase currentPhase = DayPhase.WORK;
+    private DayPhase currentPhase = DayPhase.WORK;
 
     // --- Sub-system controllers ---
     private final VillagerAIController ai = new VillagerAIController(this);
     public final VillagerInventory villagerInventory = new VillagerInventory();
 
-    // --- Instance fields (ported from original) ---
-    @Nullable public VillagerType vtype;
-    public int action = 0;
-    @Nullable public String goalKey = null;
-    @Nullable public Point housePoint = null;
-    @Nullable public Point prevPoint = null;
-    @Nullable public Point townHallPoint = null;
-    public boolean extraLog = false;
-    public ItemStack heldItem = ItemStack.EMPTY;
-    public ItemStack heldItemOffHand = ItemStack.EMPTY;
-    public long timer = 0L;
-    public long actionStart = 0L;
-    public boolean allowRandomMoves = false;
-    public boolean stopMoving = false;
-    public boolean registered = false;
-    public int longDistanceStuck;
-    public boolean nightActionPerformed = false;
-    public long speech_started = 0L;
-    public long pathingTime;
-    public int nbPathsCalculated = 0;
-    public long goalStarted = 0L;
-    public int constructionJobId = -1;
-    public int heldItemCount = 0;
-    @Nullable public String speech_key = null;
-    public int speech_variant = 0;
-    @Nullable public String dialogueKey = null;
-    public int dialogueRole = 0;
-    public long dialogueStart = 0L;
-    public boolean dialogueChat = false;
-    @Nullable public String dialogueTargetFirstName = null;
-    @Nullable public String dialogueTargetLastName = null;
-    public int visitorNbNights = 0;
-    public int foreignMerchantStallId = -1;
-    public boolean lastAttackByPlayer = false;
-    public HashMap<Goal, Long> lastGoalTime = new HashMap<>();
-    @Nullable public String hiredBy = null;
-    public boolean aggressiveStance = false;
-    public long hiredUntil = 0L;
-    public boolean isUsingBow;
-    public boolean isUsingHandToHand;
-    public boolean isRaider = false;
+    // --- Instance fields ---
+    @Nullable private VillagerType vtype;
+    private int action = 0;
+    @Nullable private String goalKey = null;
+    @Nullable private Point housePoint = null;
+    @Nullable private Point prevPoint = null;
+    @Nullable private Point townHallPoint = null;
+    private boolean extraLog = false;
+    private ItemStack heldItem = ItemStack.EMPTY;
+    private ItemStack heldItemOffHand = ItemStack.EMPTY;
+    private long timer = 0L;
+    private long actionStart = 0L;
+    private boolean allowRandomMoves = false;
+    private boolean stopMoving = false;
+    private boolean registered = false;
+    private int longDistanceStuck;
+    private boolean nightActionPerformed = false;
+    private long speech_started = 0L;
+    private long pathingTime;
+    private int nbPathsCalculated = 0;
+    private long goalStarted = 0L;
+    private int constructionJobId = -1;
+    private int heldItemCount = 0;
+    @Nullable private String speech_key = null;
+    private int speech_variant = 0;
+    @Nullable private String dialogueKey = null;
+    private int dialogueRole = 0;
+    private long dialogueStart = 0L;
+    private boolean dialogueChat = false;
+    @Nullable private String dialogueTargetFirstName = null;
+    @Nullable private String dialogueTargetLastName = null;
+    private int visitorNbNights = 0;
+    private int foreignMerchantStallId = -1;
+    private boolean lastAttackByPlayer = false;
+    private final HashMap<Goal, Long> lastGoalTime = new HashMap<>();
+    @Nullable private String hiredBy = null;
+    private boolean aggressiveStance = false;
+    private long hiredUntil = 0L;
+    private boolean isUsingBow;
+    private boolean isUsingHandToHand;
+    private boolean isRaider = false;
     private long villagerId = -1L;
 
     protected MillVillager(EntityType<? extends MillVillager> type, Level level) {
@@ -171,7 +172,7 @@ public abstract class MillVillager extends PathfinderMob {
 
     // --- Culture/VillagerType resolution ---
     @Nullable private org.dizzymii.millenaire2.culture.Culture cachedCulture = null;
-    @Nullable public String vtypeKey = null;
+    @Nullable private String vtypeKey = null;
 
     /**
      * Resolve and cache the Culture object from the synced culture key.
@@ -204,6 +205,90 @@ public abstract class MillVillager extends PathfinderMob {
         this.vtypeKey = key;
         resolveVillagerType();
     }
+
+    // --- Field accessors ---
+    @Nullable public VillagerType getVillagerType() { return vtype; }
+    public void setVillagerType(@Nullable VillagerType vt) { this.vtype = vt; }
+    public int getAction() { return action; }
+    public void setAction(int v) { this.action = v; }
+    @Nullable public String getGoalKey() { return goalKey; }
+    public void setGoalKey(@Nullable String key) { this.goalKey = key; }
+    @Nullable public Point getHousePoint() { return housePoint; }
+    public void setHousePoint(@Nullable Point p) { this.housePoint = p; }
+    @Nullable public Point getPrevPoint() { return prevPoint; }
+    public void setPrevPoint(@Nullable Point p) { this.prevPoint = p; }
+    @Nullable public Point getTownHallPoint() { return townHallPoint; }
+    public void setTownHallPoint(@Nullable Point p) { this.townHallPoint = p; }
+    public boolean isExtraLog() { return extraLog; }
+    public void setExtraLog(boolean v) { this.extraLog = v; }
+    public ItemStack getHeldItem() { return heldItem; }
+    public void setHeldItem(ItemStack item) { this.heldItem = item; }
+    public ItemStack getHeldItemOffHand() { return heldItemOffHand; }
+    public void setHeldItemOffHand(ItemStack item) { this.heldItemOffHand = item; }
+    public long getTimer() { return timer; }
+    public void setTimer(long v) { this.timer = v; }
+    public long getActionStart() { return actionStart; }
+    public void setActionStart(long v) { this.actionStart = v; }
+    public boolean isAllowRandomMoves() { return allowRandomMoves; }
+    public void setAllowRandomMoves(boolean v) { this.allowRandomMoves = v; }
+    public boolean isStopMoving() { return stopMoving; }
+    public void setStopMoving(boolean v) { this.stopMoving = v; }
+    public boolean isRegistered() { return registered; }
+    public void setRegistered(boolean v) { this.registered = v; }
+    public int getLongDistanceStuck() { return longDistanceStuck; }
+    public void setLongDistanceStuck(int v) { this.longDistanceStuck = v; }
+    public boolean isNightActionPerformed() { return nightActionPerformed; }
+    public void setNightActionPerformed(boolean v) { this.nightActionPerformed = v; }
+    public long getSpeechStarted() { return speech_started; }
+    public void setSpeechStarted(long v) { this.speech_started = v; }
+    public long getPathingTime() { return pathingTime; }
+    public void setPathingTime(long v) { this.pathingTime = v; }
+    public int getNbPathsCalculated() { return nbPathsCalculated; }
+    public void setNbPathsCalculated(int v) { this.nbPathsCalculated = v; }
+    public long getGoalStarted() { return goalStarted; }
+    public void setGoalStarted(long v) { this.goalStarted = v; }
+    public int getConstructionJobId() { return constructionJobId; }
+    public void setConstructionJobId(int id) { this.constructionJobId = id; }
+    public int getHeldItemCount() { return heldItemCount; }
+    public void setHeldItemCount(int count) { this.heldItemCount = count; }
+    @Nullable public String getSpeechKey() { return speech_key; }
+    public void setSpeechKey(@Nullable String key) { this.speech_key = key; }
+    public int getSpeechVariant() { return speech_variant; }
+    public void setSpeechVariant(int v) { this.speech_variant = v; }
+    @Nullable public String getDialogueKey() { return dialogueKey; }
+    public void setDialogueKey(@Nullable String key) { this.dialogueKey = key; }
+    public int getDialogueRole() { return dialogueRole; }
+    public void setDialogueRole(int v) { this.dialogueRole = v; }
+    public long getDialogueStart() { return dialogueStart; }
+    public void setDialogueStart(long v) { this.dialogueStart = v; }
+    public boolean isDialogueChat() { return dialogueChat; }
+    public void setDialogueChat(boolean v) { this.dialogueChat = v; }
+    @Nullable public String getDialogueTargetFirstName() { return dialogueTargetFirstName; }
+    public void setDialogueTargetFirstName(@Nullable String name) { this.dialogueTargetFirstName = name; }
+    @Nullable public String getDialogueTargetLastName() { return dialogueTargetLastName; }
+    public void setDialogueTargetLastName(@Nullable String name) { this.dialogueTargetLastName = name; }
+    public int getVisitorNbNights() { return visitorNbNights; }
+    public void setVisitorNbNights(int v) { this.visitorNbNights = v; }
+    public int getForeignMerchantStallId() { return foreignMerchantStallId; }
+    public void setForeignMerchantStallId(int id) { this.foreignMerchantStallId = id; }
+    public boolean isLastAttackByPlayer() { return lastAttackByPlayer; }
+    public void setLastAttackByPlayer(boolean v) { this.lastAttackByPlayer = v; }
+    public HashMap<Goal, Long> getLastGoalTime() { return lastGoalTime; }
+    @Nullable public String getHiredBy() { return hiredBy; }
+    public void setHiredBy(@Nullable String name) { this.hiredBy = name; }
+    public boolean isAggressiveStance() { return aggressiveStance; }
+    public void setAggressiveStance(boolean v) { this.aggressiveStance = v; }
+    public long getHiredUntil() { return hiredUntil; }
+    public void setHiredUntil(long v) { this.hiredUntil = v; }
+    public boolean isUsingBow() { return isUsingBow; }
+    public void setUsingBow(boolean v) { this.isUsingBow = v; }
+    public boolean isUsingHandToHand() { return isUsingHandToHand; }
+    public void setUsingHandToHand(boolean v) { this.isUsingHandToHand = v; }
+    public boolean isRaider() { return isRaider; }
+    public void setRaider(boolean v) { this.isRaider = v; }
+    public DayPhase getCurrentPhase() { return currentPhase; }
+    public void setCurrentPhase(DayPhase phase) { this.currentPhase = phase; }
+    @Nullable public String getVtypeKey() { return vtypeKey; }
 
     /** Exposes the AI controller for systems that need to interact with it (e.g. combat). */
     public VillagerAIController getAIController() { return ai; }
@@ -263,11 +348,9 @@ public abstract class MillVillager extends PathfinderMob {
         String name = getFirstName() + " " + getFamilyName();
         String culture = getCultureKey();
         String goalDisplay = goalKey != null ? goalKey : "idle";
-        player.sendSystemMessage(Component.literal(
-                "§6[Millénaire]§r " + name +
+        player.sendSystemMessage(MillCommonUtilities.chatMsg(name +
                 (culture.isEmpty() ? "" : " (" + culture + ")") +
-                " — " + goalDisplay
-        ));
+                " — " + goalDisplay));
 
         // Request server to open the trade GUI for this villager
         if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
