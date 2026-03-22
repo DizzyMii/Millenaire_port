@@ -2,6 +2,7 @@ package org.dizzymii.millenaire2.util;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.FriendlyByteBuf;
 
 /**
@@ -78,28 +79,21 @@ public class Point {
     }
 
     public void writeToNBT(CompoundTag tag, String prefix) {
-        tag.putInt(prefix + "X", x);
-        tag.putInt(prefix + "Y", y);
-        tag.putInt(prefix + "Z", z);
+        tag.put(prefix, NbtUtils.writeBlockPos(toBlockPos()));
     }
 
     public static Point readFromNBT(CompoundTag tag, String prefix) {
-        if (!tag.contains(prefix + "X")) return null;
-        return new Point(
-                tag.getInt(prefix + "X"),
-                tag.getInt(prefix + "Y"),
-                tag.getInt(prefix + "Z")
-        );
+        if (!tag.contains(prefix)) return null;
+        BlockPos pos = NbtUtils.readBlockPos(tag, prefix).orElse(null);
+        return pos != null ? new Point(pos) : null;
     }
 
     public void writeToBuf(FriendlyByteBuf buf) {
-        buf.writeInt(x);
-        buf.writeInt(y);
-        buf.writeInt(z);
+        buf.writeBlockPos(toBlockPos());
     }
 
     public static Point readFromBuf(FriendlyByteBuf buf) {
-        return new Point(buf.readInt(), buf.readInt(), buf.readInt());
+        return new Point(buf.readBlockPos());
     }
 
     // --- Object overrides ---
