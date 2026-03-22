@@ -12,11 +12,11 @@
       "projectName": "Millenaire2",
       "mainClass": "net.neoforged.devlaunch.Main",
       "args": [
-        "@C:\\Users\\kadeh\\Downloads\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\clientRunProgramArgs.txt"
+        "@D:\\5\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\clientRunProgramArgs.txt"
       ],
       "vmArgs": [
-        "@C:\\Users\\kadeh\\Downloads\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\clientRunVmArgs.txt",
-        "-Dfml.modFolders\u003dmillenaire2%%C:\\Users\\kadeh\\Downloads\\Mod2\\Hellyel\\Millenaire2\\bin\\main"
+        "@D:\\5\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\clientRunVmArgs.txt",
+        "-Dfml.modFolders\u003dmillenaire2%%D:\\5\\Mod2\\Hellyel\\Millenaire2\\bin\\main"
       ],
       "cwd": "${workspaceFolder}\\run",
       "env": {},
@@ -34,11 +34,11 @@
       "projectName": "Millenaire2",
       "mainClass": "net.neoforged.devlaunch.Main",
       "args": [
-        "@C:\\Users\\kadeh\\Downloads\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\dataRunProgramArgs.txt"
+        "@D:\\5\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\dataRunProgramArgs.txt"
       ],
       "vmArgs": [
-        "@C:\\Users\\kadeh\\Downloads\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\dataRunVmArgs.txt",
-        "-Dfml.modFolders\u003dmillenaire2%%C:\\Users\\kadeh\\Downloads\\Mod2\\Hellyel\\Millenaire2\\bin\\main"
+        "@D:\\5\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\dataRunVmArgs.txt",
+        "-Dfml.modFolders\u003dmillenaire2%%D:\\5\\Mod2\\Hellyel\\Millenaire2\\bin\\main"
       ],
       "cwd": "${workspaceFolder}\\run",
       "env": {},
@@ -56,11 +56,11 @@
       "projectName": "Millenaire2",
       "mainClass": "net.neoforged.devlaunch.Main",
       "args": [
-        "@C:\\Users\\kadeh\\Downloads\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\gameTestServerRunProgramArgs.txt"
+        "@D:\\5\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\gameTestServerRunProgramArgs.txt"
       ],
       "vmArgs": [
-        "@C:\\Users\\kadeh\\Downloads\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\gameTestServerRunVmArgs.txt",
-        "-Dfml.modFolders\u003dmillenaire2%%C:\\Users\\kadeh\\Downloads\\Mod2\\Hellyel\\Millenaire2\\bin\\main"
+        "@D:\\5\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\gameTestServerRunVmArgs.txt",
+        "-Dfml.modFolders\u003dmillenaire2%%D:\\5\\Mod2\\Hellyel\\Millenaire2\\bin\\main"
       ],
       "cwd": "${workspaceFolder}\\run",
       "env": {},
@@ -78,11 +78,11 @@
       "projectName": "Millenaire2",
       "mainClass": "net.neoforged.devlaunch.Main",
       "args": [
-        "@C:\\Users\\kadeh\\Downloads\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\serverRunProgramArgs.txt"
+        "@D:\\5\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\serverRunProgramArgs.txt"
       ],
       "vmArgs": [
-        "@C:\\Users\\kadeh\\Downloads\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\serverRunVmArgs.txt",
-        "-Dfml.modFolders\u003dmillenaire2%%C:\\Users\\kadeh\\Downloads\\Mod2\\Hellyel\\Millenaire2\\bin\\main"
+        "@D:\\5\\Mod2\\Hellyel\\Millenaire2\\build\\moddev\\serverRunVmArgs.txt",
+        "-Dfml.modFolders\u003dmillenaire2%%D:\\5\\Mod2\\Hellyel\\Millenaire2\\bin\\main"
       ],
       "cwd": "${workspaceFolder}\\run",
       "env": {},
