@@ -65,7 +65,7 @@ public class MillGameTests {
     public static void testGenerateNewVillageSetsFieldsAndConstruction(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         MillWorldData mw = new MillWorldData();
-        mw.world = level;
+        mw.world = level; // MillWorldData.world is fine - it's the data store's own field
 
         Culture norman = Culture.getCultureByName("norman");
         helper.assertFalse(norman == null, "Norman culture missing");
@@ -262,7 +262,7 @@ public class MillGameTests {
         ServerLevel level = helper.getLevel();
         BlockPos abs = helper.absolutePos(BlockPos.ZERO);
         b.setPos(new Point(abs.getX(), abs.getY(), abs.getZ()));
-        b.world = level;
+        b.setLevelContext(level, null);
 
         helper.assertTrue(b.canUpgrade(),
                 "Building should be able to upgrade from level 0 to 1");
@@ -486,7 +486,7 @@ public class MillGameTests {
     public static void testRaidStartMarksTargetAndRaiders(GameTestHelper helper) {
         org.dizzymii.millenaire2.world.MillWorldData mw = new org.dizzymii.millenaire2.world.MillWorldData();
         ServerLevel level = helper.getLevel();
-        mw.world = level;
+        mw.world = level; // MillWorldData.world is fine - it's the data store's own field
 
         Building attacker = new Building();
         attacker.isTownhall = true;
@@ -494,8 +494,7 @@ public class MillGameTests {
         attacker.setName("AttackerTown");
         attacker.setPos(new Point(0, 64, 0));
         attacker.setTownHallPos(attacker.getPos());
-        attacker.world = level;
-        attacker.mw = mw;
+        attacker.setLevelContext(level, mw);
 
         Building target = new Building();
         target.isTownhall = true;
@@ -503,8 +502,7 @@ public class MillGameTests {
         target.setName("TargetTown");
         target.setPos(new Point(40, 64, 0));
         target.setTownHallPos(target.getPos());
-        target.world = level;
-        target.mw = mw;
+        target.setLevelContext(level, mw);
 
         org.dizzymii.millenaire2.village.VillagerRecord raider = new org.dizzymii.millenaire2.village.VillagerRecord();
         raider.setVillagerId(1L);
@@ -530,23 +528,21 @@ public class MillGameTests {
     public static void testRaidUpdateClearsAttackStateAfterDuration(GameTestHelper helper) {
         org.dizzymii.millenaire2.world.MillWorldData mw = new org.dizzymii.millenaire2.world.MillWorldData();
         ServerLevel level = helper.getLevel();
-        mw.world = level;
+        mw.world = level; // MillWorldData.world is fine - it's the data store's own field
 
         Building attacker = new Building();
         attacker.isTownhall = true;
         attacker.isActive = true;
         attacker.setPos(new Point(0, 64, 0));
         attacker.setTownHallPos(attacker.getPos());
-        attacker.world = level;
-        attacker.mw = mw;
+        attacker.setLevelContext(level, mw);
 
         Building target = new Building();
         target.isTownhall = true;
         target.isActive = true;
         target.setPos(new Point(40, 64, 0));
         target.setTownHallPos(target.getPos());
-        target.world = level;
-        target.mw = mw;
+        target.setLevelContext(level, mw);
 
         org.dizzymii.millenaire2.village.VillagerRecord raider = new org.dizzymii.millenaire2.village.VillagerRecord();
         raider.setVillagerId(2L);
@@ -656,7 +652,7 @@ public class MillGameTests {
         Building b = new Building();
         b.isActive = true;
         b.isTownhall = false;
-        b.world = level;
+        b.setLevelContext(level, null);
         b.setPos(new Point(abs.getX(), abs.getY(), abs.getZ()));
 
         // Set up a small construction

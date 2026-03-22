@@ -180,8 +180,7 @@ public class MillCommands {
         th.setPos(spawnPoint);
         th.setTownHallPos(spawnPoint);
         th.setName(culture.key + " Village");
-        th.world = ctx.getSource().getLevel();
-        th.mw = mw;
+        th.setLevelContext(ctx.getSource().getLevel(), mw);
 
         mw.addBuilding(th, spawnPoint);
         ctx.getSource().sendSuccess(() -> Component.literal(

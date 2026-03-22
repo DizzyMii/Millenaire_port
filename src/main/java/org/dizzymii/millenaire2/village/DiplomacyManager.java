@@ -138,9 +138,9 @@ public class DiplomacyManager {
     public static void checkRaidTrigger(Building townhall, MillWorldData mw) {
         if (!raidsEnabled || !MillConfig.raidsEnabled()) return;
         if (townhall.getPos() == null) return;
-        if (townhall.world == null) return;
+        if (townhall.getLevel() == null) return;
 
-        long gameTime = townhall.world.getGameTime();
+        long gameTime = townhall.getLevel().getGameTime();
         if (townhall.lastRaidGameTime > 0
                 && gameTime - townhall.lastRaidGameTime < minTicksBetweenRaids) {
             return;
@@ -182,8 +182,8 @@ public class DiplomacyManager {
 
         if (attacker.getPos() == null) return false;
         if (attacker.raidTarget != null) return false;
-        if (attacker.lastRaidGameTime > 0 && attacker.world != null
-                && attacker.world.getGameTime() - attacker.lastRaidGameTime < minTicksBetweenRaids) {
+        if (attacker.lastRaidGameTime > 0 && attacker.getLevel() != null
+                && attacker.getLevel().getGameTime() - attacker.lastRaidGameTime < minTicksBetweenRaids) {
             return false;
         }
 
@@ -191,7 +191,7 @@ public class DiplomacyManager {
         attacker.raidTarget = targetVillagePos;
         targetTh.underAttack = true;
 
-        long now = attacker.world != null ? attacker.world.getGameTime() : 0L;
+        long now = attacker.getLevel() != null ? attacker.getLevel().getGameTime() : 0L;
         attacker.activeRaidStartTick = now;
         targetTh.activeRaidStartTick = now;
         attacker.lastRaidGameTime = now;
@@ -229,7 +229,7 @@ public class DiplomacyManager {
     public static void updateRaidState(Building attacker, MillWorldData mw) {
         if (attacker.raidTarget == null) return;
 
-        long now = attacker.world != null ? attacker.world.getGameTime() : 0L;
+        long now = attacker.getLevel() != null ? attacker.getLevel().getGameTime() : 0L;
         if (attacker.activeRaidStartTick == -1L) {
             attacker.activeRaidStartTick = now;
         }
@@ -264,7 +264,7 @@ public class DiplomacyManager {
         clearRaiders(attacker);
         attacker.raidTarget = null;
         attacker.activeRaidStartTick = -1L;
-        attacker.lastRaidGameTime = attacker.world != null ? attacker.world.getGameTime() : attacker.lastRaidGameTime;
+        attacker.lastRaidGameTime = attacker.getLevel() != null ? attacker.getLevel().getGameTime() : attacker.lastRaidGameTime;
         mw.setDirty();
     }
 
@@ -293,10 +293,10 @@ public class DiplomacyManager {
         clearRaiders(attacker);
         attacker.raidTarget = null;
         attacker.activeRaidStartTick = -1L;
-        attacker.lastRaidGameTime = attacker.world != null ? attacker.world.getGameTime() : attacker.lastRaidGameTime;
+        attacker.lastRaidGameTime = attacker.getLevel() != null ? attacker.getLevel().getGameTime() : attacker.lastRaidGameTime;
         targetTh.underAttack = false;
         targetTh.activeRaidStartTick = -1L;
-        targetTh.lastRaidGameTime = targetTh.world != null ? targetTh.world.getGameTime() : targetTh.lastRaidGameTime;
+        targetTh.lastRaidGameTime = targetTh.getLevel() != null ? targetTh.getLevel().getGameTime() : targetTh.lastRaidGameTime;
         mw.setDirty();
     }
 

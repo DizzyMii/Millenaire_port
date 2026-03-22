@@ -42,8 +42,8 @@ public class ResManager {
      * Called periodically by the building's slow tick to manage farming resources.
      */
     public void update() {
-        if (building.world == null || building.world.isClientSide) return;
-        if (!(building.world instanceof ServerLevel level)) return;
+        if (building.getLevel() == null || building.getLevel().isClientSide) return;
+        if (!(building.getLevel() instanceof ServerLevel level)) return;
 
         harvestCooldown--;
         if (harvestCooldown > 0) return;

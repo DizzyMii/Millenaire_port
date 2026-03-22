@@ -131,8 +131,18 @@ public class Building {
     @Nullable public UUID controlledBy = null;
     @Nullable public String controlledByName = null;
 
-    @Nullable public MillWorldData mw;
-    @Nullable public Level world;
+    @Nullable private MillWorldData mw;
+    @Nullable private Level world;
+
+    // ========== Context accessors ==========
+
+    @Nullable public Level getLevel() { return world; }
+    @Nullable public MillWorldData getWorldData() { return mw; }
+
+    public void setLevelContext(@Nullable Level level, @Nullable MillWorldData worldData) {
+        this.world = level;
+        this.mw = worldData;
+    }
 
     // ========== Accessors ==========
 
@@ -469,8 +479,7 @@ public class Building {
         newBuilding.setPos(site);
         newBuilding.setTownHallPos(pos);
         newBuilding.setName(planSet.name != null ? planSet.name : newPlanSetKey);
-        newBuilding.mw = mw;
-        newBuilding.world = world;
+        newBuilding.setLevelContext(world, mw);
 
         BuildingLocation loc = new BuildingLocation();
         loc.planKey = newPlanSetKey;
@@ -625,8 +634,8 @@ public class Building {
         villager.setGender(vr.gender);
         if (cultureKey != null) villager.setCultureKey(cultureKey);
         if (vr.type != null) villager.setVillagerTypeKey(vr.type);
-        villager.housePoint = vr.getHousePos();
-        villager.townHallPoint = getTownHallPos();
+        villager.setHousePoint(vr.getHousePos());
+        villager.setTownHallPoint(getTownHallPos());
 
         level.addFreshEntity(villager);
         MillLog.minor("Building", "Spawned villager: " + vr.firstName + " " + vr.familyName);

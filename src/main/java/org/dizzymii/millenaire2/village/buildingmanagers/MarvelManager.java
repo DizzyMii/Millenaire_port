@@ -80,7 +80,7 @@ public class MarvelManager {
         MillLog.minor("MarvelManager", "Marvel complete for village at " + townHall.getPos());
 
         // Fire completion effects (fireworks near town hall)
-        if (townHall.world instanceof ServerLevel level) {
+        if (townHall.getLevel() instanceof ServerLevel level) {
             Point pos = townHall.getPos();
             if (pos != null) {
                 spawnCompletionEffects(level, pos);

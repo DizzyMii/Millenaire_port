@@ -42,8 +42,8 @@ public class VisitorManager {
      * Merchants appear during daytime and leave at night.
      */
     private void updateMarket(boolean forceAttempt) {
-        if (building.world == null || building.world.isClientSide) return;
-        if (!(building.world instanceof ServerLevel serverLevel)) return;
+        if (building.getLevel() == null || building.getLevel().isClientSide) return;
+        if (!(building.getLevel() instanceof ServerLevel serverLevel)) return;
         Point pos = building.getPos();
         if (pos == null) return;
 
@@ -77,8 +77,8 @@ public class VisitorManager {
      * Attempt to spawn visitors at inn/tavern buildings.
      */
     private void updateVisitors(boolean forceAttempt) {
-        if (building.world == null || building.world.isClientSide) return;
-        if (!(building.world instanceof ServerLevel serverLevel)) return;
+        if (building.getLevel() == null || building.getLevel().isClientSide) return;
+        if (!(building.getLevel() instanceof ServerLevel serverLevel)) return;
         Point pos = building.getPos();
         if (pos == null) return;
 

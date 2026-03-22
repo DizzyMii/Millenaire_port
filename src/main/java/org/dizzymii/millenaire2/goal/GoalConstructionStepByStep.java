@@ -41,12 +41,12 @@ public class GoalConstructionStepByStep extends Goal {
         int placed = cip.placeBlocks(serverLevel, 3);
         if (placed > 0) {
             villager.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
-            if (building.mw != null) building.mw.setDirty();
+            if (building.getWorldData() != null) building.getWorldData().setDirty();
         }
 
         if (cip.isComplete()) {
             building.currentConstruction = null;
-            if (building.mw != null) building.mw.setDirty();
+            if (building.getWorldData() != null) building.getWorldData().setDirty();
             return true;
         }
         return false;

@@ -149,8 +149,7 @@ public class WorldGenVillage {
         townhall.setPos(villagePos);
         townhall.setTownHallPos(villagePos);
         townhall.location = location;
-        townhall.mw = worldData;
-        townhall.world = level;
+        townhall.setLevelContext(level, worldData);
 
         // Set up construction from already-parsed BuildingPlan data
         ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, villagePos, level);

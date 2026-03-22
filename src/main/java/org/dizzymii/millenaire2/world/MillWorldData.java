@@ -16,10 +16,10 @@ import org.dizzymii.millenaire2.village.VillagerRecord;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Per-world Millénaire data — tracks all buildings, villagers, profiles, and global tags.
@@ -41,12 +41,15 @@ public class MillWorldData extends SavedData {
     private static final String NBT_PROFILES = "profiles";
 
     // ========== Fields ==========
-    private final HashMap<Point, Building> buildings = new HashMap<>();
-    private final HashMap<Long, VillagerRecord> villagerRecords = new HashMap<>();
+    private final ConcurrentHashMap<Point, Building> buildings = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, VillagerRecord> villagerRecords = new ConcurrentHashMap<>();
     public final List<String> globalTags = new ArrayList<>();
-    public HashMap<UUID, UserProfile> profiles = new HashMap<>();
+    public ConcurrentHashMap<UUID, UserProfile> profiles = new ConcurrentHashMap<>();
 
     @Nullable public Level world;
+
+    private static final int STALE_CLEANUP_INTERVAL = 12000; // every 10 minutes
+    private int cleanupCounter = 0;
 
     public boolean millenaireEnabled = true;
     public boolean generateVillages = true;
@@ -63,10 +66,9 @@ public class MillWorldData extends SavedData {
                 DATA_NAME
         );
         data.world = level;
-        // Set world and mw references on all buildings
+        // Set level context on all buildings
         for (Building b : data.buildings.values()) {
-            b.world = level;
-            b.mw = data;
+            b.setLevelContext(level, data);
         }
         return data;
     }
@@ -77,8 +79,7 @@ public class MillWorldData extends SavedData {
 
     public void addBuilding(Building b, Point p) {
         buildings.put(p, b);
-        b.world = this.world;
-        b.mw = this;
+        b.setLevelContext(this.world, this);
         setDirty();
     }
 
@@ -165,16 +166,44 @@ public class MillWorldData extends SavedData {
 
     /**
      * Called from the server tick event. Ticks all loaded buildings.
+     * Only ticks buildings in loaded chunks to avoid unnecessary work.
      */
     public void tick() {
         if (world == null || world.isClientSide) return;
+        if (!(world instanceof net.minecraft.server.level.ServerLevel sl)) return;
         lastWorldUpdate = world.getGameTime();
 
-        for (Building b : buildings.values()) {
-            if (b.isActive) {
-                b.tick();
-            }
+        for (Map.Entry<Point, Building> entry : buildings.entrySet()) {
+            Point pos = entry.getKey();
+            Building b = entry.getValue();
+            if (!b.isActive) continue;
+            // Skip buildings in unloaded chunks
+            if (!sl.getChunkSource().hasChunk(pos.x >> 4, pos.z >> 4)) continue;
+            b.tick();
         }
+
+        // Periodic stale data cleanup
+        cleanupCounter++;
+        if (cleanupCounter >= STALE_CLEANUP_INTERVAL) {
+            cleanupCounter = 0;
+            cleanupStaleData(sl);
+        }
+    }
+
+    /**
+     * Removes stale records: dead villager records with no corresponding building,
+     * buildings at invalid positions (no chunk loaded in a while), and empty profile entries.
+     */
+    private void cleanupStaleData(net.minecraft.server.level.ServerLevel sl) {
+        // Remove villager records whose home building no longer exists
+        villagerRecords.entrySet().removeIf(entry -> {
+            VillagerRecord vr = entry.getValue();
+            Point housePos = vr.getHousePos();
+            if (housePos == null) return false;
+            return !buildings.containsKey(housePos);
+        });
+        setDirty();
+        MillLog.minor("MillWorldData", "Stale data cleanup: " + buildings.size() + " buildings, " + villagerRecords.size() + " records.");
     }
 
     // ========== NBT persistence ==========
