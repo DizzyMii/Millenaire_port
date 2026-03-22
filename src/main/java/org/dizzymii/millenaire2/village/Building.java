@@ -3,17 +3,11 @@
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import org.dizzymii.millenaire2.culture.BuildingPlan;
 import org.dizzymii.millenaire2.culture.BuildingPlanSet;
 import org.dizzymii.millenaire2.culture.Culture;
-import org.dizzymii.millenaire2.culture.VillageType;
-import org.dizzymii.millenaire2.culture.VillagerType;
-import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.item.TradeGood;
 import org.dizzymii.millenaire2.util.Point;
@@ -54,44 +48,6 @@ public class Building {
     public static final int MIN_REPUTATION_FOR_TRADE = -1024;
     public static final int MAX_REPUTATION = 32768;
 
-    // ========== NBT key constants ==========
-    private static final String NBT_ACTIVE = "active";
-    private static final String NBT_TOWNHALL = "townhall";
-    private static final String NBT_INN = "inn";
-    private static final String NBT_MARKET = "market";
-    private static final String NBT_CHEST_LOCKED = "chestLocked";
-    private static final String NBT_HAS_AUTO_SPAWN = "hasAutoSpawn";
-    private static final String NBT_UNDER_ATTACK = "underAttack";
-    private static final String NBT_CULTURE = "culture";
-    private static final String NBT_PLAN_SET_KEY = "planSetKey";
-    private static final String NBT_VILLAGE_TYPE_KEY = "villageTypeKey";
-    private static final String NBT_BUILDING_LEVEL = "buildingLevel";
-    private static final String NBT_NAME = "name";
-    private static final String NBT_QUALIFIER = "qualifier";
-    private static final String NBT_POS = "pos";
-    private static final String NBT_TH = "th";
-    private static final String NBT_LOC = "loc";
-    private static final String NBT_CONTROLLED_BY = "controlledBy";
-    private static final String NBT_CONTROLLED_BY_NAME = "controlledByName";
-    private static final String NBT_RAID_TARGET = "raidTarget";
-    private static final String NBT_ACTIVE_RAID_START_TICK = "activeRaidStartTick";
-    private static final String NBT_LAST_RAID_GAME_TIME = "lastRaidGameTime";
-    private static final String NBT_RAIDS_PERFORMED = "raidsPerformed";
-    private static final String NBT_RAIDS_SUFFERED = "raidsSuffered";
-    private static final String NBT_VILLAGERS = "villagers";
-    private static final String NBT_RELATIONS = "relations";
-    private static final String NBT_VR_ID = "id";
-    private static final String NBT_VR_GENDER = "gender";
-    private static final String NBT_VR_FIRST_NAME = "firstName";
-    private static final String NBT_VR_FAMILY_NAME = "familyName";
-    private static final String NBT_VR_TYPE = "type";
-    private static final String NBT_VR_KILLED = "killed";
-    private static final String NBT_VR_AWAY_RAIDING = "awayraiding";
-    private static final String NBT_VR_AWAY_HIRED = "awayhired";
-    private static final String NBT_VR_SCALE = "scale";
-    private static final String NBT_VR_HOUSE = "house";
-    private static final String NBT_REL_POINT = "p";
-    private static final String NBT_REL_VAL = "val";
 
     // ========== Key fields ==========
     @Nullable public String cultureKey;
@@ -356,12 +312,12 @@ public class Building {
 
         // Spawn missing villagers if this is an active townhall or building
         if (isActive && isTownhall && tickCounter % 200 == 0) {
-            checkAndSpawnVillagers();
+            BuildingSpawner.checkAndSpawnVillagers(this);
         }
 
         // Village expansion: check for upgrades every ~60 seconds (1200 ticks)
         if (isActive && isTownhall && !isUnderConstruction() && tickCounter % 1200 == 0) {
-            checkVillageExpansion();
+            BuildingExpansion.checkVillageExpansion(this);
         }
 
         // Resource production every ~10 seconds (200 ticks)
@@ -384,167 +340,6 @@ public class Building {
         if (isActive && isTownhall && tickCounter % 72000 == 0) {
             DiplomacyManager.tickRelationDecay(this);
         }
-    }
-
-    // ========== Village expansion ==========
-
-    /**
-     * Townhall checks all buildings in the village for possible upgrades,
-     * then checks if new buildings from the VillageType should be constructed.
-     */
-    private void checkVillageExpansion() {
-        if (mw == null || cultureKey == null) return;
-        Culture culture = Culture.getCultureByName(cultureKey);
-        if (culture == null) return;
-
-        // Gate: no concurrent construction in village
-        for (Building b : mw.getBuildingsMap().values()) {
-            if (isSameVillage(b) && b.isUnderConstruction()) return;
-        }
-
-        // Gate: minimum population before expanding
-        int population = 0;
-        for (Building b : mw.getBuildingsMap().values()) {
-            if (isSameVillage(b)) population += b.getVillagerRecords().size();
-        }
-        if (population < 2) return;
-
-        // 1. Try to upgrade existing buildings that are idle
-        for (Building b : mw.getBuildingsMap().values()) {
-            if (b == this) continue;
-            if (!isSameVillage(b)) continue;
-            if (b.canUpgrade()) {
-                if (b.tryUpgrade()) {
-                    LOGGER.debug("Village expansion: upgrading " + b.getName());
-                    return;
-                }
-            }
-        }
-
-        // 2. Try to build new buildings from village type definition
-        if (villageTypeKey == null) return;
-        VillageType vtype = culture.villageTypes.get(villageTypeKey);
-        if (vtype == null) vtype = culture.loneBuildingTypes.get(villageTypeKey);
-        if (vtype == null) return;
-
-        java.util.Set<String> builtPlanSets = new java.util.HashSet<>();
-        for (Building b : mw.getBuildingsMap().values()) {
-            if (!isSameVillage(b)) continue;
-            if (b.planSetKey != null) builtPlanSets.add(b.planSetKey);
-        }
-
-        String needed = findNeededBuilding(vtype.coreBuildings, builtPlanSets, culture);
-        if (needed == null) {
-            needed = findNeededBuilding(vtype.secondaryBuildings, builtPlanSets, culture);
-        }
-
-        if (needed != null) {
-            startNewBuilding(needed, culture);
-        }
-    }
-
-    @Nullable
-    private String findNeededBuilding(List<String> candidates, java.util.Set<String> alreadyBuilt, Culture culture) {
-        for (String planSetKey : candidates) {
-            if (alreadyBuilt.contains(planSetKey)) continue;
-            BuildingPlanSet planSet = culture.planSets.get(planSetKey);
-            if (planSet != null && planSet.getInitialPlan() != null) {
-                return planSetKey;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Start construction of a new building near the townhall.
-     */
-    private void startNewBuilding(String newPlanSetKey, Culture culture) {
-        if (pos == null || !(world instanceof ServerLevel serverLevel)) return;
-        BuildingPlanSet planSet = culture.planSets.get(newPlanSetKey);
-        if (planSet == null) return;
-        BuildingPlan initialPlan = planSet.getInitialPlan();
-        if (initialPlan == null || !initialPlan.hasImage()) return;
-
-        // Spiral search for a valid site near the townhall
-        Point site = findBuildingSite(serverLevel, initialPlan.width, initialPlan.length);
-        if (site == null) {
-            LOGGER.debug("Village expansion: no valid site found for " + newPlanSetKey);
-            return;
-        }
-
-        Building newBuilding = new Building();
-        newBuilding.cultureKey = cultureKey;
-        newBuilding.planSetKey = newPlanSetKey;
-        newBuilding.villageTypeKey = villageTypeKey;
-        newBuilding.buildingLevel = 0;
-        newBuilding.isActive = true;
-        newBuilding.setPos(site);
-        newBuilding.setTownHallPos(pos);
-        newBuilding.setName(planSet.name != null ? planSet.name : newPlanSetKey);
-        newBuilding.setLevelContext(world, mw);
-
-        BuildingLocation loc = new BuildingLocation();
-        loc.planKey = newPlanSetKey;
-        loc.cultureKey = cultureKey;
-        loc.pos = site;
-        loc.width = initialPlan.width;
-        loc.length = initialPlan.length;
-        newBuilding.location = loc;
-
-        ConstructionIP cip = ConstructionIP.fromBuildingPlan(initialPlan, site, serverLevel);
-        if (cip != null) {
-            cip.location = loc;
-            newBuilding.currentConstruction = cip;
-            mw.addBuilding(newBuilding, site);
-            mw.setDirty();
-            LOGGER.debug("Village expansion: new building " + newPlanSetKey + " at " + site);
-        }
-    }
-
-    @Nullable
-    private Point findBuildingSite(ServerLevel level, int buildWidth, int buildLength) {
-        if (pos == null) return null;
-        int minDist = 15;
-        int maxDist = 60;
-        int step = 5;
-
-        for (int dist = minDist; dist <= maxDist; dist += step) {
-            for (int angle = 0; angle < 8; angle++) {
-                double rad = angle * Math.PI / 4.0;
-                int cx = pos.x + (int)(Math.cos(rad) * dist);
-                int cz = pos.z + (int)(Math.sin(rad) * dist);
-
-                // Check overlap with existing buildings
-                boolean overlaps = false;
-                for (Building b : mw.getBuildingsMap().values()) {
-                    if (b.getPos() != null && isSameVillage(b)) {
-                        double d = new Point(cx, 0, cz).horizontalDistanceTo(b.getPos());
-                        if (d < 12) { overlaps = true; break; }
-                    }
-                }
-                if (overlaps) continue;
-
-                // Find ground level
-                net.minecraft.core.BlockPos check = new net.minecraft.core.BlockPos(cx, 0, cz);
-                int groundY = findGround(level, check);
-                if (groundY < 0) continue;
-                if (Math.abs(groundY - pos.y) > 8) continue;
-
-                return new Point(cx, groundY, cz);
-            }
-        }
-        return null;
-    }
-
-    private static int findGround(ServerLevel level, net.minecraft.core.BlockPos pos) {
-        for (int y = level.getMaxBuildHeight() - 1; y > level.getMinBuildHeight(); y--) {
-            net.minecraft.core.BlockPos check = new net.minecraft.core.BlockPos(pos.getX(), y, pos.getZ());
-            net.minecraft.world.level.block.state.BlockState state = level.getBlockState(check);
-            if (!state.isAir() && !state.is(net.minecraft.world.level.block.Blocks.WATER) && !state.canBeReplaced()) {
-                return y + 1;
-            }
-        }
-        return -1;
     }
 
     /**
@@ -572,237 +367,14 @@ public class Building {
         }
     }
 
-    // ========== Villager spawning ==========
-
-    /**
-     * Check VillagerRecords against loaded entities and spawn any missing villagers.
-     */
-    private void checkAndSpawnVillagers() {
-        if (!(world instanceof ServerLevel serverLevel)) return;
-        if (pos == null) return;
-
-        Culture culture = cultureKey != null ? Culture.getCultureByName(cultureKey) : null;
-
-        for (VillagerRecord vr : getVillagerRecords()) {
-            if (vr.killed || vr.awayraiding || vr.awayhired) continue;
-
-            // Check if this villager's entity is already loaded
-            // (skip spawn if entity exists within range)
-            boolean entityExists = !serverLevel.getEntitiesOfClass(
-                    MillVillager.class,
-                    net.minecraft.world.phys.AABB.ofSize(
-                            new net.minecraft.world.phys.Vec3(pos.x, pos.y, pos.z), 128, 64, 128),
-                    v -> v.getVillagerId() == vr.getVillagerId()
-            ).isEmpty();
-
-            if (entityExists) continue;
-
-            // Spawn the villager
-            spawnVillagerFromRecord(serverLevel, vr, culture);
-        }
-    }
-
-    /**
-     * Spawn a MillVillager entity from a VillagerRecord.
-     */
-    private void spawnVillagerFromRecord(ServerLevel level, VillagerRecord vr, @Nullable Culture culture) {
-        if (pos == null) return;
-
-        // Determine entity type based on gender and culture
-        VillagerType vtype = null;
-        if (culture != null && vr.type != null) {
-            vtype = culture.getVillagerType(vr.type);
-        }
-
-        EntityType<? extends MillVillager> entityType;
-        if (vr.gender == MillVillager.FEMALE) {
-            // Use symmetrical female by default
-            entityType = MillEntities.GENERIC_SYMM_FEMALE.get();
-        } else {
-            entityType = MillEntities.GENERIC_MALE.get();
-        }
-
-        MillVillager villager = entityType.create(level);
-        if (villager == null) return;
-
-        // Set position near the building
-        Point spawnPos = vr.getHousePos() != null ? vr.getHousePos() : pos;
-        villager.setPos(spawnPos.x + 0.5, spawnPos.y + 1.0, spawnPos.z + 0.5);
-
-        // Populate from record
-        villager.setVillagerId(vr.getVillagerId());
-        if (vr.firstName != null) villager.setFirstName(vr.firstName);
-        if (vr.familyName != null) villager.setFamilyName(vr.familyName);
-        villager.setGender(vr.gender);
-        if (cultureKey != null) villager.setCultureKey(cultureKey);
-        if (vr.type != null) villager.setVillagerTypeKey(vr.type);
-        villager.setHousePoint(vr.getHousePos());
-        villager.setTownHallPoint(getTownHallPos());
-
-        level.addFreshEntity(villager);
-        LOGGER.debug("Spawned villager: " + vr.firstName + " " + vr.familyName);
-    }
-
     // ========== NBT persistence ==========
+    // Serialization logic lives in BuildingNbt to keep this class focused.
 
     public CompoundTag save() {
-        CompoundTag tag = new CompoundTag();
-        tag.putBoolean(NBT_ACTIVE, isActive);
-        tag.putBoolean(NBT_TOWNHALL, isTownhall);
-        tag.putBoolean(NBT_INN, isInn);
-        tag.putBoolean(NBT_MARKET, isMarket);
-        tag.putBoolean(NBT_CHEST_LOCKED, chestLocked);
-        tag.putBoolean(NBT_HAS_AUTO_SPAWN, hasAutoSpawn);
-        tag.putBoolean(NBT_UNDER_ATTACK, underAttack);
-        if (cultureKey != null) tag.putString(NBT_CULTURE, cultureKey);
-        if (planSetKey != null) tag.putString(NBT_PLAN_SET_KEY, planSetKey);
-        if (villageTypeKey != null) tag.putString(NBT_VILLAGE_TYPE_KEY, villageTypeKey);
-        tag.putInt(NBT_BUILDING_LEVEL, buildingLevel);
-        if (name != null) tag.putString(NBT_NAME, name);
-        tag.putString(NBT_QUALIFIER, qualifier);
-
-        if (pos != null) pos.writeToNBT(tag, NBT_POS);
-        if (townHallPos != null) townHallPos.writeToNBT(tag, NBT_TH);
-
-        if (location != null) location.save(tag, NBT_LOC);
-
-        if (controlledBy != null) {
-            tag.putUUID(NBT_CONTROLLED_BY, controlledBy);
-            if (controlledByName != null) tag.putString(NBT_CONTROLLED_BY_NAME, controlledByName);
-        }
-
-        if (raidTarget != null) {
-            raidTarget.writeToNBT(tag, NBT_RAID_TARGET);
-        }
-        tag.putLong(NBT_ACTIVE_RAID_START_TICK, activeRaidStartTick);
-        tag.putLong(NBT_LAST_RAID_GAME_TIME, lastRaidGameTime);
-
-        ListTag raidsPerformedTag = new ListTag();
-        for (String name : raidsPerformed) {
-            CompoundTag rt = new CompoundTag();
-            rt.putString(NBT_NAME, name);
-            raidsPerformedTag.add(rt);
-        }
-        tag.put(NBT_RAIDS_PERFORMED, raidsPerformedTag);
-
-        ListTag raidsSufferedTag = new ListTag();
-        for (String name : raidsSuffered) {
-            CompoundTag rt = new CompoundTag();
-            rt.putString(NBT_NAME, name);
-            raidsSufferedTag.add(rt);
-        }
-        tag.put(NBT_RAIDS_SUFFERED, raidsSufferedTag);
-
-        // Save villager records
-        ListTag vrList = new ListTag();
-        for (VillagerRecord vr : vrecords.values()) {
-            CompoundTag vrTag = new CompoundTag();
-            vrTag.putLong(NBT_VR_ID, vr.getVillagerId());
-            vrTag.putInt(NBT_VR_GENDER, vr.gender);
-            if (vr.firstName != null) vrTag.putString(NBT_VR_FIRST_NAME, vr.firstName);
-            if (vr.familyName != null) vrTag.putString(NBT_VR_FAMILY_NAME, vr.familyName);
-            if (vr.type != null) vrTag.putString(NBT_VR_TYPE, vr.type);
-            if (vr.getCultureKey() != null) vrTag.putString(NBT_CULTURE, vr.getCultureKey());
-            vrTag.putBoolean(NBT_VR_KILLED, vr.killed);
-            vrTag.putBoolean(NBT_VR_AWAY_RAIDING, vr.awayraiding);
-            vrTag.putBoolean(NBT_VR_AWAY_HIRED, vr.awayhired);
-            vrTag.putFloat(NBT_VR_SCALE, vr.scale);
-            if (vr.getHousePos() != null) vr.getHousePos().writeToNBT(vrTag, NBT_VR_HOUSE);
-            if (vr.getTownHallPos() != null) vr.getTownHallPos().writeToNBT(vrTag, NBT_TH);
-            vrList.add(vrTag);
-        }
-        tag.put(NBT_VILLAGERS, vrList);
-
-        // Save relations
-        ListTag relList = new ListTag();
-        for (var entry : relations.entrySet()) {
-            CompoundTag relTag = new CompoundTag();
-            entry.getKey().writeToNBT(relTag, NBT_REL_POINT);
-            relTag.putInt(NBT_REL_VAL, entry.getValue());
-            relList.add(relTag);
-        }
-        tag.put(NBT_RELATIONS, relList);
-
-        return tag;
+        return BuildingNbt.save(this);
     }
 
     public static Building load(CompoundTag tag) {
-        Building b = new Building();
-        b.isActive = tag.getBoolean(NBT_ACTIVE);
-        b.isTownhall = tag.getBoolean(NBT_TOWNHALL);
-        b.isInn = tag.getBoolean(NBT_INN);
-        b.isMarket = tag.getBoolean(NBT_MARKET);
-        b.chestLocked = tag.getBoolean(NBT_CHEST_LOCKED);
-        b.hasAutoSpawn = tag.getBoolean(NBT_HAS_AUTO_SPAWN);
-        b.underAttack = tag.getBoolean(NBT_UNDER_ATTACK);
-        if (tag.contains(NBT_CULTURE)) b.cultureKey = tag.getString(NBT_CULTURE);
-        if (tag.contains(NBT_PLAN_SET_KEY)) b.planSetKey = tag.getString(NBT_PLAN_SET_KEY);
-        if (tag.contains(NBT_VILLAGE_TYPE_KEY)) b.villageTypeKey = tag.getString(NBT_VILLAGE_TYPE_KEY);
-        b.buildingLevel = tag.getInt(NBT_BUILDING_LEVEL);
-        if (tag.contains(NBT_NAME)) b.name = tag.getString(NBT_NAME);
-        b.qualifier = tag.getString(NBT_QUALIFIER);
-
-        b.pos = Point.readFromNBT(tag, NBT_POS);
-        b.townHallPos = Point.readFromNBT(tag, NBT_TH);
-
-        b.location = BuildingLocation.read(tag, NBT_LOC);
-
-        if (tag.hasUUID(NBT_CONTROLLED_BY)) {
-            b.controlledBy = tag.getUUID(NBT_CONTROLLED_BY);
-            if (tag.contains(NBT_CONTROLLED_BY_NAME)) b.controlledByName = tag.getString(NBT_CONTROLLED_BY_NAME);
-        }
-
-        b.raidTarget = Point.readFromNBT(tag, NBT_RAID_TARGET);
-        b.activeRaidStartTick = tag.contains(NBT_ACTIVE_RAID_START_TICK) ? tag.getLong(NBT_ACTIVE_RAID_START_TICK) : -1L;
-        b.lastRaidGameTime = tag.contains(NBT_LAST_RAID_GAME_TIME) ? tag.getLong(NBT_LAST_RAID_GAME_TIME) : -1L;
-
-        if (tag.contains(NBT_RAIDS_PERFORMED, Tag.TAG_LIST)) {
-            ListTag rp = tag.getList(NBT_RAIDS_PERFORMED, Tag.TAG_COMPOUND);
-            for (int i = 0; i < rp.size(); i++) {
-                b.raidsPerformed.add(rp.getCompound(i).getString(NBT_NAME));
-            }
-        }
-        if (tag.contains(NBT_RAIDS_SUFFERED, Tag.TAG_LIST)) {
-            ListTag rs = tag.getList(NBT_RAIDS_SUFFERED, Tag.TAG_COMPOUND);
-            for (int i = 0; i < rs.size(); i++) {
-                b.raidsSuffered.add(rs.getCompound(i).getString(NBT_NAME));
-            }
-        }
-
-        // Load villager records
-        if (tag.contains(NBT_VILLAGERS, Tag.TAG_LIST)) {
-            ListTag vrList = tag.getList(NBT_VILLAGERS, Tag.TAG_COMPOUND);
-            for (int i = 0; i < vrList.size(); i++) {
-                CompoundTag vrTag = vrList.getCompound(i);
-                VillagerRecord vr = new VillagerRecord();
-                vr.setVillagerId(vrTag.getLong(NBT_VR_ID));
-                vr.gender = vrTag.getInt(NBT_VR_GENDER);
-                if (vrTag.contains(NBT_VR_FIRST_NAME)) vr.firstName = vrTag.getString(NBT_VR_FIRST_NAME);
-                if (vrTag.contains(NBT_VR_FAMILY_NAME)) vr.familyName = vrTag.getString(NBT_VR_FAMILY_NAME);
-                if (vrTag.contains(NBT_VR_TYPE)) vr.type = vrTag.getString(NBT_VR_TYPE);
-                if (vrTag.contains(NBT_CULTURE)) vr.setCultureKey(vrTag.getString(NBT_CULTURE));
-                vr.killed = vrTag.getBoolean(NBT_VR_KILLED);
-                vr.awayraiding = vrTag.getBoolean(NBT_VR_AWAY_RAIDING);
-                vr.awayhired = vrTag.getBoolean(NBT_VR_AWAY_HIRED);
-                vr.scale = vrTag.getFloat(NBT_VR_SCALE);
-                vr.setHousePos(Point.readFromNBT(vrTag, NBT_VR_HOUSE));
-                vr.setTownHallPos(Point.readFromNBT(vrTag, NBT_TH));
-                b.addVillagerRecord(vr);
-            }
-        }
-
-        // Load relations
-        if (tag.contains(NBT_RELATIONS, Tag.TAG_LIST)) {
-            ListTag relList = tag.getList(NBT_RELATIONS, Tag.TAG_COMPOUND);
-            for (int i = 0; i < relList.size(); i++) {
-                CompoundTag relTag = relList.getCompound(i);
-                Point p = Point.readFromNBT(relTag, NBT_REL_POINT);
-                if (p != null) {
-                    b.relations.put(p, relTag.getInt(NBT_REL_VAL));
-                }
-            }
-        }
-
-        return b;
+        return BuildingNbt.load(tag);
     }
 }
