@@ -14,7 +14,7 @@ public class GoalBringBackResourcesHome extends Goal {
 
     @Override
     public GoalInformation getDestination(MillVillager v) {
-        if (v.villagerInventory.getAll().isEmpty()) return null;
+        if (v.getInventory().getAll().isEmpty()) return null;
         Point home = v.getHousePoint();
         if (home != null) {
             return new GoalInformation(home, 3);
@@ -26,11 +26,11 @@ public class GoalBringBackResourcesHome extends Goal {
     public boolean performAction(MillVillager v) {
         Building home = v.getHomeBuilding();
         if (home != null) {
-            for (Map.Entry<InvItem, Integer> entry : v.villagerInventory.getAll().entrySet()) {
+            for (Map.Entry<InvItem, Integer> entry : v.getInventory().getAll().entrySet()) {
                 home.resManager.storeGoods(entry.getKey(), entry.getValue());
             }
         }
-        v.villagerInventory.clear();
+        v.getInventory().clear();
         return true;
     }
 

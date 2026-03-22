@@ -100,7 +100,7 @@ public class MillVillager extends PathfinderMob {
 
     // --- Sub-system controllers ---
     private final VillagerAIController ai = new VillagerAIController(this);
-    public final VillagerInventory villagerInventory = new VillagerInventory();
+    private final VillagerInventory villagerInventory = new VillagerInventory();
 
     // --- Instance fields ---
     @Nullable private VillagerType vtype;
@@ -308,6 +308,9 @@ public class MillVillager extends PathfinderMob {
 
     /** Exposes the AI controller for systems that need to interact with it (e.g. combat). */
     public VillagerAIController getAIController() { return ai; }
+
+    /** Exposes the inventory for systems that need to interact with it. */
+    public VillagerInventory getInventory() { return villagerInventory; }
 
     /** Syncs the active goal key to clients via entity data. Called by VillagerAIController. */
     public void setGoalKeySync(String key) { this.entityData.set(DATA_GOAL_KEY, key); }

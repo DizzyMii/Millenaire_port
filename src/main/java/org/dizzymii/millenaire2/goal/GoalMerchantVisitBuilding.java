@@ -25,7 +25,7 @@ public class GoalMerchantVisitBuilding extends Goal {
         if (th != null) {
             // Deposit what the merchant carries
             for (java.util.Map.Entry<org.dizzymii.millenaire2.item.InvItem, Integer> entry :
-                    new java.util.ArrayList<>(v.villagerInventory.getAll().entrySet())) {
+                    new java.util.ArrayList<>(v.getInventory().getAll().entrySet())) {
                 int sell = Math.min(entry.getValue(), 4);
                 if (sell > 0) {
                     v.removeFromInv(entry.getKey(), sell);

@@ -21,11 +21,11 @@ public class GoalDeliverGoodsHousehold extends Goal {
     public boolean performAction(MillVillager v) {
         org.dizzymii.millenaire2.village.Building home = v.getHomeBuilding();
         if (home != null) {
-            for (java.util.Map.Entry<org.dizzymii.millenaire2.item.InvItem, Integer> entry : v.villagerInventory.getAll().entrySet()) {
+            for (java.util.Map.Entry<org.dizzymii.millenaire2.item.InvItem, Integer> entry : v.getInventory().getAll().entrySet()) {
                 home.resManager.storeGoods(entry.getKey(), entry.getValue());
             }
         }
-        v.villagerInventory.clear();
+        v.getInventory().clear();
         return true;
     }
 
