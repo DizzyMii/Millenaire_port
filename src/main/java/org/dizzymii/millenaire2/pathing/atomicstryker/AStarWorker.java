@@ -1,4 +1,4 @@
-﻿package org.dizzymii.millenaire2.pathing.atomicstryker;
+package org.dizzymii.millenaire2.pathing.atomicstryker;
 
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;

@@ -1,4 +1,4 @@
-﻿package org.dizzymii.millenaire2.gametest;
+package org.dizzymii.millenaire2.gametest;
 
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;

@@ -145,7 +145,7 @@ public class MillVillager extends PathfinderMob {
     private boolean isRaider = false;
     private long villagerId = -1L;
 
-    protected MillVillager(EntityType<? extends MillVillager> type, Level level) {
+    public MillVillager(EntityType<? extends MillVillager> type, Level level) {
         super(type, level);
     }
 

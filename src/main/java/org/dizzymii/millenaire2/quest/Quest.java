@@ -1,4 +1,4 @@
-﻿package org.dizzymii.millenaire2.quest;
+package org.dizzymii.millenaire2.quest;
 
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;

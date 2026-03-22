@@ -1,4 +1,4 @@
-﻿package org.dizzymii.millenaire2.parity;
+package org.dizzymii.millenaire2.parity;
 
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;

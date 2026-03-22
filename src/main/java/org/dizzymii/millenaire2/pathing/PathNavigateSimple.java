@@ -1,4 +1,4 @@
-﻿package org.dizzymii.millenaire2.pathing;
+package org.dizzymii.millenaire2.pathing;
 
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;

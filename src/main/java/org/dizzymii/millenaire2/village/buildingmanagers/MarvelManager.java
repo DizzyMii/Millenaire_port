@@ -1,4 +1,4 @@
-﻿package org.dizzymii.millenaire2.village.buildingmanagers;
+package org.dizzymii.millenaire2.village.buildingmanagers;
 
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;

@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 
 /**
  * Custom tool tiers for Millénaire cultures.
- * Ported from the original EnumHelper.addToolMaterial calls in MillItems.
+ * Ported from the original EnumHelper.addToolMaterial calls in ModItems.
  *
  * Parameters: harvestLevel, maxUses, efficiency, attackDamage, enchantability
  * Original values:
@@ -60,3 +60,4 @@ public enum MillTiers implements Tier {
     @Override
     public Ingredient getRepairIngredient() { return repairIngredient.get(); }
 }
+

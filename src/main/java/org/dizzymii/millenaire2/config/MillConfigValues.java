@@ -1,4 +1,7 @@
-﻿package org.dizzymii.millenaire2.config;
+package org.dizzymii.millenaire2.config;
+
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 
 /**
  * All mod configuration values — distances, logging levels, feature toggles.

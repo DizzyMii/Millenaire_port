@@ -1,4 +1,4 @@
-﻿package org.dizzymii.millenaire2.goal.generic;
+package org.dizzymii.millenaire2.goal.generic;
 
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;

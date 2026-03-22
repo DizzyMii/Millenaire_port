@@ -1,4 +1,4 @@
-﻿package org.dizzymii.millenaire2.buildingplan;
+package org.dizzymii.millenaire2.buildingplan;
 
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
@@ -13,7 +13,7 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import org.dizzymii.millenaire2.block.MillBlocks;
+import org.dizzymii.millenaire2.init.ModBlocks;
 import org.dizzymii.millenaire2.item.InvItem;
 
 import javax.annotation.Nullable;
@@ -371,44 +371,44 @@ public class PointType {
         registerBlock(0xE0E0F0, "white_bed", Blocks.WHITE_BED, true);
 
         // ===== Millénaire mod blocks =====
-        registerBlock(0xA07848, "timber_frame_plain", MillBlocks.TIMBER_FRAME_PLAIN.get(), false);
-        registerBlock(0xA08050, "timber_frame_cross", MillBlocks.TIMBER_FRAME_CROSS.get(), false);
-        registerBlock(0xC0A040, "thatch", MillBlocks.THATCH.get(), false);
-        registerBlock(0x806040, "mud_brick", MillBlocks.MUD_BRICK.get(), false);
-        registerBlock(0x887048, "mud_brick_extended", MillBlocks.MUD_BRICK_EXTENDED.get(), false);
-        registerBlock(0xC04020, "cooked_brick", MillBlocks.COOKED_BRICK.get(), false);
-        registerBlock(0xA89070, "stone_decoration", MillBlocks.STONE_DECORATION.get(), false);
-        registerBlock(0xD8C0A8, "sandstone_carved", MillBlocks.SANDSTONE_CARVED.get(), false);
-        registerBlock(0xC8A088, "sandstone_red_carved", MillBlocks.SANDSTONE_RED_CARVED.get(), false);
-        registerBlock(0xD0B890, "sandstone_ochre_carved", MillBlocks.SANDSTONE_OCHRE_CARVED.get(), false);
-        registerBlock(0xD8C8B0, "sandstone_decorated", MillBlocks.SANDSTONE_DECORATED.get(), false);
-        registerBlock(0xB09878, "byzantine_stone_ornament", MillBlocks.BYZANTINE_STONE_ORNAMENT.get(), false);
-        registerBlock(0xB8A088, "byzantine_sandstone_ornament", MillBlocks.BYZANTINE_SANDSTONE_ORNAMENT.get(), false);
-        registerBlock(0xA88068, "byzantine_tiles", MillBlocks.BYZANTINE_TILES.get(), false);
-        registerBlock(0xA88870, "byzantine_stone_tiles", MillBlocks.BYZANTINE_STONE_TILES.get(), false);
-        registerBlock(0xB89880, "byzantine_sandstone_tiles", MillBlocks.BYZANTINE_SANDSTONE_TILES.get(), false);
-        registerBlock(0x909088, "gray_tiles", MillBlocks.GRAY_TILES.get(), false);
-        registerBlock(0x609060, "green_tiles", MillBlocks.GREEN_TILES.get(), false);
-        registerBlock(0xC06060, "red_tiles", MillBlocks.RED_TILES.get(), false);
-        registerBlock(0xE0C080, "paper_wall", MillBlocks.PAPER_WALL.get(), true);
-        registerBlock(0x806848, "wooden_bars", MillBlocks.WOODEN_BARS.get(), true);
-        registerBlock(0x907858, "rosette", MillBlocks.ROSETTE.get(), false);
-        registerBlock(0xC0B0A0, "stained_glass", MillBlocks.STAINED_GLASS.get(), true);
-        registerBlock(0xD0E0F0, "ice_brick", MillBlocks.ICE_BRICK.get(), false);
-        registerBlock(0xE8E8F0, "snow_brick", MillBlocks.SNOW_BRICK.get(), false);
-        registerBlock(0xC8B090, "sod", MillBlocks.SOD.get(), false);
+        registerBlock(0xA07848, "timber_frame_plain", ModBlocks.TIMBER_FRAME_PLAIN.get(), false);
+        registerBlock(0xA08050, "timber_frame_cross", ModBlocks.TIMBER_FRAME_CROSS.get(), false);
+        registerBlock(0xC0A040, "thatch", ModBlocks.THATCH.get(), false);
+        registerBlock(0x806040, "mud_brick", ModBlocks.MUD_BRICK.get(), false);
+        registerBlock(0x887048, "mud_brick_extended", ModBlocks.MUD_BRICK_EXTENDED.get(), false);
+        registerBlock(0xC04020, "cooked_brick", ModBlocks.COOKED_BRICK.get(), false);
+        registerBlock(0xA89070, "stone_decoration", ModBlocks.STONE_DECORATION.get(), false);
+        registerBlock(0xD8C0A8, "sandstone_carved", ModBlocks.SANDSTONE_CARVED.get(), false);
+        registerBlock(0xC8A088, "sandstone_red_carved", ModBlocks.SANDSTONE_RED_CARVED.get(), false);
+        registerBlock(0xD0B890, "sandstone_ochre_carved", ModBlocks.SANDSTONE_OCHRE_CARVED.get(), false);
+        registerBlock(0xD8C8B0, "sandstone_decorated", ModBlocks.SANDSTONE_DECORATED.get(), false);
+        registerBlock(0xB09878, "byzantine_stone_ornament", ModBlocks.BYZANTINE_STONE_ORNAMENT.get(), false);
+        registerBlock(0xB8A088, "byzantine_sandstone_ornament", ModBlocks.BYZANTINE_SANDSTONE_ORNAMENT.get(), false);
+        registerBlock(0xA88068, "byzantine_tiles", ModBlocks.BYZANTINE_TILES.get(), false);
+        registerBlock(0xA88870, "byzantine_stone_tiles", ModBlocks.BYZANTINE_STONE_TILES.get(), false);
+        registerBlock(0xB89880, "byzantine_sandstone_tiles", ModBlocks.BYZANTINE_SANDSTONE_TILES.get(), false);
+        registerBlock(0x909088, "gray_tiles", ModBlocks.GRAY_TILES.get(), false);
+        registerBlock(0x609060, "green_tiles", ModBlocks.GREEN_TILES.get(), false);
+        registerBlock(0xC06060, "red_tiles", ModBlocks.RED_TILES.get(), false);
+        registerBlock(0xE0C080, "paper_wall", ModBlocks.PAPER_WALL.get(), true);
+        registerBlock(0x806848, "wooden_bars", ModBlocks.WOODEN_BARS.get(), true);
+        registerBlock(0x907858, "rosette", ModBlocks.ROSETTE.get(), false);
+        registerBlock(0xC0B0A0, "stained_glass", ModBlocks.STAINED_GLASS.get(), true);
+        registerBlock(0xD0E0F0, "ice_brick", ModBlocks.ICE_BRICK.get(), false);
+        registerBlock(0xE8E8F0, "snow_brick", ModBlocks.SNOW_BRICK.get(), false);
+        registerBlock(0xC8B090, "sod", ModBlocks.SOD.get(), false);
 
         // Millénaire mod stairs (second step)
-        registerBlock(0x00A088, "stairs_timberframe", MillBlocks.STAIRS_TIMBERFRAME.get(), true);
-        registerBlock(0x008068, "stairs_mudbrick", MillBlocks.STAIRS_MUDBRICK.get(), true);
-        registerBlock(0x00B090, "stairs_cookedbrick", MillBlocks.STAIRS_COOKEDBRICK.get(), true);
-        registerBlock(0x009078, "stairs_thatch", MillBlocks.STAIRS_THATCH.get(), true);
+        registerBlock(0x00A088, "stairs_timberframe", ModBlocks.STAIRS_TIMBERFRAME.get(), true);
+        registerBlock(0x008068, "stairs_mudbrick", ModBlocks.STAIRS_MUDBRICK.get(), true);
+        registerBlock(0x00B090, "stairs_cookedbrick", ModBlocks.STAIRS_COOKEDBRICK.get(), true);
+        registerBlock(0x009078, "stairs_thatch", ModBlocks.STAIRS_THATCH.get(), true);
 
         // Millénaire path blocks
-        registerBlock(0x706848, "path_dirt", MillBlocks.PATH_DIRT.get(), false);
-        registerBlock(0x908878, "path_gravel", MillBlocks.PATH_GRAVEL.get(), false);
-        registerBlock(0xA09888, "path_slabs", MillBlocks.PATH_SLABS.get(), false);
-        registerBlock(0xD0C0A8, "path_sandstone", MillBlocks.PATH_SANDSTONE.get(), false);
+        registerBlock(0x706848, "path_dirt", ModBlocks.PATH_DIRT.get(), false);
+        registerBlock(0x908878, "path_gravel", ModBlocks.PATH_GRAVEL.get(), false);
+        registerBlock(0xA09888, "path_slabs", ModBlocks.PATH_SLABS.get(), false);
+        registerBlock(0xD0C0A8, "path_sandstone", ModBlocks.PATH_SANDSTONE.get(), false);
 
         // ===== Agriculture =====
         registerSpecial(0x00C000, SpecialPointTypeList.bsoil);
@@ -468,3 +468,4 @@ public class PointType {
         LOGGER.debug("PointType: registered " + colourPoints.size() + " default colour mappings");
     }
 }
+

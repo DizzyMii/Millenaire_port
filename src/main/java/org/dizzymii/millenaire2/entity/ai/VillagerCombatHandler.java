@@ -1,4 +1,4 @@
-﻿package org.dizzymii.millenaire2.entity.ai;
+package org.dizzymii.millenaire2.entity.ai;
 
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;

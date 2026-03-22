@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 
 /**
  * Custom Millenaire crop block.
- * Max age and seed/crop items are set per-instance via suppliers registered in MillBlocks.
+ * Max age and seed/crop items are set per-instance via suppliers registered in ModBlocks.
  * Drops are handled via loot tables.
  */
 public class BlockMillCrops extends CropBlock {
@@ -36,3 +36,4 @@ public class BlockMillCrops extends CropBlock {
         return seedItem.get();
     }
 }
+

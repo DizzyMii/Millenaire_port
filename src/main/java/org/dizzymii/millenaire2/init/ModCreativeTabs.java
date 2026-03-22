@@ -8,7 +8,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.dizzymii.millenaire2.Millenaire2;
-import org.dizzymii.millenaire2.item.MillItems;
+import org.dizzymii.millenaire2.init.ModItems;
 
 /**
  * Creative mode tab registration for Millénaire.
@@ -23,9 +23,9 @@ public class ModCreativeTabs {
                     () -> CreativeModeTab.builder()
                             .title(Component.translatable("itemGroup.millenaire2"))
                             .withTabsBefore(CreativeModeTabs.COMBAT)
-                            .icon(() -> MillItems.DENIER.get().getDefaultInstance())
+                            .icon(() -> ModItems.DENIER.get().getDefaultInstance())
                             .displayItems((parameters, output) -> {
-                                MillItems.ALL_ITEMS.forEach(item -> output.accept(item.get()));
+                                ModItems.ALL_ITEMS.forEach(item -> output.accept(item.get()));
                             })
                             .build());
 
@@ -37,3 +37,4 @@ public class ModCreativeTabs {
         // Class loading triggers all static final fields above
     }
 }
+

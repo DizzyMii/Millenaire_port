@@ -14,14 +14,15 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
-import org.dizzymii.millenaire2.block.MillBlocks;
+import org.dizzymii.millenaire2.init.ModBlocks;
 import org.dizzymii.millenaire2.client.screen.FirePitScreen;
 import org.dizzymii.millenaire2.data.ContentDeployer;
-import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.init.ModBlockEntityTypes;
 import org.dizzymii.millenaire2.init.ModCreativeTabs;
-import org.dizzymii.millenaire2.item.MillItems;
-import org.dizzymii.millenaire2.menu.MillMenuTypes;
+import org.dizzymii.millenaire2.init.ModEntityTypes;
+import org.dizzymii.millenaire2.init.ModItems;
+import org.dizzymii.millenaire2.init.ModMenuTypes;
 import org.dizzymii.millenaire2.network.MillNetworking;
 import org.dizzymii.millenaire2.world.MillWorldData;
 import org.slf4j.Logger;
@@ -39,18 +40,20 @@ public class Millenaire2 {
         modEventBus.addListener(MillNetworking::register);
 
         // Register all deferred registers
-        MillBlocks.register(modEventBus);
-        MillItems.register(modEventBus);
+        ModBlocks.register(modEventBus);
+        ModItems.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
-        MillEntities.register(modEventBus);
-        MillMenuTypes.register(modEventBus);
+        ModEntityTypes.register(modEventBus);
+        ModBlockEntityTypes.register(modEventBus);
+        ModMenuTypes.register(modEventBus);
 
         // Force class loading of registration holders
-        MillBlocks.init();
-        MillItems.init();
-        MillEntities.init();
+        ModBlocks.init();
+        ModItems.init();
+        ModEntityTypes.init();
+        ModBlockEntityTypes.init();
         ModCreativeTabs.init();
-        MillMenuTypes.init();
+        ModMenuTypes.init();
 
         NeoForge.EVENT_BUS.register(this);
 
@@ -66,10 +69,10 @@ public class Millenaire2 {
     }
 
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {
-        event.put(MillEntities.MILL_VILLAGER.get(), MillVillager.createAttributes().build());
-        event.put(MillEntities.TARGETED_BLAZE.get(), net.minecraft.world.entity.monster.Blaze.createAttributes().build());
-        event.put(MillEntities.TARGETED_WITHER_SKELETON.get(), net.minecraft.world.entity.monster.WitherSkeleton.createAttributes().build());
-        event.put(MillEntities.TARGETED_GHAST.get(), net.minecraft.world.entity.monster.Ghast.createAttributes().build());
+        event.put(ModEntityTypes.MILL_VILLAGER.get(), MillVillager.createAttributes().build());
+        event.put(ModEntityTypes.TARGETED_BLAZE.get(), net.minecraft.world.entity.monster.Blaze.createAttributes().build());
+        event.put(ModEntityTypes.TARGETED_WITHER_SKELETON.get(), net.minecraft.world.entity.monster.WitherSkeleton.createAttributes().build());
+        event.put(ModEntityTypes.TARGETED_GHAST.get(), net.minecraft.world.entity.monster.Ghast.createAttributes().build());
     }
 
     @SubscribeEvent
@@ -110,7 +113,8 @@ public class Millenaire2 {
 
         @SubscribeEvent
         public static void registerMenuScreens(RegisterMenuScreensEvent event) {
-            event.register(MillMenuTypes.FIRE_PIT.get(), FirePitScreen::new);
+            event.register(ModMenuTypes.FIRE_PIT.get(), FirePitScreen::new);
         }
     }
 }
+

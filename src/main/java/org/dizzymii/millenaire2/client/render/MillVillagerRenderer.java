@@ -52,30 +52,6 @@ public class MillVillagerRenderer extends EntityRenderer<MillVillager> {
         return VillagerTextureHelper.resolveTexture(entity, DEFAULT_TEXTURE);
     }
 
-    // ── Shared rendering helpers ──────────────────────────────────────────────
-
-    static void renderSpeechAndName(HumanoidMobRenderer<MillVillager, ?> renderer,
-                                    MillVillager entity, Component displayName,
-                                    PoseStack poseStack, MultiBufferSource buffer,
-                                    int packedLight, float partialTick) {
-        if (!renderer.shouldShowName(entity)) return;
-        if (entity.getSpeechKey() != null && entity.level() != null) {
-            long elapsed = entity.level().getGameTime() - entity.getSpeechStarted();
-            if (elapsed >= 0 && elapsed < SPEECH_DISPLAY_TICKS) {
-                String speechText = org.dizzymii.millenaire2.util.VillageUtilities
-                        .getVillagerSentence("", entity.getSpeechKey());
-                poseStack.pushPose();
-                poseStack.translate(0, 0.25, 0);
-                renderer.renderNameTag(entity, Component.literal("\u00a7e" + speechText),
-                        poseStack, buffer, packedLight, partialTick);
-                poseStack.popPose();
-            } else {
-                entity.setSpeechKey(null);
-            }
-        }
-        renderer.renderNameTag(entity, entity.getDisplayName(), poseStack, buffer, packedLight, partialTick);
-    }
-
     static void applyScale(MillVillager entity, PoseStack poseStack) {
         if (entity.getVillagerType() != null && entity.getVillagerType().baseScale != 1.0f) {
             float s = entity.getVillagerType().baseScale;
@@ -95,7 +71,21 @@ public class MillVillagerRenderer extends EntityRenderer<MillVillager> {
         }
         @Override protected void renderNameTag(MillVillager entity, Component displayName,
                 PoseStack poseStack, MultiBufferSource buffer, int packedLight, float partialTick) {
-            renderSpeechAndName(this, entity, displayName, poseStack, buffer, packedLight, partialTick);
+            if (entity.getSpeechKey() != null && entity.level() != null) {
+                long elapsed = entity.level().getGameTime() - entity.getSpeechStarted();
+                if (elapsed >= 0 && elapsed < SPEECH_DISPLAY_TICKS) {
+                    String speechText = org.dizzymii.millenaire2.util.VillageUtilities
+                            .getVillagerSentence("", entity.getSpeechKey());
+                    poseStack.pushPose();
+                    poseStack.translate(0, 0.25, 0);
+                    super.renderNameTag(entity, Component.literal("\u00a7e" + speechText),
+                            poseStack, buffer, packedLight, partialTick);
+                    poseStack.popPose();
+                } else {
+                    entity.setSpeechKey(null);
+                }
+            }
+            super.renderNameTag(entity, displayName, poseStack, buffer, packedLight, partialTick);
         }
         @Override protected void scale(MillVillager entity, PoseStack poseStack, float partialTickTime) {
             applyScale(entity, poseStack);
@@ -111,7 +101,21 @@ public class MillVillagerRenderer extends EntityRenderer<MillVillager> {
         }
         @Override protected void renderNameTag(MillVillager entity, Component displayName,
                 PoseStack poseStack, MultiBufferSource buffer, int packedLight, float partialTick) {
-            renderSpeechAndName(this, entity, displayName, poseStack, buffer, packedLight, partialTick);
+            if (entity.getSpeechKey() != null && entity.level() != null) {
+                long elapsed = entity.level().getGameTime() - entity.getSpeechStarted();
+                if (elapsed >= 0 && elapsed < SPEECH_DISPLAY_TICKS) {
+                    String speechText = org.dizzymii.millenaire2.util.VillageUtilities
+                            .getVillagerSentence("", entity.getSpeechKey());
+                    poseStack.pushPose();
+                    poseStack.translate(0, 0.25, 0);
+                    super.renderNameTag(entity, Component.literal("\u00a7e" + speechText),
+                            poseStack, buffer, packedLight, partialTick);
+                    poseStack.popPose();
+                } else {
+                    entity.setSpeechKey(null);
+                }
+            }
+            super.renderNameTag(entity, displayName, poseStack, buffer, packedLight, partialTick);
         }
         @Override protected void scale(MillVillager entity, PoseStack poseStack, float partialTickTime) {
             applyScale(entity, poseStack);
@@ -127,7 +131,21 @@ public class MillVillagerRenderer extends EntityRenderer<MillVillager> {
         }
         @Override protected void renderNameTag(MillVillager entity, Component displayName,
                 PoseStack poseStack, MultiBufferSource buffer, int packedLight, float partialTick) {
-            renderSpeechAndName(this, entity, displayName, poseStack, buffer, packedLight, partialTick);
+            if (entity.getSpeechKey() != null && entity.level() != null) {
+                long elapsed = entity.level().getGameTime() - entity.getSpeechStarted();
+                if (elapsed >= 0 && elapsed < SPEECH_DISPLAY_TICKS) {
+                    String speechText = org.dizzymii.millenaire2.util.VillageUtilities
+                            .getVillagerSentence("", entity.getSpeechKey());
+                    poseStack.pushPose();
+                    poseStack.translate(0, 0.25, 0);
+                    super.renderNameTag(entity, Component.literal("\u00a7e" + speechText),
+                            poseStack, buffer, packedLight, partialTick);
+                    poseStack.popPose();
+                } else {
+                    entity.setSpeechKey(null);
+                }
+            }
+            super.renderNameTag(entity, displayName, poseStack, buffer, packedLight, partialTick);
         }
         @Override protected void scale(MillVillager entity, PoseStack poseStack, float partialTickTime) {
             applyScale(entity, poseStack);

@@ -11,6 +11,7 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
+import org.dizzymii.millenaire2.init.ModMenuTypes;
 
 /**
  * Container menu for the Fire Pit.
@@ -24,7 +25,7 @@ public class FirePitMenu extends AbstractContainerMenu {
 
     // Server-side constructor (from block entity)
     public FirePitMenu(int containerId, Inventory playerInventory, Container container, ContainerData data) {
-        super(MillMenuTypes.FIRE_PIT.get(), containerId);
+        super(ModMenuTypes.FIRE_PIT.get(), containerId);
         checkContainerSize(container, 3);
         checkContainerDataCount(data, 4);
         this.container = container;
@@ -151,3 +152,4 @@ public class FirePitMenu extends AbstractContainerMenu {
         }
     }
 }
+

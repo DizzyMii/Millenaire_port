@@ -1,32 +1,11 @@
 package org.dizzymii.millenaire2.menu;
 
-import net.minecraft.core.registries.Registries;
-import net.minecraft.world.inventory.MenuType;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import org.dizzymii.millenaire2.Millenaire2;
+import org.dizzymii.millenaire2.init.ModMenuTypes;
 
 /**
- * Central registry for all Millénaire container menu types.
+ * @deprecated Use {@link ModMenuTypes} instead. Retained as a compile shim.
  */
-public class MillMenuTypes {
-
-    public static final DeferredRegister<MenuType<?>> MENU_TYPES =
-            DeferredRegister.create(Registries.MENU, Millenaire2.MODID);
-
-    public static final DeferredHolder<MenuType<?>, MenuType<FirePitMenu>> FIRE_PIT =
-            MENU_TYPES.register("fire_pit", () -> IMenuTypeExtension.create(FirePitMenu::new));
-
-    /**
-     * Called from Millenaire2 constructor to force class loading.
-     */
-    public static void register(IEventBus modEventBus) {
-        MENU_TYPES.register(modEventBus);
-    }
-
-    public static void init() {
-        // Class loading triggers all static final fields above
-    }
+@Deprecated
+public final class MillMenuTypes {
+    private MillMenuTypes() {}
 }

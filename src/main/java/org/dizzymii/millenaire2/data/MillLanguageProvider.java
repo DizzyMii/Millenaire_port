@@ -3,8 +3,8 @@ package org.dizzymii.millenaire2.data;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.LanguageProvider;
 import org.dizzymii.millenaire2.Millenaire2;
-import org.dizzymii.millenaire2.block.MillBlocks;
-import org.dizzymii.millenaire2.item.MillItems;
+import org.dizzymii.millenaire2.init.ModBlocks;
+import org.dizzymii.millenaire2.init.ModItems;
 
 public class MillLanguageProvider extends LanguageProvider {
 
@@ -18,382 +18,382 @@ public class MillLanguageProvider extends LanguageProvider {
         add("itemGroup.millenaire2", "Millénaire");
 
         // ===== Blocks =====
-        addBlock(MillBlocks.STONE_DECORATION, "Stone Decoration");
-        addBlock(MillBlocks.COOKED_BRICK, "Cooked Brick");
+        addBlock(ModBlocks.STONE_DECORATION, "Stone Decoration");
+        addBlock(ModBlocks.COOKED_BRICK, "Cooked Brick");
 
         // Painted bricks
-        addBlock(MillBlocks.PAINTED_BRICK_WHITE, "White Painted Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_ORANGE, "Orange Painted Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_MAGENTA, "Magenta Painted Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_LIGHT_BLUE, "Light Blue Painted Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_YELLOW, "Yellow Painted Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_LIME, "Lime Painted Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_PINK, "Pink Painted Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_GRAY, "Gray Painted Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_LIGHT_GRAY, "Light Gray Painted Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_CYAN, "Cyan Painted Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_PURPLE, "Purple Painted Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_BLUE, "Blue Painted Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_BROWN, "Brown Painted Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_GREEN, "Green Painted Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_RED, "Red Painted Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_BLACK, "Black Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_WHITE, "White Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_ORANGE, "Orange Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_MAGENTA, "Magenta Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_LIGHT_BLUE, "Light Blue Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_YELLOW, "Yellow Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_LIME, "Lime Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_PINK, "Pink Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_GRAY, "Gray Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_LIGHT_GRAY, "Light Gray Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_CYAN, "Cyan Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_PURPLE, "Purple Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_BLUE, "Blue Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_BROWN, "Brown Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_GREEN, "Green Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_RED, "Red Painted Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_BLACK, "Black Painted Brick");
 
         // Decorated painted bricks
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_WHITE, "White Decorated Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_ORANGE, "Orange Decorated Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_MAGENTA, "Magenta Decorated Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_LIGHT_BLUE, "Light Blue Decorated Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_YELLOW, "Yellow Decorated Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_LIME, "Lime Decorated Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_PINK, "Pink Decorated Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_GRAY, "Gray Decorated Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_LIGHT_GRAY, "Light Gray Decorated Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_CYAN, "Cyan Decorated Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_PURPLE, "Purple Decorated Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_BLUE, "Blue Decorated Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_BROWN, "Brown Decorated Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_GREEN, "Green Decorated Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_RED, "Red Decorated Brick");
-        addBlock(MillBlocks.PAINTED_BRICK_DECO_BLACK, "Black Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_WHITE, "White Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_ORANGE, "Orange Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_MAGENTA, "Magenta Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_LIGHT_BLUE, "Light Blue Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_YELLOW, "Yellow Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_LIME, "Lime Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_PINK, "Pink Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_GRAY, "Gray Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_LIGHT_GRAY, "Light Gray Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_CYAN, "Cyan Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_PURPLE, "Purple Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_BLUE, "Blue Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_BROWN, "Brown Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_GREEN, "Green Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_RED, "Red Decorated Brick");
+        addBlock(ModBlocks.PAINTED_BRICK_DECO_BLACK, "Black Decorated Brick");
 
         // Wood
-        addBlock(MillBlocks.TIMBER_FRAME_PLAIN, "Timber Frame");
-        addBlock(MillBlocks.TIMBER_FRAME_CROSS, "Timber Frame (Cross)");
-        addBlock(MillBlocks.THATCH, "Thatch");
+        addBlock(ModBlocks.TIMBER_FRAME_PLAIN, "Timber Frame");
+        addBlock(ModBlocks.TIMBER_FRAME_CROSS, "Timber Frame (Cross)");
+        addBlock(ModBlocks.THATCH, "Thatch");
 
         // Earth
-        addBlock(MillBlocks.MUD_BRICK, "Mud Brick");
-        addBlock(MillBlocks.MUD_BRICK_EXTENDED, "Extended Mud Brick");
+        addBlock(ModBlocks.MUD_BRICK, "Mud Brick");
+        addBlock(ModBlocks.MUD_BRICK_EXTENDED, "Extended Mud Brick");
 
         // Sandstone
-        addBlock(MillBlocks.SANDSTONE_CARVED, "Carved Sandstone");
-        addBlock(MillBlocks.SANDSTONE_RED_CARVED, "Carved Red Sandstone");
-        addBlock(MillBlocks.SANDSTONE_OCHRE_CARVED, "Carved Ochre Sandstone");
-        addBlock(MillBlocks.SANDSTONE_DECORATED, "Decorated Sandstone");
-        addBlock(MillBlocks.BYZANTINE_STONE_ORNAMENT, "Byzantine Stone Ornament");
-        addBlock(MillBlocks.BYZANTINE_SANDSTONE_ORNAMENT, "Byzantine Sandstone Ornament");
+        addBlock(ModBlocks.SANDSTONE_CARVED, "Carved Sandstone");
+        addBlock(ModBlocks.SANDSTONE_RED_CARVED, "Carved Red Sandstone");
+        addBlock(ModBlocks.SANDSTONE_OCHRE_CARVED, "Carved Ochre Sandstone");
+        addBlock(ModBlocks.SANDSTONE_DECORATED, "Decorated Sandstone");
+        addBlock(ModBlocks.BYZANTINE_STONE_ORNAMENT, "Byzantine Stone Ornament");
+        addBlock(ModBlocks.BYZANTINE_SANDSTONE_ORNAMENT, "Byzantine Sandstone Ornament");
 
         // Tiles
-        addBlock(MillBlocks.BYZANTINE_TILES, "Byzantine Tiles");
-        addBlock(MillBlocks.BYZANTINE_STONE_TILES, "Byzantine Stone Tiles");
-        addBlock(MillBlocks.BYZANTINE_SANDSTONE_TILES, "Byzantine Sandstone Tiles");
-        addBlock(MillBlocks.GRAY_TILES, "Gray Tiles");
-        addBlock(MillBlocks.GREEN_TILES, "Green Tiles");
-        addBlock(MillBlocks.RED_TILES, "Red Tiles");
+        addBlock(ModBlocks.BYZANTINE_TILES, "Byzantine Tiles");
+        addBlock(ModBlocks.BYZANTINE_STONE_TILES, "Byzantine Stone Tiles");
+        addBlock(ModBlocks.BYZANTINE_SANDSTONE_TILES, "Byzantine Sandstone Tiles");
+        addBlock(ModBlocks.GRAY_TILES, "Gray Tiles");
+        addBlock(ModBlocks.GREEN_TILES, "Green Tiles");
+        addBlock(ModBlocks.RED_TILES, "Red Tiles");
 
         // Stairs
-        addBlock(MillBlocks.STAIRS_TIMBERFRAME, "Timber Frame Stairs");
-        addBlock(MillBlocks.STAIRS_MUDBRICK, "Mud Brick Stairs");
-        addBlock(MillBlocks.STAIRS_COOKEDBRICK, "Cooked Brick Stairs");
-        addBlock(MillBlocks.STAIRS_THATCH, "Thatch Stairs");
-        addBlock(MillBlocks.STAIRS_SANDSTONE_CARVED, "Carved Sandstone Stairs");
-        addBlock(MillBlocks.STAIRS_SANDSTONE_RED_CARVED, "Carved Red Sandstone Stairs");
-        addBlock(MillBlocks.STAIRS_SANDSTONE_OCHRE_CARVED, "Carved Ochre Sandstone Stairs");
-        addBlock(MillBlocks.STAIRS_BYZANTINE_TILES, "Byzantine Tile Stairs");
-        addBlock(MillBlocks.STAIRS_GRAY_TILES, "Gray Tile Stairs");
-        addBlock(MillBlocks.STAIRS_GREEN_TILES, "Green Tile Stairs");
-        addBlock(MillBlocks.STAIRS_RED_TILES, "Red Tile Stairs");
+        addBlock(ModBlocks.STAIRS_TIMBERFRAME, "Timber Frame Stairs");
+        addBlock(ModBlocks.STAIRS_MUDBRICK, "Mud Brick Stairs");
+        addBlock(ModBlocks.STAIRS_COOKEDBRICK, "Cooked Brick Stairs");
+        addBlock(ModBlocks.STAIRS_THATCH, "Thatch Stairs");
+        addBlock(ModBlocks.STAIRS_SANDSTONE_CARVED, "Carved Sandstone Stairs");
+        addBlock(ModBlocks.STAIRS_SANDSTONE_RED_CARVED, "Carved Red Sandstone Stairs");
+        addBlock(ModBlocks.STAIRS_SANDSTONE_OCHRE_CARVED, "Carved Ochre Sandstone Stairs");
+        addBlock(ModBlocks.STAIRS_BYZANTINE_TILES, "Byzantine Tile Stairs");
+        addBlock(ModBlocks.STAIRS_GRAY_TILES, "Gray Tile Stairs");
+        addBlock(ModBlocks.STAIRS_GREEN_TILES, "Green Tile Stairs");
+        addBlock(ModBlocks.STAIRS_RED_TILES, "Red Tile Stairs");
 
         // Slabs
-        addBlock(MillBlocks.SLAB_WOOD_DECO, "Decorative Wood Slab");
-        addBlock(MillBlocks.SLAB_STONE_DECO, "Decorative Stone Slab");
-        addBlock(MillBlocks.SLAB_SANDSTONE_CARVED, "Carved Sandstone Slab");
-        addBlock(MillBlocks.SLAB_SANDSTONE_RED_CARVED, "Carved Red Sandstone Slab");
-        addBlock(MillBlocks.SLAB_SANDSTONE_OCHRE_CARVED, "Carved Ochre Sandstone Slab");
-        addBlock(MillBlocks.SLAB_BYZANTINE_TILES, "Byzantine Tile Slab");
-        addBlock(MillBlocks.SLAB_GRAY_TILES, "Gray Tile Slab");
-        addBlock(MillBlocks.SLAB_GREEN_TILES, "Green Tile Slab");
-        addBlock(MillBlocks.SLAB_RED_TILES, "Red Tile Slab");
-        addBlock(MillBlocks.SLAB_PATH_DIRT, "Dirt Path Slab");
-        addBlock(MillBlocks.SLAB_PATH_GRAVEL, "Gravel Path Slab");
-        addBlock(MillBlocks.SLAB_PATH_SLABS, "Stone Path Slab");
-        addBlock(MillBlocks.SLAB_PATH_SANDSTONE, "Sandstone Path Slab");
-        addBlock(MillBlocks.SLAB_PATH_GRAVEL_SLABS, "Gravel Stone Path Slab");
-        addBlock(MillBlocks.SLAB_PATH_OCHRE_TILES, "Ochre Tile Path Slab");
-        addBlock(MillBlocks.SLAB_PATH_SNOW, "Snow Path Slab");
+        addBlock(ModBlocks.SLAB_WOOD_DECO, "Decorative Wood Slab");
+        addBlock(ModBlocks.SLAB_STONE_DECO, "Decorative Stone Slab");
+        addBlock(ModBlocks.SLAB_SANDSTONE_CARVED, "Carved Sandstone Slab");
+        addBlock(ModBlocks.SLAB_SANDSTONE_RED_CARVED, "Carved Red Sandstone Slab");
+        addBlock(ModBlocks.SLAB_SANDSTONE_OCHRE_CARVED, "Carved Ochre Sandstone Slab");
+        addBlock(ModBlocks.SLAB_BYZANTINE_TILES, "Byzantine Tile Slab");
+        addBlock(ModBlocks.SLAB_GRAY_TILES, "Gray Tile Slab");
+        addBlock(ModBlocks.SLAB_GREEN_TILES, "Green Tile Slab");
+        addBlock(ModBlocks.SLAB_RED_TILES, "Red Tile Slab");
+        addBlock(ModBlocks.SLAB_PATH_DIRT, "Dirt Path Slab");
+        addBlock(ModBlocks.SLAB_PATH_GRAVEL, "Gravel Path Slab");
+        addBlock(ModBlocks.SLAB_PATH_SLABS, "Stone Path Slab");
+        addBlock(ModBlocks.SLAB_PATH_SANDSTONE, "Sandstone Path Slab");
+        addBlock(ModBlocks.SLAB_PATH_GRAVEL_SLABS, "Gravel Stone Path Slab");
+        addBlock(ModBlocks.SLAB_PATH_OCHRE_TILES, "Ochre Tile Path Slab");
+        addBlock(ModBlocks.SLAB_PATH_SNOW, "Snow Path Slab");
 
         // Walls
-        addBlock(MillBlocks.WALL_MUD_BRICK, "Mud Brick Wall");
-        addBlock(MillBlocks.WALL_SANDSTONE_CARVED, "Carved Sandstone Wall");
-        addBlock(MillBlocks.WALL_SANDSTONE_RED_CARVED, "Carved Red Sandstone Wall");
-        addBlock(MillBlocks.WALL_SANDSTONE_OCHRE_CARVED, "Carved Ochre Sandstone Wall");
-        addBlock(MillBlocks.WALL_SNOW, "Snow Wall");
+        addBlock(ModBlocks.WALL_MUD_BRICK, "Mud Brick Wall");
+        addBlock(ModBlocks.WALL_SANDSTONE_CARVED, "Carved Sandstone Wall");
+        addBlock(ModBlocks.WALL_SANDSTONE_RED_CARVED, "Carved Red Sandstone Wall");
+        addBlock(ModBlocks.WALL_SANDSTONE_OCHRE_CARVED, "Carved Ochre Sandstone Wall");
+        addBlock(ModBlocks.WALL_SNOW, "Snow Wall");
 
         // Panes / Bars
-        addBlock(MillBlocks.PAPER_WALL, "Paper Wall");
-        addBlock(MillBlocks.WOODEN_BARS, "Wooden Bars");
-        addBlock(MillBlocks.WOODEN_BARS_INDIAN, "Indian Wooden Bars");
-        addBlock(MillBlocks.WOODEN_BARS_ROSETTE, "Rosette Wooden Bars");
-        addBlock(MillBlocks.WOODEN_BARS_DARK, "Dark Wooden Bars");
+        addBlock(ModBlocks.PAPER_WALL, "Paper Wall");
+        addBlock(ModBlocks.WOODEN_BARS, "Wooden Bars");
+        addBlock(ModBlocks.WOODEN_BARS_INDIAN, "Indian Wooden Bars");
+        addBlock(ModBlocks.WOODEN_BARS_ROSETTE, "Rosette Wooden Bars");
+        addBlock(ModBlocks.WOODEN_BARS_DARK, "Dark Wooden Bars");
 
         // Functional
-        addBlock(MillBlocks.WET_BRICK, "Wet Brick");
-        addBlock(MillBlocks.SILK_WORM_BLOCK, "Silk Worm");
-        addBlock(MillBlocks.SNAIL_SOIL, "Snail Soil");
-        addBlock(MillBlocks.SOD, "Sod");
-        addBlock(MillBlocks.ALCHEMIST_EXPLOSIVE, "Alchemist's Explosive");
-        addBlock(MillBlocks.ROSETTE, "Rosette");
-        addBlock(MillBlocks.STAINED_GLASS, "Stained Glass");
-        addBlock(MillBlocks.MILL_STATUE, "Statue");
-        addBlock(MillBlocks.ICE_BRICK, "Ice Brick");
-        addBlock(MillBlocks.SNOW_BRICK, "Snow Brick");
+        addBlock(ModBlocks.WET_BRICK, "Wet Brick");
+        addBlock(ModBlocks.SILK_WORM_BLOCK, "Silk Worm");
+        addBlock(ModBlocks.SNAIL_SOIL, "Snail Soil");
+        addBlock(ModBlocks.SOD, "Sod");
+        addBlock(ModBlocks.ALCHEMIST_EXPLOSIVE, "Alchemist's Explosive");
+        addBlock(ModBlocks.ROSETTE, "Rosette");
+        addBlock(ModBlocks.STAINED_GLASS, "Stained Glass");
+        addBlock(ModBlocks.MILL_STATUE, "Statue");
+        addBlock(ModBlocks.ICE_BRICK, "Ice Brick");
+        addBlock(ModBlocks.SNOW_BRICK, "Snow Brick");
 
         // Paths
-        addBlock(MillBlocks.PATH_DIRT, "Dirt Path");
-        addBlock(MillBlocks.PATH_GRAVEL, "Gravel Path");
-        addBlock(MillBlocks.PATH_SLABS, "Stone Path");
-        addBlock(MillBlocks.PATH_SANDSTONE, "Sandstone Path");
-        addBlock(MillBlocks.PATH_GRAVEL_SLABS, "Gravel Stone Path");
-        addBlock(MillBlocks.PATH_OCHRE_TILES, "Ochre Tile Path");
-        addBlock(MillBlocks.PATH_SNOW, "Snow Path");
+        addBlock(ModBlocks.PATH_DIRT, "Dirt Path");
+        addBlock(ModBlocks.PATH_GRAVEL, "Gravel Path");
+        addBlock(ModBlocks.PATH_SLABS, "Stone Path");
+        addBlock(ModBlocks.PATH_SANDSTONE, "Sandstone Path");
+        addBlock(ModBlocks.PATH_GRAVEL_SLABS, "Gravel Stone Path");
+        addBlock(ModBlocks.PATH_OCHRE_TILES, "Ochre Tile Path");
+        addBlock(ModBlocks.PATH_SNOW, "Snow Path");
 
         // Crops
-        addBlock(MillBlocks.CROP_RICE, "Rice");
-        addBlock(MillBlocks.CROP_TURMERIC, "Turmeric");
-        addBlock(MillBlocks.CROP_MAIZE, "Maize");
-        addBlock(MillBlocks.CROP_COTTON, "Cotton");
-        addBlock(MillBlocks.CROP_VINE, "Vine");
+        addBlock(ModBlocks.CROP_RICE, "Rice");
+        addBlock(ModBlocks.CROP_TURMERIC, "Turmeric");
+        addBlock(ModBlocks.CROP_MAIZE, "Maize");
+        addBlock(ModBlocks.CROP_COTTON, "Cotton");
+        addBlock(ModBlocks.CROP_VINE, "Vine");
 
         // Saplings & Leaves
-        addBlock(MillBlocks.SAPLING_APPLE, "Apple Tree Sapling");
-        addBlock(MillBlocks.SAPLING_OLIVE, "Olive Tree Sapling");
-        addBlock(MillBlocks.SAPLING_PISTACHIO, "Pistachio Sapling");
-        addBlock(MillBlocks.SAPLING_CHERRY, "Cherry Sapling");
-        addBlock(MillBlocks.SAPLING_SAKURA, "Sakura Sapling");
-        addBlock(MillBlocks.LEAVES_APPLE, "Apple Tree Leaves");
-        addBlock(MillBlocks.LEAVES_OLIVE, "Olive Tree Leaves");
-        addBlock(MillBlocks.LEAVES_PISTACHIO, "Pistachio Leaves");
-        addBlock(MillBlocks.LEAVES_CHERRY, "Cherry Leaves");
-        addBlock(MillBlocks.LEAVES_SAKURA, "Sakura Leaves");
-        addBlock(MillBlocks.FRUIT_LEAVES, "Fruit Leaves");
+        addBlock(ModBlocks.SAPLING_APPLE, "Apple Tree Sapling");
+        addBlock(ModBlocks.SAPLING_OLIVE, "Olive Tree Sapling");
+        addBlock(ModBlocks.SAPLING_PISTACHIO, "Pistachio Sapling");
+        addBlock(ModBlocks.SAPLING_CHERRY, "Cherry Sapling");
+        addBlock(ModBlocks.SAPLING_SAKURA, "Sakura Sapling");
+        addBlock(ModBlocks.LEAVES_APPLE, "Apple Tree Leaves");
+        addBlock(ModBlocks.LEAVES_OLIVE, "Olive Tree Leaves");
+        addBlock(ModBlocks.LEAVES_PISTACHIO, "Pistachio Leaves");
+        addBlock(ModBlocks.LEAVES_CHERRY, "Cherry Leaves");
+        addBlock(ModBlocks.LEAVES_SAKURA, "Sakura Leaves");
+        addBlock(ModBlocks.FRUIT_LEAVES, "Fruit Leaves");
 
         // Special
-        addBlock(MillBlocks.LOCKED_CHEST, "Locked Chest");
-        addBlock(MillBlocks.FIRE_PIT, "Fire Pit");
-        addBlock(MillBlocks.PANEL, "Village Panel");
-        addBlock(MillBlocks.IMPORT_TABLE, "Import Table");
-        addBlock(MillBlocks.BED_STRAW, "Straw Bed");
-        addBlock(MillBlocks.BED_CHARPOY, "Charpoy Bed");
+        addBlock(ModBlocks.LOCKED_CHEST, "Locked Chest");
+        addBlock(ModBlocks.FIRE_PIT, "Fire Pit");
+        addBlock(ModBlocks.PANEL, "Village Panel");
+        addBlock(ModBlocks.IMPORT_TABLE, "Import Table");
+        addBlock(ModBlocks.BED_STRAW, "Straw Bed");
+        addBlock(ModBlocks.BED_CHARPOY, "Charpoy Bed");
 
         // Mock blocks
-        addBlock(MillBlocks.MARKER_BLOCK, "Marker Block");
-        addBlock(MillBlocks.MAIN_CHEST, "Main Chest Marker");
-        addBlock(MillBlocks.ANIMAL_SPAWN, "Animal Spawn Marker");
-        addBlock(MillBlocks.SOURCE, "Source Marker");
-        addBlock(MillBlocks.FREE_BLOCK, "Free Block Marker");
-        addBlock(MillBlocks.TREE_SPAWN, "Tree Spawn Marker");
-        addBlock(MillBlocks.SOIL_BLOCK, "Soil Marker");
-        addBlock(MillBlocks.DECOR_BLOCK, "Decoration Marker");
+        addBlock(ModBlocks.MARKER_BLOCK, "Marker Block");
+        addBlock(ModBlocks.MAIN_CHEST, "Main Chest Marker");
+        addBlock(ModBlocks.ANIMAL_SPAWN, "Animal Spawn Marker");
+        addBlock(ModBlocks.SOURCE, "Source Marker");
+        addBlock(ModBlocks.FREE_BLOCK, "Free Block Marker");
+        addBlock(ModBlocks.TREE_SPAWN, "Tree Spawn Marker");
+        addBlock(ModBlocks.SOIL_BLOCK, "Soil Marker");
+        addBlock(ModBlocks.DECOR_BLOCK, "Decoration Marker");
 
         // ===== Items =====
         // Currency
-        addItem(MillItems.DENIER, "Denier");
-        addItem(MillItems.DENIER_ARGENT, "Denier Argent");
-        addItem(MillItems.DENIER_OR, "Denier Or");
+        addItem(ModItems.DENIER, "Denier");
+        addItem(ModItems.DENIER_ARGENT, "Denier Argent");
+        addItem(ModItems.DENIER_OR, "Denier Or");
 
         // Wands
-        addItem(MillItems.SUMMONING_WAND, "Summoning Wand");
-        addItem(MillItems.NEGATION_WAND, "Negation Wand");
+        addItem(ModItems.SUMMONING_WAND, "Summoning Wand");
+        addItem(ModItems.NEGATION_WAND, "Negation Wand");
 
         // Purse
-        addItem(MillItems.PURSE, "Purse");
+        addItem(ModItems.PURSE, "Purse");
 
         // Food - Norman
-        addItem(MillItems.CIDER_APPLE, "Cider Apple");
-        addItem(MillItems.CIDER, "Cider");
-        addItem(MillItems.CALVA, "Calva");
-        addItem(MillItems.BOUDIN, "Boudin");
-        addItem(MillItems.TRIPES, "Tripes");
+        addItem(ModItems.CIDER_APPLE, "Cider Apple");
+        addItem(ModItems.CIDER, "Cider");
+        addItem(ModItems.CALVA, "Calva");
+        addItem(ModItems.BOUDIN, "Boudin");
+        addItem(ModItems.TRIPES, "Tripes");
 
         // Food - Indian
-        addItem(MillItems.VEGETABLE_CURRY, "Vegetable Curry");
-        addItem(MillItems.CHICKEN_CURRY, "Chicken Curry");
-        addItem(MillItems.RASGULLA, "Rasgulla");
+        addItem(ModItems.VEGETABLE_CURRY, "Vegetable Curry");
+        addItem(ModItems.CHICKEN_CURRY, "Chicken Curry");
+        addItem(ModItems.RASGULLA, "Rasgulla");
 
         // Food - Mayan
-        addItem(MillItems.MASA, "Masa");
-        addItem(MillItems.WAH, "Wah");
-        addItem(MillItems.BALCHE, "Balché");
-        addItem(MillItems.SIKILPAH, "Sikilpah");
-        addItem(MillItems.CACAUHAA, "Cacauhaa");
+        addItem(ModItems.MASA, "Masa");
+        addItem(ModItems.WAH, "Wah");
+        addItem(ModItems.BALCHE, "Balché");
+        addItem(ModItems.SIKILPAH, "Sikilpah");
+        addItem(ModItems.CACAUHAA, "Cacauhaa");
 
         // Food - Japanese
-        addItem(MillItems.UDON, "Udon");
-        addItem(MillItems.SAKE, "Saké");
-        addItem(MillItems.IKAYAKI, "Ikayaki");
+        addItem(ModItems.UDON, "Udon");
+        addItem(ModItems.SAKE, "Saké");
+        addItem(ModItems.IKAYAKI, "Ikayaki");
 
         // Food - Byzantine
-        addItem(MillItems.OLIVES, "Olives");
-        addItem(MillItems.OLIVE_OIL, "Olive Oil");
-        addItem(MillItems.FETA, "Feta");
-        addItem(MillItems.SOUVLAKI, "Souvlaki");
-        addItem(MillItems.WINE_BASIC, "Wine");
-        addItem(MillItems.WINE_FANCY, "Fine Wine");
+        addItem(ModItems.OLIVES, "Olives");
+        addItem(ModItems.OLIVE_OIL, "Olive Oil");
+        addItem(ModItems.FETA, "Feta");
+        addItem(ModItems.SOUVLAKI, "Souvlaki");
+        addItem(ModItems.WINE_BASIC, "Wine");
+        addItem(ModItems.WINE_FANCY, "Fine Wine");
 
         // Food - Seljuk
-        addItem(MillItems.AYRAN, "Ayran");
-        addItem(MillItems.YOGURT, "Yogurt");
-        addItem(MillItems.PIDE, "Pide");
-        addItem(MillItems.LOKUM, "Lokum");
-        addItem(MillItems.HELVA, "Helva");
-        addItem(MillItems.PISTACHIOS, "Pistachios");
+        addItem(ModItems.AYRAN, "Ayran");
+        addItem(ModItems.YOGURT, "Yogurt");
+        addItem(ModItems.PIDE, "Pide");
+        addItem(ModItems.LOKUM, "Lokum");
+        addItem(ModItems.HELVA, "Helva");
+        addItem(ModItems.PISTACHIOS, "Pistachios");
 
         // Food - Inuit
-        addItem(MillItems.BEARMEAT_RAW, "Raw Bear Meat");
-        addItem(MillItems.BEARMEAT_COOKED, "Cooked Bear Meat");
-        addItem(MillItems.WOLFMEAT_RAW, "Raw Wolf Meat");
-        addItem(MillItems.WOLFMEAT_COOKED, "Cooked Wolf Meat");
-        addItem(MillItems.SEAFOOD_RAW, "Raw Seafood");
-        addItem(MillItems.SEAFOOD_COOKED, "Cooked Seafood");
-        addItem(MillItems.INUIT_BEAR_STEW, "Bear Stew");
-        addItem(MillItems.INUIT_MEATY_STEW, "Meaty Stew");
-        addItem(MillItems.INUIT_POTATO_STEW, "Potato Stew");
+        addItem(ModItems.BEARMEAT_RAW, "Raw Bear Meat");
+        addItem(ModItems.BEARMEAT_COOKED, "Cooked Bear Meat");
+        addItem(ModItems.WOLFMEAT_RAW, "Raw Wolf Meat");
+        addItem(ModItems.WOLFMEAT_COOKED, "Cooked Wolf Meat");
+        addItem(ModItems.SEAFOOD_RAW, "Raw Seafood");
+        addItem(ModItems.SEAFOOD_COOKED, "Cooked Seafood");
+        addItem(ModItems.INUIT_BEAR_STEW, "Bear Stew");
+        addItem(ModItems.INUIT_MEATY_STEW, "Meaty Stew");
+        addItem(ModItems.INUIT_POTATO_STEW, "Potato Stew");
 
         // Food - Misc
-        addItem(MillItems.CHERRIES, "Cherries");
-        addItem(MillItems.CHERRY_BLOSSOM, "Cherry Blossom");
+        addItem(ModItems.CHERRIES, "Cherries");
+        addItem(ModItems.CHERRY_BLOSSOM, "Cherry Blossom");
 
         // Seeds / Crops
-        addItem(MillItems.RICE, "Rice");
-        addItem(MillItems.TURMERIC, "Turmeric");
-        addItem(MillItems.MAIZE, "Maize");
-        addItem(MillItems.GRAPES, "Grapes");
-        addItem(MillItems.COTTON, "Cotton");
+        addItem(ModItems.RICE, "Rice");
+        addItem(ModItems.TURMERIC, "Turmeric");
+        addItem(ModItems.MAIZE, "Maize");
+        addItem(ModItems.GRAPES, "Grapes");
+        addItem(ModItems.COTTON, "Cotton");
 
         // Misc Goods
-        addItem(MillItems.SILK, "Silk");
-        addItem(MillItems.OBSIDIAN_FLAKE, "Obsidian Flake");
-        addItem(MillItems.UNKNOWN_POWDER, "Unknown Powder");
-        addItem(MillItems.TANNED_HIDE, "Tanned Hide");
-        addItem(MillItems.BRICK_MOULD, "Brick Mould");
-        addItem(MillItems.ULU, "Ulu");
-        addItem(MillItems.BANNER_PATTERN, "Banner Pattern");
+        addItem(ModItems.SILK, "Silk");
+        addItem(ModItems.OBSIDIAN_FLAKE, "Obsidian Flake");
+        addItem(ModItems.UNKNOWN_POWDER, "Unknown Powder");
+        addItem(ModItems.TANNED_HIDE, "Tanned Hide");
+        addItem(ModItems.BRICK_MOULD, "Brick Mould");
+        addItem(ModItems.ULU, "Ulu");
+        addItem(ModItems.BANNER_PATTERN, "Banner Pattern");
 
         // Wall Decorations
-        addItem(MillItems.TAPESTRY, "Tapestry");
-        addItem(MillItems.INDIAN_STATUE, "Indian Statue");
-        addItem(MillItems.MAYAN_STATUE, "Mayan Statue");
-        addItem(MillItems.BYZANTINE_ICON_SMALL, "Small Byzantine Icon");
-        addItem(MillItems.BYZANTINE_ICON_MEDIUM, "Medium Byzantine Icon");
-        addItem(MillItems.BYZANTINE_ICON_LARGE, "Large Byzantine Icon");
-        addItem(MillItems.HIDE_HANGING, "Hide Hanging");
-        addItem(MillItems.WALL_CARPET_SMALL, "Small Wall Carpet");
-        addItem(MillItems.WALL_CARPET_MEDIUM, "Medium Wall Carpet");
-        addItem(MillItems.WALL_CARPET_LARGE, "Large Wall Carpet");
+        addItem(ModItems.TAPESTRY, "Tapestry");
+        addItem(ModItems.INDIAN_STATUE, "Indian Statue");
+        addItem(ModItems.MAYAN_STATUE, "Mayan Statue");
+        addItem(ModItems.BYZANTINE_ICON_SMALL, "Small Byzantine Icon");
+        addItem(ModItems.BYZANTINE_ICON_MEDIUM, "Medium Byzantine Icon");
+        addItem(ModItems.BYZANTINE_ICON_LARGE, "Large Byzantine Icon");
+        addItem(ModItems.HIDE_HANGING, "Hide Hanging");
+        addItem(ModItems.WALL_CARPET_SMALL, "Small Wall Carpet");
+        addItem(ModItems.WALL_CARPET_MEDIUM, "Medium Wall Carpet");
+        addItem(ModItems.WALL_CARPET_LARGE, "Large Wall Carpet");
 
         // Clothes
-        addItem(MillItems.CLOTHES_BYZ_WOOL, "Byzantine Wool Clothes");
-        addItem(MillItems.CLOTHES_BYZ_SILK, "Byzantine Silk Clothes");
-        addItem(MillItems.CLOTHES_SELJUK_WOOL, "Seljuk Wool Clothes");
-        addItem(MillItems.CLOTHES_SELJUK_COTTON, "Seljuk Cotton Clothes");
+        addItem(ModItems.CLOTHES_BYZ_WOOL, "Byzantine Wool Clothes");
+        addItem(ModItems.CLOTHES_BYZ_SILK, "Byzantine Silk Clothes");
+        addItem(ModItems.CLOTHES_SELJUK_WOOL, "Seljuk Wool Clothes");
+        addItem(ModItems.CLOTHES_SELJUK_COTTON, "Seljuk Cotton Clothes");
 
         // Banners
-        addItem(MillItems.VILLAGE_BANNER, "Village Banner");
-        addItem(MillItems.CULTURE_BANNER, "Culture Banner");
+        addItem(ModItems.VILLAGE_BANNER, "Village Banner");
+        addItem(ModItems.CULTURE_BANNER, "Culture Banner");
 
         // Amulets
-        addItem(MillItems.AMULET_VISHNU, "Amulet of Vishnu");
-        addItem(MillItems.AMULET_ALCHEMIST, "Alchemist's Amulet");
-        addItem(MillItems.AMULET_YGGDRASIL, "Amulet of Yggdrasil");
-        addItem(MillItems.AMULET_SKOLL_HATI, "Amulet of Sköll and Hati");
+        addItem(ModItems.AMULET_VISHNU, "Amulet of Vishnu");
+        addItem(ModItems.AMULET_ALCHEMIST, "Alchemist's Amulet");
+        addItem(ModItems.AMULET_YGGDRASIL, "Amulet of Yggdrasil");
+        addItem(ModItems.AMULET_SKOLL_HATI, "Amulet of Sköll and Hati");
 
         // Norman Tools
-        addItem(MillItems.NORMAN_BROADSWORD, "Norman Broadsword");
-        addItem(MillItems.NORMAN_AXE, "Norman Axe");
-        addItem(MillItems.NORMAN_PICKAXE, "Norman Pickaxe");
-        addItem(MillItems.NORMAN_SHOVEL, "Norman Shovel");
-        addItem(MillItems.NORMAN_HOE, "Norman Hoe");
+        addItem(ModItems.NORMAN_BROADSWORD, "Norman Broadsword");
+        addItem(ModItems.NORMAN_AXE, "Norman Axe");
+        addItem(ModItems.NORMAN_PICKAXE, "Norman Pickaxe");
+        addItem(ModItems.NORMAN_SHOVEL, "Norman Shovel");
+        addItem(ModItems.NORMAN_HOE, "Norman Hoe");
 
         // Mayan Tools
-        addItem(MillItems.MAYAN_MACE, "Mayan Mace");
-        addItem(MillItems.MAYAN_AXE, "Mayan Axe");
-        addItem(MillItems.MAYAN_PICKAXE, "Mayan Pickaxe");
-        addItem(MillItems.MAYAN_SHOVEL, "Mayan Shovel");
-        addItem(MillItems.MAYAN_HOE, "Mayan Hoe");
+        addItem(ModItems.MAYAN_MACE, "Mayan Mace");
+        addItem(ModItems.MAYAN_AXE, "Mayan Axe");
+        addItem(ModItems.MAYAN_PICKAXE, "Mayan Pickaxe");
+        addItem(ModItems.MAYAN_SHOVEL, "Mayan Shovel");
+        addItem(ModItems.MAYAN_HOE, "Mayan Hoe");
 
         // Byzantine Tools
-        addItem(MillItems.BYZANTINE_MACE, "Byzantine Mace");
-        addItem(MillItems.BYZANTINE_AXE, "Byzantine Axe");
-        addItem(MillItems.BYZANTINE_PICKAXE, "Byzantine Pickaxe");
-        addItem(MillItems.BYZANTINE_SHOVEL, "Byzantine Shovel");
-        addItem(MillItems.BYZANTINE_HOE, "Byzantine Hoe");
+        addItem(ModItems.BYZANTINE_MACE, "Byzantine Mace");
+        addItem(ModItems.BYZANTINE_AXE, "Byzantine Axe");
+        addItem(ModItems.BYZANTINE_PICKAXE, "Byzantine Pickaxe");
+        addItem(ModItems.BYZANTINE_SHOVEL, "Byzantine Shovel");
+        addItem(ModItems.BYZANTINE_HOE, "Byzantine Hoe");
 
         // Japanese / Seljuk / Inuit
-        addItem(MillItems.TACHI_SWORD, "Tachi");
-        addItem(MillItems.SELJUK_SCIMITAR, "Seljuk Scimitar");
-        addItem(MillItems.INUIT_TRIDENT, "Inuit Trident");
+        addItem(ModItems.TACHI_SWORD, "Tachi");
+        addItem(ModItems.SELJUK_SCIMITAR, "Seljuk Scimitar");
+        addItem(ModItems.INUIT_TRIDENT, "Inuit Trident");
 
         // Bows
-        addItem(MillItems.YUMI_BOW, "Yumi");
-        addItem(MillItems.INUIT_BOW, "Inuit Bow");
-        addItem(MillItems.SELJUK_BOW, "Seljuk Bow");
+        addItem(ModItems.YUMI_BOW, "Yumi");
+        addItem(ModItems.INUIT_BOW, "Inuit Bow");
+        addItem(ModItems.SELJUK_BOW, "Seljuk Bow");
 
         // Armor - Norman
-        addItem(MillItems.NORMAN_HELMET, "Norman Helmet");
-        addItem(MillItems.NORMAN_CHESTPLATE, "Norman Chestplate");
-        addItem(MillItems.NORMAN_LEGGINGS, "Norman Leggings");
-        addItem(MillItems.NORMAN_BOOTS, "Norman Boots");
+        addItem(ModItems.NORMAN_HELMET, "Norman Helmet");
+        addItem(ModItems.NORMAN_CHESTPLATE, "Norman Chestplate");
+        addItem(ModItems.NORMAN_LEGGINGS, "Norman Leggings");
+        addItem(ModItems.NORMAN_BOOTS, "Norman Boots");
 
         // Armor - Japanese Red
-        addItem(MillItems.JAPANESE_RED_HELMET, "Japanese Red Helmet");
-        addItem(MillItems.JAPANESE_RED_CHESTPLATE, "Japanese Red Chestplate");
-        addItem(MillItems.JAPANESE_RED_LEGGINGS, "Japanese Red Leggings");
-        addItem(MillItems.JAPANESE_RED_BOOTS, "Japanese Red Boots");
+        addItem(ModItems.JAPANESE_RED_HELMET, "Japanese Red Helmet");
+        addItem(ModItems.JAPANESE_RED_CHESTPLATE, "Japanese Red Chestplate");
+        addItem(ModItems.JAPANESE_RED_LEGGINGS, "Japanese Red Leggings");
+        addItem(ModItems.JAPANESE_RED_BOOTS, "Japanese Red Boots");
 
         // Armor - Japanese Blue
-        addItem(MillItems.JAPANESE_BLUE_HELMET, "Japanese Blue Helmet");
-        addItem(MillItems.JAPANESE_BLUE_CHESTPLATE, "Japanese Blue Chestplate");
-        addItem(MillItems.JAPANESE_BLUE_LEGGINGS, "Japanese Blue Leggings");
-        addItem(MillItems.JAPANESE_BLUE_BOOTS, "Japanese Blue Boots");
+        addItem(ModItems.JAPANESE_BLUE_HELMET, "Japanese Blue Helmet");
+        addItem(ModItems.JAPANESE_BLUE_CHESTPLATE, "Japanese Blue Chestplate");
+        addItem(ModItems.JAPANESE_BLUE_LEGGINGS, "Japanese Blue Leggings");
+        addItem(ModItems.JAPANESE_BLUE_BOOTS, "Japanese Blue Boots");
 
         // Armor - Japanese Guard
-        addItem(MillItems.JAPANESE_GUARD_HELMET, "Japanese Guard Helmet");
-        addItem(MillItems.JAPANESE_GUARD_CHESTPLATE, "Japanese Guard Chestplate");
-        addItem(MillItems.JAPANESE_GUARD_LEGGINGS, "Japanese Guard Leggings");
-        addItem(MillItems.JAPANESE_GUARD_BOOTS, "Japanese Guard Boots");
+        addItem(ModItems.JAPANESE_GUARD_HELMET, "Japanese Guard Helmet");
+        addItem(ModItems.JAPANESE_GUARD_CHESTPLATE, "Japanese Guard Chestplate");
+        addItem(ModItems.JAPANESE_GUARD_LEGGINGS, "Japanese Guard Leggings");
+        addItem(ModItems.JAPANESE_GUARD_BOOTS, "Japanese Guard Boots");
 
         // Armor - Byzantine
-        addItem(MillItems.BYZANTINE_HELMET, "Byzantine Helmet");
-        addItem(MillItems.BYZANTINE_CHESTPLATE, "Byzantine Chestplate");
-        addItem(MillItems.BYZANTINE_LEGGINGS, "Byzantine Leggings");
-        addItem(MillItems.BYZANTINE_BOOTS, "Byzantine Boots");
+        addItem(ModItems.BYZANTINE_HELMET, "Byzantine Helmet");
+        addItem(ModItems.BYZANTINE_CHESTPLATE, "Byzantine Chestplate");
+        addItem(ModItems.BYZANTINE_LEGGINGS, "Byzantine Leggings");
+        addItem(ModItems.BYZANTINE_BOOTS, "Byzantine Boots");
 
         // Armor - Fur
-        addItem(MillItems.FUR_HELMET, "Fur Hat");
-        addItem(MillItems.FUR_CHESTPLATE, "Fur Coat");
-        addItem(MillItems.FUR_LEGGINGS, "Fur Leggings");
-        addItem(MillItems.FUR_BOOTS, "Fur Boots");
+        addItem(ModItems.FUR_HELMET, "Fur Hat");
+        addItem(ModItems.FUR_CHESTPLATE, "Fur Coat");
+        addItem(ModItems.FUR_LEGGINGS, "Fur Leggings");
+        addItem(ModItems.FUR_BOOTS, "Fur Boots");
 
         // Armor - Seljuk
-        addItem(MillItems.SELJUK_TURBAN, "Seljuk Turban");
-        addItem(MillItems.SELJUK_HELMET, "Seljuk Helmet");
-        addItem(MillItems.SELJUK_CHESTPLATE, "Seljuk Chestplate");
-        addItem(MillItems.SELJUK_LEGGINGS, "Seljuk Leggings");
-        addItem(MillItems.SELJUK_BOOTS, "Seljuk Boots");
+        addItem(ModItems.SELJUK_TURBAN, "Seljuk Turban");
+        addItem(ModItems.SELJUK_HELMET, "Seljuk Helmet");
+        addItem(ModItems.SELJUK_CHESTPLATE, "Seljuk Chestplate");
+        addItem(ModItems.SELJUK_LEGGINGS, "Seljuk Leggings");
+        addItem(ModItems.SELJUK_BOOTS, "Seljuk Boots");
 
         // Mayan Crown
-        addItem(MillItems.MAYAN_QUEST_CROWN, "Mayan Quest Crown");
+        addItem(ModItems.MAYAN_QUEST_CROWN, "Mayan Quest Crown");
 
         // Parchments
-        addItem(MillItems.PARCHMENT_NORMAN_VILLAGERS, "Norman Villagers Parchment");
-        addItem(MillItems.PARCHMENT_NORMAN_BUILDINGS, "Norman Buildings Parchment");
-        addItem(MillItems.PARCHMENT_NORMAN_ITEMS, "Norman Items Parchment");
-        addItem(MillItems.PARCHMENT_NORMAN_COMPLETE, "Complete Norman Parchment");
-        addItem(MillItems.PARCHMENT_INDIAN_VILLAGERS, "Indian Villagers Parchment");
-        addItem(MillItems.PARCHMENT_INDIAN_BUILDINGS, "Indian Buildings Parchment");
-        addItem(MillItems.PARCHMENT_INDIAN_ITEMS, "Indian Items Parchment");
-        addItem(MillItems.PARCHMENT_INDIAN_COMPLETE, "Complete Indian Parchment");
-        addItem(MillItems.PARCHMENT_MAYAN_VILLAGERS, "Mayan Villagers Parchment");
-        addItem(MillItems.PARCHMENT_MAYAN_BUILDINGS, "Mayan Buildings Parchment");
-        addItem(MillItems.PARCHMENT_MAYAN_ITEMS, "Mayan Items Parchment");
-        addItem(MillItems.PARCHMENT_MAYAN_COMPLETE, "Complete Mayan Parchment");
-        addItem(MillItems.PARCHMENT_JAPANESE_VILLAGERS, "Japanese Villagers Parchment");
-        addItem(MillItems.PARCHMENT_JAPANESE_BUILDINGS, "Japanese Buildings Parchment");
-        addItem(MillItems.PARCHMENT_JAPANESE_ITEMS, "Japanese Items Parchment");
-        addItem(MillItems.PARCHMENT_JAPANESE_COMPLETE, "Complete Japanese Parchment");
-        addItem(MillItems.PARCHMENT_VILLAGE_SCROLL, "Village Scroll");
-        addItem(MillItems.PARCHMENT_SADHU, "Sadhu Parchment");
+        addItem(ModItems.PARCHMENT_NORMAN_VILLAGERS, "Norman Villagers Parchment");
+        addItem(ModItems.PARCHMENT_NORMAN_BUILDINGS, "Norman Buildings Parchment");
+        addItem(ModItems.PARCHMENT_NORMAN_ITEMS, "Norman Items Parchment");
+        addItem(ModItems.PARCHMENT_NORMAN_COMPLETE, "Complete Norman Parchment");
+        addItem(ModItems.PARCHMENT_INDIAN_VILLAGERS, "Indian Villagers Parchment");
+        addItem(ModItems.PARCHMENT_INDIAN_BUILDINGS, "Indian Buildings Parchment");
+        addItem(ModItems.PARCHMENT_INDIAN_ITEMS, "Indian Items Parchment");
+        addItem(ModItems.PARCHMENT_INDIAN_COMPLETE, "Complete Indian Parchment");
+        addItem(ModItems.PARCHMENT_MAYAN_VILLAGERS, "Mayan Villagers Parchment");
+        addItem(ModItems.PARCHMENT_MAYAN_BUILDINGS, "Mayan Buildings Parchment");
+        addItem(ModItems.PARCHMENT_MAYAN_ITEMS, "Mayan Items Parchment");
+        addItem(ModItems.PARCHMENT_MAYAN_COMPLETE, "Complete Mayan Parchment");
+        addItem(ModItems.PARCHMENT_JAPANESE_VILLAGERS, "Japanese Villagers Parchment");
+        addItem(ModItems.PARCHMENT_JAPANESE_BUILDINGS, "Japanese Buildings Parchment");
+        addItem(ModItems.PARCHMENT_JAPANESE_ITEMS, "Japanese Items Parchment");
+        addItem(ModItems.PARCHMENT_JAPANESE_COMPLETE, "Complete Japanese Parchment");
+        addItem(ModItems.PARCHMENT_VILLAGE_SCROLL, "Village Scroll");
+        addItem(ModItems.PARCHMENT_SADHU, "Sadhu Parchment");
 
         // ===== Commands =====
         add("millenaire2.command.error.player_only", "This command can only be run by a player.");
@@ -429,3 +429,4 @@ public class MillLanguageProvider extends LanguageProvider {
         add("entity.millenaire2.wall_decoration", "Wall Decoration");
     }
 }
+

@@ -5,11 +5,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import org.dizzymii.millenaire2.block.MillBlocks;
+import org.dizzymii.millenaire2.init.ModBlocks;
 
 /**
  * Custom tree generator for apple trees.
- * Generates a small oak-style tree with fruit leaves from MillBlocks.
+ * Generates a small oak-style tree with fruit leaves from ModBlocks.
  * Ported from org.millenaire.common.world.WorldGenAppleTree (Forge 1.12.2).
  */
 public class WorldGenAppleTree {
@@ -28,8 +28,8 @@ public class WorldGenAppleTree {
         }
 
         BlockState log = Blocks.OAK_LOG.defaultBlockState();
-        BlockState leaves = MillBlocks.FRUIT_LEAVES != null
-                ? MillBlocks.FRUIT_LEAVES.get().defaultBlockState()
+        BlockState leaves = ModBlocks.FRUIT_LEAVES != null
+                ? ModBlocks.FRUIT_LEAVES.get().defaultBlockState()
                 : Blocks.OAK_LEAVES.defaultBlockState();
 
         // Place trunk
@@ -55,3 +55,4 @@ public class WorldGenAppleTree {
         return true;
     }
 }
+

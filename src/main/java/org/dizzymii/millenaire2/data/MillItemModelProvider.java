@@ -6,8 +6,8 @@ import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredItem;
 import org.dizzymii.millenaire2.Millenaire2;
-import org.dizzymii.millenaire2.block.MillBlocks;
-import org.dizzymii.millenaire2.item.MillItems;
+import org.dizzymii.millenaire2.init.ModBlocks;
+import org.dizzymii.millenaire2.init.ModItems;
 
 public class MillItemModelProvider extends ItemModelProvider {
 
@@ -18,213 +18,213 @@ public class MillItemModelProvider extends ItemModelProvider {
     @Override
     protected void registerModels() {
         // Currency
-        basicItem(MillItems.DENIER);
-        basicItem(MillItems.DENIER_ARGENT);
-        basicItem(MillItems.DENIER_OR);
+        basicItem(ModItems.DENIER);
+        basicItem(ModItems.DENIER_ARGENT);
+        basicItem(ModItems.DENIER_OR);
 
         // Wands
-        basicItem(MillItems.SUMMONING_WAND);
-        basicItem(MillItems.NEGATION_WAND);
+        basicItem(ModItems.SUMMONING_WAND);
+        basicItem(ModItems.NEGATION_WAND);
 
         // Purse
-        basicItem(MillItems.PURSE);
+        basicItem(ModItems.PURSE);
 
         // Food - Norman
-        basicItem(MillItems.CIDER_APPLE);
-        basicItem(MillItems.CIDER);
-        basicItem(MillItems.CALVA);
-        basicItem(MillItems.BOUDIN);
-        basicItem(MillItems.TRIPES);
+        basicItem(ModItems.CIDER_APPLE);
+        basicItem(ModItems.CIDER);
+        basicItem(ModItems.CALVA);
+        basicItem(ModItems.BOUDIN);
+        basicItem(ModItems.TRIPES);
 
         // Food - Indian
-        basicItem(MillItems.VEGETABLE_CURRY);
-        basicItem(MillItems.CHICKEN_CURRY);
-        basicItem(MillItems.RASGULLA);
+        basicItem(ModItems.VEGETABLE_CURRY);
+        basicItem(ModItems.CHICKEN_CURRY);
+        basicItem(ModItems.RASGULLA);
 
         // Food - Mayan
-        basicItem(MillItems.MASA);
-        basicItem(MillItems.WAH);
-        basicItem(MillItems.BALCHE);
-        basicItem(MillItems.SIKILPAH);
-        basicItem(MillItems.CACAUHAA);
+        basicItem(ModItems.MASA);
+        basicItem(ModItems.WAH);
+        basicItem(ModItems.BALCHE);
+        basicItem(ModItems.SIKILPAH);
+        basicItem(ModItems.CACAUHAA);
 
         // Food - Japanese
-        basicItem(MillItems.UDON);
-        basicItem(MillItems.SAKE);
-        basicItem(MillItems.IKAYAKI);
+        basicItem(ModItems.UDON);
+        basicItem(ModItems.SAKE);
+        basicItem(ModItems.IKAYAKI);
 
         // Food - Byzantine
-        basicItem(MillItems.OLIVES);
-        basicItem(MillItems.OLIVE_OIL);
-        basicItem(MillItems.FETA);
-        basicItem(MillItems.SOUVLAKI);
-        basicItem(MillItems.WINE_BASIC);
-        basicItem(MillItems.WINE_FANCY);
+        basicItem(ModItems.OLIVES);
+        basicItem(ModItems.OLIVE_OIL);
+        basicItem(ModItems.FETA);
+        basicItem(ModItems.SOUVLAKI);
+        basicItem(ModItems.WINE_BASIC);
+        basicItem(ModItems.WINE_FANCY);
 
         // Food - Seljuk
-        basicItem(MillItems.AYRAN);
-        basicItem(MillItems.YOGURT);
-        basicItem(MillItems.PIDE);
-        basicItem(MillItems.LOKUM);
-        basicItem(MillItems.HELVA);
-        basicItem(MillItems.PISTACHIOS);
+        basicItem(ModItems.AYRAN);
+        basicItem(ModItems.YOGURT);
+        basicItem(ModItems.PIDE);
+        basicItem(ModItems.LOKUM);
+        basicItem(ModItems.HELVA);
+        basicItem(ModItems.PISTACHIOS);
 
         // Food - Inuit
-        basicItem(MillItems.BEARMEAT_RAW);
-        basicItem(MillItems.BEARMEAT_COOKED);
-        basicItem(MillItems.WOLFMEAT_RAW);
-        basicItem(MillItems.WOLFMEAT_COOKED);
-        basicItem(MillItems.SEAFOOD_RAW);
-        basicItem(MillItems.SEAFOOD_COOKED);
-        basicItem(MillItems.INUIT_BEAR_STEW);
-        basicItem(MillItems.INUIT_MEATY_STEW);
-        basicItem(MillItems.INUIT_POTATO_STEW);
+        basicItem(ModItems.BEARMEAT_RAW);
+        basicItem(ModItems.BEARMEAT_COOKED);
+        basicItem(ModItems.WOLFMEAT_RAW);
+        basicItem(ModItems.WOLFMEAT_COOKED);
+        basicItem(ModItems.SEAFOOD_RAW);
+        basicItem(ModItems.SEAFOOD_COOKED);
+        basicItem(ModItems.INUIT_BEAR_STEW);
+        basicItem(ModItems.INUIT_MEATY_STEW);
+        basicItem(ModItems.INUIT_POTATO_STEW);
 
         // Food - Misc
-        basicItem(MillItems.CHERRIES);
-        basicItem(MillItems.CHERRY_BLOSSOM);
+        basicItem(ModItems.CHERRIES);
+        basicItem(ModItems.CHERRY_BLOSSOM);
 
         // Seeds / Crops
-        basicItem(MillItems.RICE);
-        basicItem(MillItems.TURMERIC);
-        basicItem(MillItems.MAIZE);
-        basicItem(MillItems.GRAPES);
-        basicItem(MillItems.COTTON);
+        basicItem(ModItems.RICE);
+        basicItem(ModItems.TURMERIC);
+        basicItem(ModItems.MAIZE);
+        basicItem(ModItems.GRAPES);
+        basicItem(ModItems.COTTON);
 
         // Misc Goods
-        basicItem(MillItems.SILK);
-        basicItem(MillItems.OBSIDIAN_FLAKE);
-        basicItem(MillItems.UNKNOWN_POWDER);
-        basicItem(MillItems.TANNED_HIDE);
-        basicItem(MillItems.BRICK_MOULD);
-        basicItem(MillItems.ULU);
-        basicItem(MillItems.BANNER_PATTERN);
+        basicItem(ModItems.SILK);
+        basicItem(ModItems.OBSIDIAN_FLAKE);
+        basicItem(ModItems.UNKNOWN_POWDER);
+        basicItem(ModItems.TANNED_HIDE);
+        basicItem(ModItems.BRICK_MOULD);
+        basicItem(ModItems.ULU);
+        basicItem(ModItems.BANNER_PATTERN);
 
         // Wall Decorations
-        basicItem(MillItems.TAPESTRY);
-        basicItem(MillItems.INDIAN_STATUE);
-        basicItem(MillItems.MAYAN_STATUE);
-        basicItem(MillItems.BYZANTINE_ICON_SMALL);
-        basicItem(MillItems.BYZANTINE_ICON_MEDIUM);
-        basicItem(MillItems.BYZANTINE_ICON_LARGE);
-        basicItem(MillItems.HIDE_HANGING);
-        basicItem(MillItems.WALL_CARPET_SMALL);
-        basicItem(MillItems.WALL_CARPET_MEDIUM);
-        basicItem(MillItems.WALL_CARPET_LARGE);
+        basicItem(ModItems.TAPESTRY);
+        basicItem(ModItems.INDIAN_STATUE);
+        basicItem(ModItems.MAYAN_STATUE);
+        basicItem(ModItems.BYZANTINE_ICON_SMALL);
+        basicItem(ModItems.BYZANTINE_ICON_MEDIUM);
+        basicItem(ModItems.BYZANTINE_ICON_LARGE);
+        basicItem(ModItems.HIDE_HANGING);
+        basicItem(ModItems.WALL_CARPET_SMALL);
+        basicItem(ModItems.WALL_CARPET_MEDIUM);
+        basicItem(ModItems.WALL_CARPET_LARGE);
 
         // Clothes
-        basicItem(MillItems.CLOTHES_BYZ_WOOL);
-        basicItem(MillItems.CLOTHES_BYZ_SILK);
-        basicItem(MillItems.CLOTHES_SELJUK_WOOL);
-        basicItem(MillItems.CLOTHES_SELJUK_COTTON);
+        basicItem(ModItems.CLOTHES_BYZ_WOOL);
+        basicItem(ModItems.CLOTHES_BYZ_SILK);
+        basicItem(ModItems.CLOTHES_SELJUK_WOOL);
+        basicItem(ModItems.CLOTHES_SELJUK_COTTON);
 
         // Banners
-        basicItem(MillItems.VILLAGE_BANNER);
-        basicItem(MillItems.CULTURE_BANNER);
+        basicItem(ModItems.VILLAGE_BANNER);
+        basicItem(ModItems.CULTURE_BANNER);
 
         // Amulets
-        basicItem(MillItems.AMULET_VISHNU);
-        basicItem(MillItems.AMULET_ALCHEMIST);
-        basicItem(MillItems.AMULET_YGGDRASIL);
-        basicItem(MillItems.AMULET_SKOLL_HATI);
+        basicItem(ModItems.AMULET_VISHNU);
+        basicItem(ModItems.AMULET_ALCHEMIST);
+        basicItem(ModItems.AMULET_YGGDRASIL);
+        basicItem(ModItems.AMULET_SKOLL_HATI);
 
         // Tools - handheld model
-        handheldItem(MillItems.NORMAN_BROADSWORD);
-        handheldItem(MillItems.NORMAN_AXE);
-        handheldItem(MillItems.NORMAN_PICKAXE);
-        handheldItem(MillItems.NORMAN_SHOVEL);
-        handheldItem(MillItems.NORMAN_HOE);
+        handheldItem(ModItems.NORMAN_BROADSWORD);
+        handheldItem(ModItems.NORMAN_AXE);
+        handheldItem(ModItems.NORMAN_PICKAXE);
+        handheldItem(ModItems.NORMAN_SHOVEL);
+        handheldItem(ModItems.NORMAN_HOE);
 
-        handheldItem(MillItems.MAYAN_MACE);
-        handheldItem(MillItems.MAYAN_AXE);
-        handheldItem(MillItems.MAYAN_PICKAXE);
-        handheldItem(MillItems.MAYAN_SHOVEL);
-        handheldItem(MillItems.MAYAN_HOE);
+        handheldItem(ModItems.MAYAN_MACE);
+        handheldItem(ModItems.MAYAN_AXE);
+        handheldItem(ModItems.MAYAN_PICKAXE);
+        handheldItem(ModItems.MAYAN_SHOVEL);
+        handheldItem(ModItems.MAYAN_HOE);
 
-        handheldItem(MillItems.BYZANTINE_MACE);
-        handheldItem(MillItems.BYZANTINE_AXE);
-        handheldItem(MillItems.BYZANTINE_PICKAXE);
-        handheldItem(MillItems.BYZANTINE_SHOVEL);
-        handheldItem(MillItems.BYZANTINE_HOE);
+        handheldItem(ModItems.BYZANTINE_MACE);
+        handheldItem(ModItems.BYZANTINE_AXE);
+        handheldItem(ModItems.BYZANTINE_PICKAXE);
+        handheldItem(ModItems.BYZANTINE_SHOVEL);
+        handheldItem(ModItems.BYZANTINE_HOE);
 
-        handheldItem(MillItems.TACHI_SWORD);
-        handheldItem(MillItems.SELJUK_SCIMITAR);
-        handheldItem(MillItems.INUIT_TRIDENT);
+        handheldItem(ModItems.TACHI_SWORD);
+        handheldItem(ModItems.SELJUK_SCIMITAR);
+        handheldItem(ModItems.INUIT_TRIDENT);
 
         // Bows
-        basicItem(MillItems.YUMI_BOW);
-        basicItem(MillItems.INUIT_BOW);
-        basicItem(MillItems.SELJUK_BOW);
+        basicItem(ModItems.YUMI_BOW);
+        basicItem(ModItems.INUIT_BOW);
+        basicItem(ModItems.SELJUK_BOW);
 
         // Armor
-        basicItem(MillItems.NORMAN_HELMET);
-        basicItem(MillItems.NORMAN_CHESTPLATE);
-        basicItem(MillItems.NORMAN_LEGGINGS);
-        basicItem(MillItems.NORMAN_BOOTS);
+        basicItem(ModItems.NORMAN_HELMET);
+        basicItem(ModItems.NORMAN_CHESTPLATE);
+        basicItem(ModItems.NORMAN_LEGGINGS);
+        basicItem(ModItems.NORMAN_BOOTS);
 
-        basicItem(MillItems.JAPANESE_RED_HELMET);
-        basicItem(MillItems.JAPANESE_RED_CHESTPLATE);
-        basicItem(MillItems.JAPANESE_RED_LEGGINGS);
-        basicItem(MillItems.JAPANESE_RED_BOOTS);
+        basicItem(ModItems.JAPANESE_RED_HELMET);
+        basicItem(ModItems.JAPANESE_RED_CHESTPLATE);
+        basicItem(ModItems.JAPANESE_RED_LEGGINGS);
+        basicItem(ModItems.JAPANESE_RED_BOOTS);
 
-        basicItem(MillItems.JAPANESE_BLUE_HELMET);
-        basicItem(MillItems.JAPANESE_BLUE_CHESTPLATE);
-        basicItem(MillItems.JAPANESE_BLUE_LEGGINGS);
-        basicItem(MillItems.JAPANESE_BLUE_BOOTS);
+        basicItem(ModItems.JAPANESE_BLUE_HELMET);
+        basicItem(ModItems.JAPANESE_BLUE_CHESTPLATE);
+        basicItem(ModItems.JAPANESE_BLUE_LEGGINGS);
+        basicItem(ModItems.JAPANESE_BLUE_BOOTS);
 
-        basicItem(MillItems.JAPANESE_GUARD_HELMET);
-        basicItem(MillItems.JAPANESE_GUARD_CHESTPLATE);
-        basicItem(MillItems.JAPANESE_GUARD_LEGGINGS);
-        basicItem(MillItems.JAPANESE_GUARD_BOOTS);
+        basicItem(ModItems.JAPANESE_GUARD_HELMET);
+        basicItem(ModItems.JAPANESE_GUARD_CHESTPLATE);
+        basicItem(ModItems.JAPANESE_GUARD_LEGGINGS);
+        basicItem(ModItems.JAPANESE_GUARD_BOOTS);
 
-        basicItem(MillItems.BYZANTINE_HELMET);
-        basicItem(MillItems.BYZANTINE_CHESTPLATE);
-        basicItem(MillItems.BYZANTINE_LEGGINGS);
-        basicItem(MillItems.BYZANTINE_BOOTS);
+        basicItem(ModItems.BYZANTINE_HELMET);
+        basicItem(ModItems.BYZANTINE_CHESTPLATE);
+        basicItem(ModItems.BYZANTINE_LEGGINGS);
+        basicItem(ModItems.BYZANTINE_BOOTS);
 
-        basicItem(MillItems.FUR_HELMET);
-        basicItem(MillItems.FUR_CHESTPLATE);
-        basicItem(MillItems.FUR_LEGGINGS);
-        basicItem(MillItems.FUR_BOOTS);
+        basicItem(ModItems.FUR_HELMET);
+        basicItem(ModItems.FUR_CHESTPLATE);
+        basicItem(ModItems.FUR_LEGGINGS);
+        basicItem(ModItems.FUR_BOOTS);
 
-        basicItem(MillItems.SELJUK_TURBAN);
-        basicItem(MillItems.SELJUK_HELMET);
-        basicItem(MillItems.SELJUK_CHESTPLATE);
-        basicItem(MillItems.SELJUK_LEGGINGS);
-        basicItem(MillItems.SELJUK_BOOTS);
+        basicItem(ModItems.SELJUK_TURBAN);
+        basicItem(ModItems.SELJUK_HELMET);
+        basicItem(ModItems.SELJUK_CHESTPLATE);
+        basicItem(ModItems.SELJUK_LEGGINGS);
+        basicItem(ModItems.SELJUK_BOOTS);
 
-        basicItem(MillItems.MAYAN_QUEST_CROWN);
+        basicItem(ModItems.MAYAN_QUEST_CROWN);
 
         // Parchments
-        basicItem(MillItems.PARCHMENT_NORMAN_VILLAGERS);
-        basicItem(MillItems.PARCHMENT_NORMAN_BUILDINGS);
-        basicItem(MillItems.PARCHMENT_NORMAN_ITEMS);
-        basicItem(MillItems.PARCHMENT_NORMAN_COMPLETE);
-        basicItem(MillItems.PARCHMENT_INDIAN_VILLAGERS);
-        basicItem(MillItems.PARCHMENT_INDIAN_BUILDINGS);
-        basicItem(MillItems.PARCHMENT_INDIAN_ITEMS);
-        basicItem(MillItems.PARCHMENT_INDIAN_COMPLETE);
-        basicItem(MillItems.PARCHMENT_MAYAN_VILLAGERS);
-        basicItem(MillItems.PARCHMENT_MAYAN_BUILDINGS);
-        basicItem(MillItems.PARCHMENT_MAYAN_ITEMS);
-        basicItem(MillItems.PARCHMENT_MAYAN_COMPLETE);
-        basicItem(MillItems.PARCHMENT_JAPANESE_VILLAGERS);
-        basicItem(MillItems.PARCHMENT_JAPANESE_BUILDINGS);
-        basicItem(MillItems.PARCHMENT_JAPANESE_ITEMS);
-        basicItem(MillItems.PARCHMENT_JAPANESE_COMPLETE);
-        basicItem(MillItems.PARCHMENT_VILLAGE_SCROLL);
-        basicItem(MillItems.PARCHMENT_SADHU);
+        basicItem(ModItems.PARCHMENT_NORMAN_VILLAGERS);
+        basicItem(ModItems.PARCHMENT_NORMAN_BUILDINGS);
+        basicItem(ModItems.PARCHMENT_NORMAN_ITEMS);
+        basicItem(ModItems.PARCHMENT_NORMAN_COMPLETE);
+        basicItem(ModItems.PARCHMENT_INDIAN_VILLAGERS);
+        basicItem(ModItems.PARCHMENT_INDIAN_BUILDINGS);
+        basicItem(ModItems.PARCHMENT_INDIAN_ITEMS);
+        basicItem(ModItems.PARCHMENT_INDIAN_COMPLETE);
+        basicItem(ModItems.PARCHMENT_MAYAN_VILLAGERS);
+        basicItem(ModItems.PARCHMENT_MAYAN_BUILDINGS);
+        basicItem(ModItems.PARCHMENT_MAYAN_ITEMS);
+        basicItem(ModItems.PARCHMENT_MAYAN_COMPLETE);
+        basicItem(ModItems.PARCHMENT_JAPANESE_VILLAGERS);
+        basicItem(ModItems.PARCHMENT_JAPANESE_BUILDINGS);
+        basicItem(ModItems.PARCHMENT_JAPANESE_ITEMS);
+        basicItem(ModItems.PARCHMENT_JAPANESE_COMPLETE);
+        basicItem(ModItems.PARCHMENT_VILLAGE_SCROLL);
+        basicItem(ModItems.PARCHMENT_SADHU);
 
         // Sapling items (flat texture, not block model)
-        basicItem(MillBlocks.SAPLING_APPLE.getId().getPath(),
+        basicItem(ModBlocks.SAPLING_APPLE.getId().getPath(),
                 modLoc("block/sapling_appletree"));
-        basicItem(MillBlocks.SAPLING_OLIVE.getId().getPath(),
+        basicItem(ModBlocks.SAPLING_OLIVE.getId().getPath(),
                 modLoc("block/sapling_olivetree"));
-        basicItem(MillBlocks.SAPLING_PISTACHIO.getId().getPath(),
+        basicItem(ModBlocks.SAPLING_PISTACHIO.getId().getPath(),
                 modLoc("block/sapling_pistachio"));
-        basicItem(MillBlocks.SAPLING_CHERRY.getId().getPath(),
+        basicItem(ModBlocks.SAPLING_CHERRY.getId().getPath(),
                 modLoc("block/sapling_cherry"));
-        basicItem(MillBlocks.SAPLING_SAKURA.getId().getPath(),
+        basicItem(ModBlocks.SAPLING_SAKURA.getId().getPath(),
                 modLoc("block/sapling_sakura"));
     }
 
@@ -244,3 +244,4 @@ public class MillItemModelProvider extends ItemModelProvider {
                 .texture("layer0", texture);
     }
 }
+

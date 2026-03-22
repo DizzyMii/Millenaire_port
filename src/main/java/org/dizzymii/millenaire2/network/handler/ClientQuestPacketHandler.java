@@ -1,4 +1,4 @@
-﻿package org.dizzymii.millenaire2.network.handler;
+package org.dizzymii.millenaire2.network.handler;
 
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;

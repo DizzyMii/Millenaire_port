@@ -1,4 +1,4 @@
-﻿package org.dizzymii.millenaire2.event;
+package org.dizzymii.millenaire2.event;
 
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
@@ -13,7 +13,7 @@ import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import org.dizzymii.millenaire2.Millenaire2;
-import org.dizzymii.millenaire2.block.MillBlocks;
+import org.dizzymii.millenaire2.init.ModBlocks;
 import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
@@ -62,7 +62,7 @@ public class MillEventController {
         BlockState state = event.getLevel().getBlockState(event.getPos());
 
         // Locked chest interaction
-        if (state.is(MillBlocks.LOCKED_CHEST.get())) {
+        if (state.is(ModBlocks.LOCKED_CHEST.get())) {
             if (!(event.getLevel() instanceof ServerLevel sl)) return;
             MillWorldData mw = MillWorldData.get(sl);
 
@@ -137,3 +137,4 @@ public class MillEventController {
     }
 
 }
+

@@ -1,4 +1,4 @@
-﻿package org.dizzymii.millenaire2.buildingplan;
+package org.dizzymii.millenaire2.buildingplan;
 
 
 import com.mojang.logging.LogUtils;
