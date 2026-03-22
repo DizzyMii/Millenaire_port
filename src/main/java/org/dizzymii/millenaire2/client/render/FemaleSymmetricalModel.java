@@ -14,7 +14,7 @@ import org.dizzymii.millenaire2.entity.MillVillager;
  * Female symmetrical model (e.g. Norman, Japanese women).
  * Ported from org.millenaire.client.render.ModelFemaleSymmetrical (Forge 1.12.2).
  */
-public class FemaleSymmetricalModel extends HumanoidModel<MillVillager.GenericSymmFemale> {
+public class FemaleSymmetricalModel extends HumanoidModel<MillVillager> {
 
     public static final ModelLayerLocation LAYER_LOCATION =
             new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(Millenaire2.MODID, "mill_villager_female_symm"), "main");

@@ -47,13 +47,11 @@ class BuildingSpawner {
         Point pos = building.getPos();
         if (pos == null) return;
 
-        EntityType<? extends MillVillager> entityType =
-                vr.gender == MillVillager.FEMALE
-                        ? MillEntities.GENERIC_SYMM_FEMALE.get()
-                        : MillEntities.GENERIC_MALE.get();
-
-        MillVillager villager = entityType.create(level);
+        MillVillager villager = MillEntities.MILL_VILLAGER.get().create(level);
         if (villager == null) return;
+        villager.setBodyModel(vr.gender == MillVillager.FEMALE
+                ? MillVillager.BodyModel.SYMM_FEMALE
+                : MillVillager.BodyModel.MALE);
 
         Point spawnPos = vr.getHousePos() != null ? vr.getHousePos() : pos;
         villager.setPos(spawnPos.x + 0.5, spawnPos.y + 1.0, spawnPos.z + 0.5);

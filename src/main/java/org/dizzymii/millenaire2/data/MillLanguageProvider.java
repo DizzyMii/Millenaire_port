@@ -422,9 +422,7 @@ public class MillLanguageProvider extends LanguageProvider {
         add("container.millenaire2.import_table", "Import Table");
 
         // ===== Entity =====
-        add("entity.millenaire2.mill_villager_male", "Villager");
-        add("entity.millenaire2.mill_villager_female_symm", "Villager");
-        add("entity.millenaire2.mill_villager_female_asymm", "Villager");
+        add("entity.millenaire2.mill_villager", "Villager");
         add("entity.millenaire2.targeted_blaze", "Targeted Blaze");
         add("entity.millenaire2.targeted_ghast", "Targeted Ghast");
         add("entity.millenaire2.targeted_wither_skeleton", "Targeted Wither Skeleton");

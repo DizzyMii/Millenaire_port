@@ -277,7 +277,7 @@ public class MillGameTests {
         ServerLevel level = helper.getLevel();
         BlockPos spawnPos = helper.absolutePos(new BlockPos(1, 1, 1));
 
-        MillVillager villager = MillEntities.GENERIC_MALE.get().create(level);
+        MillVillager villager = MillEntities.MILL_VILLAGER.get().create(level);
         helper.assertFalse(villager == null, "Failed to create MillVillager");
 
         villager.moveTo(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, 0, 0);
@@ -295,7 +295,7 @@ public class MillGameTests {
         ServerLevel level = helper.getLevel();
         BlockPos spawnPos = helper.absolutePos(new BlockPos(2, 1, 2));
 
-        MillVillager villager = MillEntities.GENERIC_MALE.get().create(level);
+        MillVillager villager = MillEntities.MILL_VILLAGER.get().create(level);
         helper.assertFalse(villager == null, "Failed to create villager entity");
 
         villager.moveTo(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, 0, 0);

@@ -30,13 +30,13 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 
 /**
- * Abstract base entity for all Millénaire villagers.
+ * Entity for all Millénaire villagers.
  * Ported from org.millenaire.common.entity.MillVillager (Forge 1.12.2).
  *
  * In NeoForge 1.21.1, EntityCreature → PathfinderMob.
  * IEntityAdditionalSpawnData is replaced by synched entity data or custom packets.
  */
-public abstract class MillVillager extends PathfinderMob {
+public class MillVillager extends PathfinderMob {
 
     // --- Synched data ---
     private static final EntityDataAccessor<String> DATA_FIRST_NAME =
@@ -49,6 +49,8 @@ public abstract class MillVillager extends PathfinderMob {
             SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> DATA_GOAL_KEY =
             SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Integer> DATA_BODY_MODEL =
+            SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.INT);
 
     // --- NBT key constants ---
     private static final String NBT_FIRST_NAME = "firstName";
@@ -65,6 +67,7 @@ public abstract class MillVillager extends PathfinderMob {
     private static final String NBT_HIRED_UNTIL = "hiredUntil";
     private static final String NBT_VILLAGER_TYPE = "villagerType";
     private static final String NBT_INVENTORY = "millInventory";
+    private static final String NBT_BODY_MODEL = "bodyModel";
 
     // --- Constants ---
     public static final int MALE = 1;
@@ -74,6 +77,16 @@ public abstract class MillVillager extends PathfinderMob {
     public static final int ARCHER_RANGE = 20;
     public static final int MAX_CHILD_SIZE = 20;
     private static final double DEFAULT_MOVE_SPEED = 0.5;
+
+    public enum BodyModel {
+        MALE(0), SYMM_FEMALE(1), ASYMM_FEMALE(2);
+        public final int id;
+        BodyModel(int id) { this.id = id; }
+        public static BodyModel fromId(int id) {
+            for (BodyModel m : values()) { if (m.id == id) return m; }
+            return MALE;
+        }
+    }
 
     public enum DayPhase {
         NIGHT,      // 18000-23999, 0-5999: sleep/hide
@@ -152,6 +165,7 @@ public abstract class MillVillager extends PathfinderMob {
         builder.define(DATA_GENDER, 0);
         builder.define(DATA_CULTURE, "");
         builder.define(DATA_GOAL_KEY, "");
+        builder.define(DATA_BODY_MODEL, 0);
     }
 
     // --- Name accessors ---
@@ -163,6 +177,8 @@ public abstract class MillVillager extends PathfinderMob {
     public void setGender(int gender) { this.entityData.set(DATA_GENDER, gender); }
     public String getCultureKey() { return this.entityData.get(DATA_CULTURE); }
     public void setCultureKey(String key) { this.entityData.set(DATA_CULTURE, key); }
+    public BodyModel getBodyModel() { return BodyModel.fromId(this.entityData.get(DATA_BODY_MODEL)); }
+    public void setBodyModel(BodyModel model) { this.entityData.set(DATA_BODY_MODEL, model.id); }
 
     public long getVillagerId() { return villagerId; }
     public void setVillagerId(long id) { this.villagerId = id; }
@@ -414,6 +430,7 @@ public abstract class MillVillager extends PathfinderMob {
             tag.putString(NBT_VILLAGER_TYPE, vtype.key);
         }
         tag.put(NBT_INVENTORY, villagerInventory.saveToNBT());
+        tag.putInt(NBT_BODY_MODEL, getBodyModel().id);
     }
 
     @Override
@@ -442,6 +459,9 @@ public abstract class MillVillager extends PathfinderMob {
         if (tag.contains(NBT_VILLAGER_TYPE)) {
             setVillagerTypeKey(tag.getString(NBT_VILLAGER_TYPE));
         }
+        if (tag.contains(NBT_BODY_MODEL)) {
+            setBodyModel(BodyModel.fromId(tag.getInt(NBT_BODY_MODEL)));
+        }
     }
 
     // --- Building helpers ---
@@ -466,23 +486,4 @@ public abstract class MillVillager extends PathfinderMob {
     public void addToInv(InvItem item, int count) { villagerInventory.add(item, count); }
     public void removeFromInv(InvItem item, int count) { villagerInventory.remove(item, count); }
 
-    // ========== Concrete villager subclasses ==========
-
-    public static class GenericMale extends MillVillager {
-        public GenericMale(EntityType<? extends GenericMale> type, Level level) {
-            super(type, level);
-        }
-    }
-
-    public static class GenericSymmFemale extends MillVillager {
-        public GenericSymmFemale(EntityType<? extends GenericSymmFemale> type, Level level) {
-            super(type, level);
-        }
-    }
-
-    public static class GenericAsymmFemale extends MillVillager {
-        public GenericAsymmFemale(EntityType<? extends GenericAsymmFemale> type, Level level) {
-            super(type, level);
-        }
-    }
 }

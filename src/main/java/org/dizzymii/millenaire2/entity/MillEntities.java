@@ -24,23 +24,11 @@ public class MillEntities {
 
     // ========== Entity Types ==========
 
-    public static final DeferredHolder<EntityType<?>, EntityType<MillVillager.GenericMale>> GENERIC_MALE =
-            ENTITY_TYPES.register("generic_villager",
-                    () -> EntityType.Builder.of(MillVillager.GenericMale::new, MobCategory.CREATURE)
+    public static final DeferredHolder<EntityType<?>, EntityType<MillVillager>> MILL_VILLAGER =
+            ENTITY_TYPES.register("mill_villager",
+                    () -> EntityType.Builder.of(MillVillager::new, MobCategory.CREATURE)
                             .sized(0.6F, 1.95F).clientTrackingRange(8).updateInterval(3)
-                            .build("generic_villager"));
-
-    public static final DeferredHolder<EntityType<?>, EntityType<MillVillager.GenericSymmFemale>> GENERIC_SYMM_FEMALE =
-            ENTITY_TYPES.register("generic_symm_female",
-                    () -> EntityType.Builder.of(MillVillager.GenericSymmFemale::new, MobCategory.CREATURE)
-                            .sized(0.6F, 1.95F).clientTrackingRange(8).updateInterval(3)
-                            .build("generic_symm_female"));
-
-    public static final DeferredHolder<EntityType<?>, EntityType<MillVillager.GenericAsymmFemale>> GENERIC_ASYMM_FEMALE =
-            ENTITY_TYPES.register("generic_asymm_female",
-                    () -> EntityType.Builder.of(MillVillager.GenericAsymmFemale::new, MobCategory.CREATURE)
-                            .sized(0.6F, 1.95F).clientTrackingRange(8).updateInterval(3)
-                            .build("generic_asymm_female"));
+                            .build("mill_villager"));
 
     public static final DeferredHolder<EntityType<?>, EntityType<EntityWallDecoration>> WALL_DECORATION =
             ENTITY_TYPES.register("wall_decoration",

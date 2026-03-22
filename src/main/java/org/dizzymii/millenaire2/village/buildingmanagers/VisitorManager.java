@@ -3,7 +3,6 @@
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.EntityType;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.util.Point;
@@ -106,8 +105,9 @@ public class VisitorManager {
     }
 
     private void spawnMerchant(ServerLevel level, Point pos) {
-        MillVillager merchant = MillEntities.GENERIC_MALE.get().create(level);
+        MillVillager merchant = MillEntities.MILL_VILLAGER.get().create(level);
         if (merchant == null) return;
+        merchant.setBodyModel(MillVillager.BodyModel.MALE);
 
         merchant.setPos(pos.x + 0.5, pos.y + 1.0, pos.z + 0.5);
         merchant.setFirstName("Merchant");
@@ -126,15 +126,14 @@ public class VisitorManager {
     }
 
     private void spawnVisitor(ServerLevel level, Point pos) {
-        EntityType<? extends MillVillager> type = random.nextBoolean()
-                ? MillEntities.GENERIC_MALE.get()
-                : MillEntities.GENERIC_SYMM_FEMALE.get();
-        MillVillager visitor = type.create(level);
+        MillVillager visitor = MillEntities.MILL_VILLAGER.get().create(level);
         if (visitor == null) return;
+        boolean isFemale = random.nextBoolean();
+        visitor.setBodyModel(isFemale ? MillVillager.BodyModel.SYMM_FEMALE : MillVillager.BodyModel.MALE);
+        visitor.setGender(isFemale ? MillVillager.FEMALE : MillVillager.MALE);
 
         visitor.setPos(pos.x + 0.5 + random.nextGaussian(), pos.y + 1.0, pos.z + 0.5 + random.nextGaussian());
         visitor.setFirstName("Visitor");
-        visitor.setGender(random.nextBoolean() ? MillVillager.MALE : MillVillager.FEMALE);
 
         level.addFreshEntity(visitor);
         visitorCount++;

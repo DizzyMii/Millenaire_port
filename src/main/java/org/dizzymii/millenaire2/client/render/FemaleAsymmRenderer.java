@@ -1,25 +1,9 @@
 package org.dizzymii.millenaire2.client.render;
 
-import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
-import net.minecraft.resources.ResourceLocation;
-import org.dizzymii.millenaire2.Millenaire2;
-import org.dizzymii.millenaire2.entity.MillVillager;
-
 /**
- * Renderer for female asymmetrical villagers (Indian sari, etc.).
+ * @deprecated Absorbed into {@link MillVillagerRenderer.AsymmFemaleDelegate} as part of 4.4 entity consolidation.
  */
-public class FemaleAsymmRenderer extends HumanoidMobRenderer<MillVillager.GenericAsymmFemale, FemaleAsymmetricalModel> {
-
-    private static final ResourceLocation DEFAULT_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Millenaire2.MODID, "textures/entity/villager_default.png");
-
-    public FemaleAsymmRenderer(EntityRendererProvider.Context context) {
-        super(context, new FemaleAsymmetricalModel(context.bakeLayer(FemaleAsymmetricalModel.LAYER_LOCATION)), 0.5F);
-    }
-
-    @Override
-    public ResourceLocation getTextureLocation(MillVillager.GenericAsymmFemale entity) {
-        return VillagerTextureHelper.resolveTexture(entity, DEFAULT_TEXTURE);
-    }
+@Deprecated
+final class FemaleAsymmRenderer {
+    private FemaleAsymmRenderer() {}
 }

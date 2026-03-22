@@ -6,9 +6,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import org.dizzymii.millenaire2.Millenaire2;
-import org.dizzymii.millenaire2.client.render.FemaleAsymmRenderer;
 import org.dizzymii.millenaire2.client.render.FemaleAsymmetricalModel;
-import org.dizzymii.millenaire2.client.render.FemaleSymmRenderer;
 import org.dizzymii.millenaire2.client.render.FemaleSymmetricalModel;
 import org.dizzymii.millenaire2.client.render.MillVillagerModel;
 import org.dizzymii.millenaire2.client.render.MillVillagerRenderer;
@@ -35,9 +33,7 @@ public class ClientSetup {
 
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(MillEntities.GENERIC_MALE.get(), MillVillagerRenderer::new);
-        event.registerEntityRenderer(MillEntities.GENERIC_SYMM_FEMALE.get(), FemaleSymmRenderer::new);
-        event.registerEntityRenderer(MillEntities.GENERIC_ASYMM_FEMALE.get(), FemaleAsymmRenderer::new);
+        event.registerEntityRenderer(MillEntities.MILL_VILLAGER.get(), MillVillagerRenderer::new);
         // Targeted mobs reuse vanilla renderers
         event.registerEntityRenderer(MillEntities.TARGETED_BLAZE.get(),
                 net.minecraft.client.renderer.entity.BlazeRenderer::new);

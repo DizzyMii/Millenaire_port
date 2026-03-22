@@ -14,7 +14,7 @@ import org.dizzymii.millenaire2.entity.MillVillager;
  * Female asymmetrical model (e.g. Indian women with sari).
  * Ported from org.millenaire.client.render.ModelFemaleAsymmetrical (Forge 1.12.2).
  */
-public class FemaleAsymmetricalModel extends HumanoidModel<MillVillager.GenericAsymmFemale> {
+public class FemaleAsymmetricalModel extends HumanoidModel<MillVillager> {
 
     public static final ModelLayerLocation LAYER_LOCATION =
             new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(Millenaire2.MODID, "mill_villager_female_asymm"), "main");
