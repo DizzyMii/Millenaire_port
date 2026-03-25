@@ -19,7 +19,6 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -76,7 +75,6 @@ public class Building {
     public CopyOnWriteArrayList<String> buildingsBought = new CopyOnWriteArrayList<>();
     public ConcurrentHashMap<BuildingProject.EnumProjects, CopyOnWriteArrayList<BuildingProject>> buildingProjects = new ConcurrentHashMap<>();
 
-    private final Set<MillVillager> villagers = new LinkedHashSet<>();
     private final HashMap<Long, VillagerRecord> vrecords = new HashMap<>();
     private final ConcurrentHashMap<Point, Integer> relations = new ConcurrentHashMap<>();
 
