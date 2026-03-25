@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Manages resources, stalls, special positions, and locked chests for a Building.
@@ -41,12 +42,14 @@ public class BuildingResManager {
     }
 
     public boolean takeGoods(InvItem item, int count) {
-        int current = countGoods(item);
-        if (current < count) return false;
-        int remaining = current - count;
-        if (remaining <= 0) resources.remove(item);
-        else resources.put(item, remaining);
-        return true;
+        AtomicBoolean success = new AtomicBoolean(false);
+        resources.compute(item, (k, current) -> {
+            if (current == null || current < count) return current;
+            success.set(true);
+            int remaining = current - count;
+            return remaining <= 0 ? null : remaining;
+        });
+        return success.get();
     }
 
     // ========== NBT persistence ==========

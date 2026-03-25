@@ -9,6 +9,7 @@ import org.dizzymii.millenaire2.culture.BuildingPlan;
 import org.dizzymii.millenaire2.culture.BuildingPlanSet;
 import org.dizzymii.millenaire2.culture.Culture;
 import org.dizzymii.millenaire2.culture.VillageType;
+import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.item.TradeGood;
 import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;

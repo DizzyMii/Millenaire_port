@@ -219,9 +219,9 @@ public class DiplomacyManager {
         for (Point knownPos : townhall.getKnownVillages()) {
             int current = townhall.getRelation(knownPos);
             if (current > 0) {
-                townhall.setRelation(knownPos, current + decayPerHour);
+                townhall.setRelation(knownPos, Math.max(0, current + decayPerHour));
             } else if (current < 0) {
-                townhall.setRelation(knownPos, current - decayPerHour);
+                townhall.setRelation(knownPos, Math.min(0, current - decayPerHour));
             }
         }
     }
