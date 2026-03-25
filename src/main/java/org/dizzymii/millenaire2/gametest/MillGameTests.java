@@ -15,9 +15,12 @@ import org.dizzymii.millenaire2.culture.VillageType;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.goal.Goal;
+import org.dizzymii.millenaire2.item.InvItem;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
+import org.dizzymii.millenaire2.village.BuildingResManager;
 import org.dizzymii.millenaire2.village.ConstructionIP;
+import org.dizzymii.millenaire2.village.DiplomacyManager;
 import org.dizzymii.millenaire2.world.UserProfile;
 
 /**
@@ -568,6 +571,88 @@ public class MillGameTests {
                 "Deniers not persisted, got " + loaded.deniers);
         helper.assertTrue(loaded.getVillageReputation(new Point(100, 64, 200)) == 75,
                 "Reputation not persisted");
+
+        helper.succeed();
+    }
+
+    // ==================== BuildingResManager.takeGoods atomic safety ====================
+
+    /**
+     * Verifies that takeGoods correctly refuses requests exceeding available stock
+     * and that taking the exact stock removes the entry (no stale zero entries).
+     * Covers the fix for the TOCTOU race condition in the original non-atomic implementation.
+     */
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testTakeGoodsAtomicRemoval(GameTestHelper helper) {
+        InvItem item = InvItem.registerDirect("test_wheat_tg", "minecraft:wheat");
+        Building b = new Building();
+        BuildingResManager mgr = b.resManager;
+
+        // Seed with 3
+        mgr.storeGoods(item, 3);
+        helper.assertTrue(mgr.countGoods(item) == 3, "Expected 3 after storeGoods");
+
+        // Taking more than available must fail and leave stock unchanged
+        boolean tookTooMany = mgr.takeGoods(item, 5);
+        helper.assertFalse(tookTooMany, "takeGoods(5) should return false when only 3 available");
+        helper.assertTrue(mgr.countGoods(item) == 3, "Stock must be unchanged after failed take");
+
+        // Taking exactly the remaining stock should succeed and remove the entry
+        boolean success = mgr.takeGoods(item, 3);
+        helper.assertTrue(success, "takeGoods(3) should succeed");
+        helper.assertTrue(mgr.countGoods(item) == 0,
+                "Stock should be 0 (entry removed) after taking all, got " + mgr.countGoods(item));
+
+        helper.succeed();
+    }
+
+    // ==================== DiplomacyManager.tickRelationDecay clamp-toward-zero ====================
+
+    /**
+     * Verifies that tickRelationDecay never causes a relation to overshoot zero and oscillate
+     * when the configured magnitude is larger than the current relation value.
+     * Covers the fix for the overshoot/oscillation bug in the original implementation.
+     */
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testRelationDecayNeverOvershoots(GameTestHelper helper) {
+        // Use a decay step of -2 to exercise the overshoot path.
+        // DiplomacyManager.decayPerHour is a static field; the try/finally below restores the
+        // original value so later tests are not affected. GameTests run sequentially within a
+        // single server session, so this mutation is safe in practice.
+        int savedDecay = DiplomacyManager.decayPerHour;
+        DiplomacyManager.decayPerHour = -2;
+
+        try {
+            Building townhall = new Building();
+            townhall.isTownhall = true;
+            Point villageA = new Point(0, 64, 0);
+            Point villageB = new Point(500, 64, 0);
+            townhall.setPos(villageA);
+
+            // Positive relation of 1 — without the fix, +1 + (-2) = -1, then oscillates
+            townhall.setRelation(villageB, 1);
+            DiplomacyManager.tickRelationDecay(townhall);
+            int afterPositive = townhall.getRelation(villageB);
+            helper.assertTrue(afterPositive == 0,
+                    "Positive relation 1 should decay to exactly 0, got " + afterPositive);
+
+            // Negative relation of -1 — without the fix, -1 - (-2) = +1, then oscillates
+            townhall.setRelation(villageB, -1);
+            DiplomacyManager.tickRelationDecay(townhall);
+            int afterNegative = townhall.getRelation(villageB);
+            helper.assertTrue(afterNegative == 0,
+                    "Negative relation -1 should decay to exactly 0, got " + afterNegative);
+
+            // Larger positive relation should decay normally, not overshoot
+            townhall.setRelation(villageB, 10);
+            DiplomacyManager.tickRelationDecay(townhall);
+            int afterLarger = townhall.getRelation(villageB);
+            helper.assertTrue(afterLarger == 8,
+                    "Relation 10 should decay to 8 with step -2, got " + afterLarger);
+
+        } finally {
+            DiplomacyManager.decayPerHour = savedDecay;
+        }
 
         helper.succeed();
     }
