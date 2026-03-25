@@ -10,6 +10,14 @@ group = mod_group_id
 
 repositories {
     mavenLocal()
+    // SmartBrainLib by Tslat - provides BrainActivityGroup, SmartBrainOwner, ExtendedBehaviour, etc.
+    // Our entity/brain/smartbrain/ package is a compatible drop-in implementation that mirrors
+    // the SmartBrainLib API. When network access to maven.tslat.net is available:
+    //   1. Uncomment the maven block and the dependency below.
+    //   2. Delete src/main/java/org/dizzymii/millenaire2/entity/brain/smartbrain/
+    //      (SmartBrainOwner, BrainActivityGroup, ExtendedBehaviour, ExtendedSensor).
+    //   3. Update imports in VillagerBrainConfig and the four Behaviour classes.
+    // maven { url = "https://maven.tslat.net/" }
 }
 
 base {
@@ -100,6 +108,10 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 
 dependencies {
+    // SmartBrainLib — uncomment when maven.tslat.net is accessible.
+    // Our entity/brain/smartbrain/ package is a temporary compatible replacement.
+    // implementation "net.tslat.smartbrainlib:SmartBrainLib-neoforge:1.21.1-1.13.11"
+
     // Example mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"

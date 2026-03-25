@@ -1,24 +1,28 @@
 package org.dizzymii.millenaire2.entity;
 
+import com.mojang.serialization.Dynamic;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.Brain;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.dizzymii.millenaire2.culture.VillagerType;
+import org.dizzymii.millenaire2.entity.brain.VillagerBrainConfig;
 import org.dizzymii.millenaire2.goal.Goal;
 import org.dizzymii.millenaire2.goal.GoalInformation;
 import org.dizzymii.millenaire2.item.InvItem;
@@ -27,6 +31,7 @@ import org.dizzymii.millenaire2.util.Point;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,6 +64,8 @@ public abstract class MillVillager extends PathfinderMob {
     public static final int MAX_CHILD_SIZE = 20;
     private static final double DEFAULT_MOVE_SPEED = 0.5;
     private static final int GOAL_TICK_INTERVAL = 20; // Check goals every second
+    /** Ticks after being hurt during which the villager is considered aggroed. */
+    private static final int AGGRO_LINGER_TICKS = 200;
 
     // --- Instance fields (ported from original) ---
     @Nullable public VillagerType vtype;
@@ -107,9 +114,21 @@ public abstract class MillVillager extends PathfinderMob {
     public boolean isRaider = false;
     private long villagerId = -1L;
     private int goalTickCounter = 0;
+    /** Counts down from {@link #AGGRO_LINGER_TICKS} after the last attack. */
+    private int aggroTicks = 0;
 
     /** Controller that owns goal selection and execution logic for this villager. */
     private final VillagerGoalController goalController = new VillagerGoalController(this);
+
+    /** Returns the goal controller (used by Brain behaviours). */
+    public VillagerGoalController getGoalController() {
+        return goalController;
+    }
+
+    /** {@code true} while the villager has been recently attacked and may fight back. */
+    public boolean isAggroed() {
+        return aggroTicks > 0;
+    }
 
     protected MillVillager(EntityType<? extends MillVillager> type, Level level) {
         super(type, level);
@@ -211,6 +230,30 @@ public abstract class MillVillager extends PathfinderMob {
         return !getFirstName().isEmpty();
     }
 
+    // ========== Brain setup ==========
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Brain.Provider<MillVillager> brainProvider() {
+        // No custom sensors or memory modules — behaviours read entity fields directly.
+        // When SmartBrainLib is available, replace with SmartBrainProvider.of(this).
+        return Brain.provider(List.of(), List.of());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Brain<?> makeBrain(Dynamic<?> dynamic) {
+        Brain<MillVillager> brain = (Brain<MillVillager>) this.brainProvider().makeBrain(dynamic);
+        VillagerBrainConfig.configureBrain(brain);
+        return brain;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Brain<MillVillager> getBrain() {
+        return (Brain<MillVillager>) super.getBrain();
+    }
+
     // ========== Tick logic ==========
 
     @Override
@@ -222,12 +265,27 @@ public abstract class MillVillager extends PathfinderMob {
     }
 
     private void serverTick() {
+        // Decay aggro counter
+        if (aggroTicks > 0) {
+            aggroTicks--;
+        }
+
         goalTickCounter++;
         if (goalTickCounter >= GOAL_TICK_INTERVAL) {
             goalTickCounter = 0;
-            goalController.tickGoalSelection();
+            // Update Brain activity based on time-of-day / combat state
+            VillagerBrainConfig.updateActivity(this);
         }
-        goalController.tickGoalExecution();
+    }
+
+    @Override
+    protected void customServerAiStep() {
+        super.customServerAiStep();
+        if (this.level() instanceof ServerLevel sl) {
+            this.level().getProfiler().push("millVillagerBrain");
+            this.getBrain().tick(sl, this);
+            this.level().getProfiler().pop();
+        }
     }
 
     // ========== Package-private bridge methods for VillagerGoalController ==========
@@ -281,11 +339,15 @@ public abstract class MillVillager extends PathfinderMob {
 
         // Switch to defensive/combat goal if attacked
         if (result && !this.level().isClientSide && this.isAlive()) {
+            aggroTicks = AGGRO_LINGER_TICKS;
             if (vtype != null && vtype.helpInAttacks && Goal.defendVillage != null) {
                 try {
                     GoalInformation info = Goal.defendVillage.getDestination(this);
                     if (info != null && info.hasTarget()) {
                         goalController.setActiveGoal("defendvillage", Goal.defendVillage, info);
+                        // Switch Brain to FIGHT activity immediately
+                        this.getBrain().setActiveActivityIfPossible(
+                                net.minecraft.world.entity.schedule.Activity.FIGHT);
                     }
                 } catch (Exception ignored) {}
             }
@@ -297,6 +359,7 @@ public abstract class MillVillager extends PathfinderMob {
     public void die(DamageSource source) {
         super.die(source);
         if (!this.level().isClientSide) {
+            VillagerDebugger.remove(this);
             MillLog.major(this, "Villager died: " + getFirstName() + " " + getFamilyName()
                     + " at " + new Point(this.blockPosition()));
             // Notify village and update villager record

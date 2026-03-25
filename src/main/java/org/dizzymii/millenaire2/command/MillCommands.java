@@ -7,12 +7,16 @@ import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import org.dizzymii.millenaire2.Millenaire2;
 import org.dizzymii.millenaire2.culture.Culture;
+import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.entity.VillagerDebugger;
 import org.dizzymii.millenaire2.util.Point;
 import org.dizzymii.millenaire2.village.Building;
 import org.dizzymii.millenaire2.village.VillagerRecord;
@@ -85,6 +89,19 @@ public class MillCommands {
                         )
                         .then(Commands.literal("resendprofiles")
                                 .executes(MillCommands::cmdDebugResendProfiles)
+                        )
+                        .then(Commands.literal("villager")
+                                .executes(MillCommands::cmdDebugVillagerNearest)
+                                .then(Commands.literal("nearby")
+                                        .then(Commands.argument("radius", IntegerArgumentType.integer(1, 128))
+                                                .executes(MillCommands::cmdDebugVillagerNearby)
+                                        )
+                                )
+                                .then(Commands.literal("extralog")
+                                        .then(Commands.argument("radius", IntegerArgumentType.integer(1, 64))
+                                                .executes(MillCommands::cmdDebugExtraLog)
+                                        )
+                                )
                         )
                 )
         );
@@ -297,6 +314,74 @@ public class MillCommands {
         return 1;
     }
 
+    /** Shows debug info for the nearest MillVillager within 16 blocks. */
+    private static int cmdDebugVillagerNearest(CommandContext<CommandSourceStack> ctx) {
+        if (!(ctx.getSource().getEntity() instanceof ServerPlayer player)) {
+            ctx.getSource().sendFailure(Component.literal("Must be run by a player."));
+            return 0;
+        }
+        MillVillager nearest = findNearestVillager(player, 16);
+        if (nearest == null) {
+            ctx.getSource().sendFailure(Component.literal("No Millénaire villager found within 16 blocks."));
+            return 0;
+        }
+        VillagerDebugger.sendDebugToPlayer(nearest, player);
+        return 1;
+    }
+
+    /** Lists all MillVillagers within a given radius with their current goal and activity. */
+    private static int cmdDebugVillagerNearby(CommandContext<CommandSourceStack> ctx) {
+        if (!(ctx.getSource().getEntity() instanceof ServerPlayer player)) {
+            ctx.getSource().sendFailure(Component.literal("Must be run by a player."));
+            return 0;
+        }
+        int radius = IntegerArgumentType.getInteger(ctx, "radius");
+        AABB box = AABB.ofSize(player.position(), radius * 2, radius * 2, radius * 2);
+        List<MillVillager> villagers = player.serverLevel().getEntitiesOfClass(MillVillager.class, box);
+        if (villagers.isEmpty()) {
+            ctx.getSource().sendSuccess(
+                    () -> Component.literal("§6[Millénaire]§r No villagers within " + radius + " blocks."), false);
+            return 0;
+        }
+        player.sendSystemMessage(Component.literal(
+                "§6[Millénaire]§r " + villagers.size() + " villager(s) within " + radius + " blocks:"));
+        for (MillVillager v : villagers) {
+            String name = v.getFirstName() + " " + v.getFamilyName();
+            String goal = v.goalKey != null ? v.goalKey : "idle";
+            String activity;
+            try {
+                activity = v.getBrain().getActiveActivities().stream()
+                        .map(a -> a.getName()).reduce((a, b) -> a + "+" + b).orElse("none");
+            } catch (Exception e) {
+                activity = "?";
+            }
+            player.sendSystemMessage(Component.literal(
+                    "  §e" + name + "§r [" + (v.vtypeKey != null ? v.vtypeKey : "?") + "] "
+                    + "activity=§f" + activity + "§r goal=§f" + goal));
+        }
+        return villagers.size();
+    }
+
+    /** Toggles verbose extraLog flag on all MillVillagers within radius. */
+    private static int cmdDebugExtraLog(CommandContext<CommandSourceStack> ctx) {
+        if (!(ctx.getSource().getEntity() instanceof ServerPlayer player)) {
+            ctx.getSource().sendFailure(Component.literal("Must be run by a player."));
+            return 0;
+        }
+        int radius = IntegerArgumentType.getInteger(ctx, "radius");
+        AABB box = AABB.ofSize(player.position(), radius * 2, radius * 2, radius * 2);
+        List<MillVillager> villagers = player.serverLevel().getEntitiesOfClass(MillVillager.class, box);
+        int toggled = 0;
+        for (MillVillager v : villagers) {
+            v.extraLog = !v.extraLog;
+            toggled++;
+        }
+        final int count = toggled;
+        ctx.getSource().sendSuccess(
+                () -> Component.literal("§6[Millénaire]§r Toggled extraLog on " + count + " villager(s)."), false);
+        return count;
+    }
+
     // ========== Helpers ==========
 
     @Nullable
@@ -310,5 +395,21 @@ public class MillCommands {
             }
         }
         return null;
+    }
+
+    @Nullable
+    private static MillVillager findNearestVillager(ServerPlayer player, int radius) {
+        AABB box = AABB.ofSize(player.position(), radius * 2, radius * 2, radius * 2);
+        List<MillVillager> villagers = player.serverLevel().getEntitiesOfClass(MillVillager.class, box);
+        MillVillager nearest = null;
+        double bestDist = Double.MAX_VALUE;
+        for (MillVillager v : villagers) {
+            double d = v.distanceToSqr(player);
+            if (d < bestDist) {
+                bestDist = d;
+                nearest = v;
+            }
+        }
+        return nearest;
     }
 }
