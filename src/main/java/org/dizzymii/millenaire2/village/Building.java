@@ -4,15 +4,11 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import org.dizzymii.millenaire2.culture.BuildingPlan;
 import org.dizzymii.millenaire2.culture.BuildingPlanSet;
 import org.dizzymii.millenaire2.culture.Culture;
 import org.dizzymii.millenaire2.culture.VillageType;
-import org.dizzymii.millenaire2.culture.VillagerType;
-import org.dizzymii.millenaire2.entity.MillEntities;
-import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.item.TradeGood;
 import org.dizzymii.millenaire2.util.MillLog;
 import org.dizzymii.millenaire2.util.Point;
@@ -251,7 +247,9 @@ public class Building {
 
         // Spawn missing villagers if this is an active townhall or building
         if (isActive && isTownhall && tickCounter % 200 == 0) {
-            checkAndSpawnVillagers();
+            if (world instanceof ServerLevel serverLevel) {
+                VillagerSpawner.checkAndSpawnVillagers(this, serverLevel);
+            }
         }
 
         // Village expansion: check for upgrades every ~60 seconds (1200 ticks)
@@ -401,77 +399,6 @@ public class Building {
         if (VillageEconomyLoader.tickProduction(this) && mw != null) {
             mw.setDirty();
         }
-    }
-
-    // ========== Villager spawning ==========
-
-    /**
-     * Check VillagerRecords against loaded entities and spawn any missing villagers.
-     */
-    private void checkAndSpawnVillagers() {
-        if (!(world instanceof ServerLevel serverLevel)) return;
-        if (pos == null) return;
-
-        Culture culture = cultureKey != null ? Culture.getCultureByName(cultureKey) : null;
-
-        for (VillagerRecord vr : getVillagerRecords()) {
-            if (vr.killed || vr.awayraiding || vr.awayhired) continue;
-
-            // Check if this villager's entity is already loaded
-            // (skip spawn if entity exists within range)
-            boolean entityExists = !serverLevel.getEntitiesOfClass(
-                    MillVillager.class,
-                    net.minecraft.world.phys.AABB.ofSize(
-                            new net.minecraft.world.phys.Vec3(pos.x, pos.y, pos.z), 128, 64, 128),
-                    v -> v.getVillagerId() == vr.getVillagerId()
-            ).isEmpty();
-
-            if (entityExists) continue;
-
-            // Spawn the villager
-            spawnVillagerFromRecord(serverLevel, vr, culture);
-        }
-    }
-
-    /**
-     * Spawn a MillVillager entity from a VillagerRecord.
-     */
-    private void spawnVillagerFromRecord(ServerLevel level, VillagerRecord vr, @Nullable Culture culture) {
-        if (pos == null) return;
-
-        // Determine entity type based on gender and culture
-        VillagerType vtype = null;
-        if (culture != null && vr.type != null) {
-            vtype = culture.getVillagerType(vr.type);
-        }
-
-        EntityType<? extends MillVillager> entityType;
-        if (vr.gender == MillVillager.FEMALE) {
-            // Use symmetrical female by default
-            entityType = MillEntities.GENERIC_SYMM_FEMALE.get();
-        } else {
-            entityType = MillEntities.GENERIC_MALE.get();
-        }
-
-        MillVillager villager = entityType.create(level);
-        if (villager == null) return;
-
-        // Set position near the building
-        Point spawnPos = vr.getHousePos() != null ? vr.getHousePos() : pos;
-        villager.setPos(spawnPos.x + 0.5, spawnPos.y + 1.0, spawnPos.z + 0.5);
-
-        // Populate from record
-        villager.setVillagerId(vr.getVillagerId());
-        if (vr.firstName != null) villager.setFirstName(vr.firstName);
-        if (vr.familyName != null) villager.setFamilyName(vr.familyName);
-        villager.setGender(vr.gender);
-        if (cultureKey != null) villager.setCultureKey(cultureKey);
-        if (vr.type != null) villager.setVillagerTypeKey(vr.type);
-        villager.housePoint = vr.getHousePos();
-        villager.townHallPoint = getTownHallPos();
-
-        level.addFreshEntity(villager);
-        MillLog.minor("Building", "Spawned villager: " + vr.firstName + " " + vr.familyName);
     }
 
     // ========== NBT persistence ==========
