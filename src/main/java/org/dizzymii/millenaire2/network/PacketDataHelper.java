@@ -136,6 +136,11 @@ public final class PacketDataHelper {
             return new int[]{buf.readInt(), buf.readInt(), buf.readInt()};
         }
 
+        public org.dizzymii.millenaire2.util.Point readPoint() {
+            int[] p = readBlockPos();
+            return new org.dizzymii.millenaire2.util.Point(p[0], p[1], p[2]);
+        }
+
         public boolean hasRemaining() {
             return buf.readableBytes() > 0;
         }
