@@ -202,7 +202,7 @@ public class VillagerType {
     }
 
     public boolean containsTag(String tag) {
-        return tags.contains(tag.toLowerCase());
+        return tags.stream().anyMatch(t -> t.equalsIgnoreCase(tag));
     }
 
     public boolean hasChildren() {
