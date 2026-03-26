@@ -1,5 +1,6 @@
 package org.dizzymii.millenaire2.ui;
 
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -8,6 +9,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import org.dizzymii.millenaire2.menu.MillMenuTypes;
 
 /**
  * Container for puja sacrifice rituals.
@@ -20,6 +22,11 @@ public class ContainerPuja extends AbstractContainerMenu {
 
     public ContainerPuja(MenuType<?> type, int containerId, Inventory playerInventory) {
         this(type, containerId, playerInventory, new SimpleContainer(OFFERING_SLOTS));
+    }
+
+    /** Client-side factory constructor used by {@link net.neoforged.neoforge.common.extensions.IMenuTypeExtension}. */
+    public ContainerPuja(int containerId, Inventory playerInventory, FriendlyByteBuf buf) {
+        this(MillMenuTypes.PUJA.get(), containerId, playerInventory);
     }
 
     public ContainerPuja(MenuType<?> type, int containerId, Inventory playerInventory, Container offeringContainer) {

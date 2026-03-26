@@ -35,6 +35,14 @@ public class MillMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<ContainerPuja>> PUJA =
             MENU_TYPES.register("puja", () -> IMenuTypeExtension.create(
                     (windowId, inv, buf) -> new ContainerPuja(PUJA.get(), windowId, inv)));
+    public static final DeferredHolder<MenuType<?>, MenuType<ContainerTrade>> TRADE =
+            MENU_TYPES.register("trade", () -> IMenuTypeExtension.create(ContainerTrade::new));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<ContainerLockedChest>> LOCKED_CHEST =
+            MENU_TYPES.register("locked_chest", () -> IMenuTypeExtension.create(ContainerLockedChest::new));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<ContainerPuja>> PUJA =
+            MENU_TYPES.register("puja", () -> IMenuTypeExtension.create(ContainerPuja::new));
 
     /**
      * Called from Millenaire2 constructor to force class loading.
