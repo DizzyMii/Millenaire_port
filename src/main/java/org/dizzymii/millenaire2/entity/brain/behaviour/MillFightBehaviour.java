@@ -5,6 +5,7 @@ import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.entity.VillagerDebugger;
 import org.dizzymii.millenaire2.entity.brain.smartbrain.ExtendedBehaviour;
 import org.dizzymii.millenaire2.goal.Goal;
+import org.dizzymii.millenaire2.goal.GoalInformation;
 import org.dizzymii.millenaire2.util.MillLog;
 
 /**
