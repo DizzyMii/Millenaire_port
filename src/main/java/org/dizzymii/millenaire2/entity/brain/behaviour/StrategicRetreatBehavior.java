@@ -31,12 +31,19 @@ public class StrategicRetreatBehavior extends ExtendedBehaviour<HumanoidNPC> {
 
     @Override
     protected void start(ServerLevel level, HumanoidNPC entity) {
-        List<Monster> hostiles = nearbyHostiles(level, entity);
-        if (hostiles.isEmpty()) return;
+        retreat(level, entity);
+    }
 
-        Vec3 retreatTarget = computeRetreatTarget(entity, hostiles);
-        entity.setSprinting(true);
-        entity.getNavigation().moveTo(retreatTarget.x, retreatTarget.y, retreatTarget.z, RETREAT_SPEED);
+    @Override
+    protected boolean shouldKeepRunning(ServerLevel level, HumanoidNPC entity) {
+        return !nearbyHostiles(level, entity).isEmpty() || !entity.getNavigation().isDone();
+    }
+
+    @Override
+    protected void tick(ServerLevel level, HumanoidNPC entity) {
+        if (!nearbyHostiles(level, entity).isEmpty()) {
+            retreat(level, entity);
+        }
     }
 
     @Override
@@ -80,5 +87,14 @@ public class StrategicRetreatBehavior extends ExtendedBehaviour<HumanoidNPC> {
         double y = entity.level().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 BlockPos.containing(retreatPos.x, entityPos.y, retreatPos.z)).getY();
         return new Vec3(retreatPos.x, y, retreatPos.z);
+    }
+
+    private void retreat(ServerLevel level, HumanoidNPC entity) {
+        List<Monster> hostiles = nearbyHostiles(level, entity);
+        if (hostiles.isEmpty()) return;
+
+        Vec3 retreatTarget = computeRetreatTarget(entity, hostiles);
+        entity.setSprinting(true);
+        entity.getNavigation().moveTo(retreatTarget.x, retreatTarget.y, retreatTarget.z, RETREAT_SPEED);
     }
 }

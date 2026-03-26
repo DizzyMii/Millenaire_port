@@ -32,6 +32,7 @@ public class ConsumeFoodBehavior extends ExtendedBehaviour<HumanoidNPC> {
         int bestIndex = findBestFoodIndex(inventory);
         if (bestIndex < 0) return;
 
+        ItemStack previousMainHand = entity.getItemInHand(InteractionHand.MAIN_HAND).copy();
         ItemStack consumed = entity.removeCarriedInventorySlot(bestIndex);
         if (consumed.isEmpty()) return;
         FoodProperties food = consumed.get(DataComponents.FOOD);
@@ -52,7 +53,7 @@ public class ConsumeFoodBehavior extends ExtendedBehaviour<HumanoidNPC> {
         if (!consumed.isEmpty()) {
             entity.addToCarriedInventory(consumed);
         }
-        entity.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        entity.setItemInHand(InteractionHand.MAIN_HAND, previousMainHand);
     }
 
     private boolean shouldEat(HumanoidNPC entity) {

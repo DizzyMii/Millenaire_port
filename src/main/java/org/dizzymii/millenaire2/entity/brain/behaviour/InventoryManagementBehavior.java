@@ -27,7 +27,7 @@ public class InventoryManagementBehavior extends ExtendedBehaviour<HumanoidNPC> 
         if (entity.getBrain().getMemory(ModMemoryTypes.LAST_KNOWN_DANGER.get()).isPresent()) return false;
         if (entity.getBrain().getMemory(ModMemoryTypes.NEEDS_HEALING.get()).orElse(false)) return false;
         if (entity.getCarriedInventoryFillRatio() <= FULLNESS_THRESHOLD) return false;
-        return findLowValueIndex(entity) >= 0;
+        return hasLowValueDiscardCandidate(entity);
     }
 
     @Override
@@ -52,10 +52,23 @@ public class InventoryManagementBehavior extends ExtendedBehaviour<HumanoidNPC> 
     private int findLowValueIndex(HumanoidNPC entity) {
         for (int i = entity.getCarriedInventory().size() - 1; i >= 0; i--) {
             ItemStack stack = entity.getCarriedInventorySlot(i);
-            if (!stack.isEmpty() && LOW_VALUE_ITEMS.contains(stack.getItem())) {
+            if (isLowValue(stack)) {
                 return i;
             }
         }
         return -1;
+    }
+
+    public static boolean hasLowValueDiscardCandidate(HumanoidNPC entity) {
+        for (ItemStack stack : entity.getCarriedInventory()) {
+            if (isLowValue(stack)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isLowValue(ItemStack stack) {
+        return !stack.isEmpty() && LOW_VALUE_ITEMS.contains(stack.getItem());
     }
 }

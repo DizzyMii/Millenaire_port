@@ -5,7 +5,9 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.behavior.Behavior;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.schedule.Activity;
@@ -414,6 +416,24 @@ public class HumanoidNpcTests {
     }
 
     @GameTest(template = "empty", timeoutTicks = 80)
+    public static void testConsumeFoodBehaviorRestoresPreviousMainHand(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        HumanoidNPC npc = spawnNpc(helper, 1, 1, 1);
+        npc.setHealth(6.0f);
+        npc.setNpcFoodLevel(5);
+        npc.getBrain().setMemory(ModMemoryTypes.NEEDS_HEALING.get(), true);
+        npc.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_SWORD));
+        npc.addToCarriedInventory(new ItemStack(Items.COOKED_BEEF));
+
+        new ConsumeFoodBehavior().tryStart(level, npc, level.getGameTime());
+
+        ItemStack mainHand = npc.getItemInHand(InteractionHand.MAIN_HAND);
+        helper.assertTrue(mainHand.is(Items.IRON_SWORD),
+                "ConsumeFoodBehavior must restore pre-consumption main-hand item");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 80)
     public static void testStrategicRetreatBehaviorSprintsTowardBaseWhenThreatened(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         HumanoidNPC npc = spawnNpc(helper, 5, 1, 5);
@@ -432,6 +452,31 @@ public class HumanoidNpcTests {
         helper.assertTrue(started, "StrategicRetreatBehavior should start when low health and hostiles are nearby");
         helper.assertTrue(npc.isSprinting(), "NPC should sprint while retreating");
         retreat.doStop(level, npc, level.getGameTime());
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 80)
+    public static void testStrategicRetreatBehaviorKeepsRunningUnderThreat(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        HumanoidNPC npc = spawnNpc(helper, 5, 1, 5);
+        npc.setHealth(6.0f);
+        npc.getBrain().setMemory(ModMemoryTypes.NEEDS_HEALING.get(), true);
+
+        Zombie zombie = EntityType.ZOMBIE.create(level);
+        if (zombie == null) throw new IllegalStateException("Failed to create zombie");
+        zombie.setPos(npc.getX() + 1, npc.getY(), npc.getZ() + 1);
+        level.addFreshEntity(zombie);
+
+        StrategicRetreatBehavior retreat = new StrategicRetreatBehavior();
+        helper.assertTrue(retreat.tryStart(level, npc, level.getGameTime()),
+                "Retreat behavior should start when threatened");
+        retreat.tickOrStop(level, npc, level.getGameTime() + 1);
+
+        helper.assertTrue(retreat.getStatus().equals(Behavior.Status.RUNNING),
+                "Retreat behavior should keep running while threat remains nearby");
+        helper.assertTrue(npc.isSprinting(),
+                "NPC should remain sprinting while retreat behavior is still running");
+        retreat.doStop(level, npc, level.getGameTime() + 2);
         helper.succeed();
     }
 
@@ -477,6 +522,27 @@ public class HumanoidNpcTests {
             helper.assertTrue(
                     npc.getBrain().isActive(HumanoidNPC.SURVIVAL_ACTIVITY),
                     "SURVIVAL activity should override WORK when low health and threatened");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 120)
+    public static void testLogisticsActivityDoesNotPreemptWorkWithoutLowValueItems(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        HumanoidNPC npc = spawnNpc(helper, 1, 1, 1);
+        npc.setNpcFoodLevel(20);
+        npc.getBrain().setMemory(ModMemoryTypes.NEEDS_HEALING.get(), false);
+        npc.getBrain().eraseMemory(ModMemoryTypes.LAST_KNOWN_DANGER.get());
+
+        for (int i = 0; i < 30; i++) {
+            npc.addToCarriedInventory(new ItemStack(Items.DIAMOND));
+        }
+
+        helper.runAtTickTime(helper.getTick() + 30, () -> {
+            helper.assertTrue(npc.getBrain().isActive(Activity.WORK),
+                    "WORK should remain active when no discardable logistics item exists");
+            helper.assertFalse(npc.getBrain().isActive(HumanoidNPC.LOGISTICS_ACTIVITY),
+                    "LOGISTICS should not activate without low-value discard candidates");
             helper.succeed();
         });
     }

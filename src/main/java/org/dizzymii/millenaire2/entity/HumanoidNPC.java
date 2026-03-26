@@ -71,6 +71,7 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
     private static final int CARRIED_INVENTORY_CAPACITY = 36;
     private static final int MAX_NPC_FOOD_LEVEL = 20;
     public static final int LOW_HUNGER_FOOD_LEVEL = 12;
+    private static final double LOGISTICS_FILL_THRESHOLD = 0.80D;
     /**
      * NeoForge 1.21.1 activity compatibility:
      * use built-in activities instead of runtime custom Activity registration.
@@ -441,6 +442,8 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
     }
 
     private boolean shouldRunLogistics() {
-        return !shouldPrioritizeSurvival() && getCarriedInventoryFillRatio() > 0.80D;
+        return !shouldPrioritizeSurvival()
+                && getCarriedInventoryFillRatio() > LOGISTICS_FILL_THRESHOLD
+                && InventoryManagementBehavior.hasLowValueDiscardCandidate(this);
     }
 }
