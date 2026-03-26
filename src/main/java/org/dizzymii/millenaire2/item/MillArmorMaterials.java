@@ -74,6 +74,7 @@ public class MillArmorMaterials {
             map.put(ArmorItem.Type.LEGGINGS, leggings);
             map.put(ArmorItem.Type.CHESTPLATE, chestplate);
             map.put(ArmorItem.Type.HELMET, helmet);
+            // BODY covers horse/wolf armor in 1.21.1; mapped to chestplate value by convention
             map.put(ArmorItem.Type.BODY, chestplate);
         });
     }
