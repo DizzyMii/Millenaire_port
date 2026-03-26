@@ -1,6 +1,7 @@
 package org.dizzymii.millenaire2.entity.brain;
 
 import com.mojang.serialization.Codec;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
@@ -67,6 +68,26 @@ public final class ModMemoryTypes {
     public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<List<String>>>
             NEEDED_MATERIALS = MEMORY_MODULE_TYPES.register("needed_materials",
                     () -> new MemoryModuleType<>(Optional.of(Codec.STRING.listOf())));
+
+    /**
+     * Stores whether the NPC should prioritize immediate healing/food actions.
+     * Written by
+     * {@link org.dizzymii.millenaire2.entity.brain.sensor.SelfPreservationSensor}
+     * when health falls below the configured threshold.
+     */
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<Boolean>>
+            NEEDS_HEALING = MEMORY_MODULE_TYPES.register("needs_healing",
+                    () -> new MemoryModuleType<>(Optional.of(Codec.BOOL)));
+
+    /**
+     * Stores the last dangerous location observed by self-preservation sensing.
+     * Written by
+     * {@link org.dizzymii.millenaire2.entity.brain.sensor.SelfPreservationSensor}
+     * when nearby hostiles are detected.
+     */
+    public static final DeferredHolder<MemoryModuleType<?>, MemoryModuleType<BlockPos>>
+            LAST_KNOWN_DANGER = MEMORY_MODULE_TYPES.register("last_known_danger",
+                    () -> new MemoryModuleType<>(Optional.of(BlockPos.CODEC)));
 
     // ========== Class-loading trigger ==========
 

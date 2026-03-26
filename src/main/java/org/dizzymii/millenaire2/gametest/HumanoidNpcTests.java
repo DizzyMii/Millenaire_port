@@ -1,9 +1,15 @@
 package org.dizzymii.millenaire2.gametest;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.behavior.Behavior;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -13,8 +19,12 @@ import org.dizzymii.millenaire2.Millenaire2;
 import org.dizzymii.millenaire2.entity.HumanoidNPC;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.brain.ModMemoryTypes;
+import org.dizzymii.millenaire2.entity.brain.behaviour.ConsumeFoodBehavior;
 import org.dizzymii.millenaire2.entity.brain.behaviour.ContextualToolSwapBehavior;
+import org.dizzymii.millenaire2.entity.brain.behaviour.InventoryManagementBehavior;
+import org.dizzymii.millenaire2.entity.brain.behaviour.StrategicRetreatBehavior;
 import org.dizzymii.millenaire2.entity.brain.sensor.InventoryStateSensor;
+import org.dizzymii.millenaire2.entity.brain.sensor.SelfPreservationSensor;
 
 import java.util.List;
 import java.util.Optional;
@@ -78,6 +88,15 @@ public class HumanoidNpcTests {
         };
     }
 
+    private static SelfPreservationSensor alwaysFireSelfPreservationSensor() {
+        return new SelfPreservationSensor() {
+            @Override
+            public int getScanRate(HumanoidNPC entity) {
+                return 1;
+            }
+        };
+    }
+
     // ==================== Brain configuration tests ====================
 
     /**
@@ -91,7 +110,7 @@ public class HumanoidNpcTests {
     }
 
     /**
-     * All three custom memory module types must be registered and readable from
+     * All custom memory module types must be registered and readable from
      * the brain without throwing.
      *
      * <p>Accessing a registered type with no value returns an empty Optional;
@@ -104,12 +123,16 @@ public class HumanoidNpcTests {
         Optional<?> baseLoc   = npc.getBrain().getMemory(ModMemoryTypes.BASE_LOCATION.get());
         Optional<?> objective = npc.getBrain().getMemory(ModMemoryTypes.MACRO_OBJECTIVE.get());
         Optional<?> materials = npc.getBrain().getMemory(ModMemoryTypes.NEEDED_MATERIALS.get());
+        Optional<?> needsHealing = npc.getBrain().getMemory(ModMemoryTypes.NEEDS_HEALING.get());
+        Optional<?> lastKnownDanger = npc.getBrain().getMemory(ModMemoryTypes.LAST_KNOWN_DANGER.get());
 
         // getMemory returns Optional.empty() for registered-but-absent memories and
         // throws for unregistered ones; the non-null check proves registration succeeded.
         helper.assertFalse(baseLoc   == null, "BASE_LOCATION memory access must not return null");
         helper.assertFalse(objective == null, "MACRO_OBJECTIVE memory access must not return null");
         helper.assertFalse(materials == null, "NEEDED_MATERIALS memory access must not return null");
+        helper.assertFalse(needsHealing == null, "NEEDS_HEALING memory access must not return null");
+        helper.assertFalse(lastKnownDanger == null, "LAST_KNOWN_DANGER memory access must not return null");
         helper.succeed();
     }
 
@@ -348,5 +371,179 @@ public class HumanoidNpcTests {
         helper.assertFalse(mem.isPresent(),
                 "BASE_LOCATION memory must be absent after setBaseLocation(null)");
         helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 80)
+    public static void testSelfPreservationSensorWritesNeedsHealingAndDanger(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        HumanoidNPC npc = spawnNpc(helper, 1, 1, 1);
+        npc.hurt(level.damageSources().generic(), 13.0f);
+        npc.setNpcFoodLevel(6);
+
+        Zombie zombie = EntityType.ZOMBIE.create(level);
+        if (zombie == null) throw new IllegalStateException("Failed to create zombie");
+        zombie.setPos(npc.getX() + 2, npc.getY(), npc.getZ());
+        level.addFreshEntity(zombie);
+
+        alwaysFireSelfPreservationSensor().tick(level, npc);
+
+        boolean needsHealing = npc.getBrain().getMemory(ModMemoryTypes.NEEDS_HEALING.get()).orElse(false);
+        Optional<BlockPos> danger = npc.getBrain().getMemory(ModMemoryTypes.LAST_KNOWN_DANGER.get());
+        helper.assertTrue(needsHealing, "NEEDS_HEALING should be true under 40% health");
+        helper.assertTrue(danger.isPresent(), "LAST_KNOWN_DANGER should be present with nearby hostile");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 80)
+    public static void testConsumeFoodBehaviorUsesBestFoodFromInventory(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        HumanoidNPC npc = spawnNpc(helper, 1, 1, 1);
+        npc.setHealth(6.0f);
+        npc.setNpcFoodLevel(5);
+        npc.getBrain().setMemory(ModMemoryTypes.NEEDS_HEALING.get(), true);
+        npc.addToCarriedInventory(new ItemStack(Items.APPLE));
+        npc.addToCarriedInventory(new ItemStack(Items.COOKED_BEEF));
+
+        new ConsumeFoodBehavior().tryStart(level, npc, level.getGameTime());
+
+        helper.assertTrue(npc.getHealth() > 6.0f, "ConsumeFoodBehavior should heal when food is consumed");
+        helper.assertTrue(npc.getNpcFoodLevel() > 5, "ConsumeFoodBehavior should increase NPC food level");
+        boolean stillHasApple = npc.getCarriedInventory().stream().anyMatch(s -> s.is(Items.APPLE));
+        boolean stillHasBeef = npc.getCarriedInventory().stream().anyMatch(s -> s.is(Items.COOKED_BEEF));
+        helper.assertTrue(stillHasApple, "Lower-value food should remain after consuming best food first");
+        helper.assertFalse(stillHasBeef, "Best food should be consumed and removed from carried inventory");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 80)
+    public static void testConsumeFoodBehaviorRestoresPreviousMainHand(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        HumanoidNPC npc = spawnNpc(helper, 1, 1, 1);
+        npc.setHealth(6.0f);
+        npc.setNpcFoodLevel(5);
+        npc.getBrain().setMemory(ModMemoryTypes.NEEDS_HEALING.get(), true);
+        npc.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_SWORD));
+        npc.addToCarriedInventory(new ItemStack(Items.COOKED_BEEF));
+
+        new ConsumeFoodBehavior().tryStart(level, npc, level.getGameTime());
+
+        ItemStack mainHand = npc.getItemInHand(InteractionHand.MAIN_HAND);
+        helper.assertTrue(mainHand.is(Items.IRON_SWORD),
+                "ConsumeFoodBehavior must restore pre-consumption main-hand item");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 80)
+    public static void testStrategicRetreatBehaviorSprintsTowardBaseWhenThreatened(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        HumanoidNPC npc = spawnNpc(helper, 5, 1, 5);
+        npc.setHealth(6.0f);
+        npc.getBrain().setMemory(ModMemoryTypes.NEEDS_HEALING.get(), true);
+        BlockPos base = helper.absolutePos(new BlockPos(1, 1, 1));
+        npc.setBaseLocation(GlobalPos.of(level.dimension(), base));
+
+        Zombie zombie = EntityType.ZOMBIE.create(level);
+        if (zombie == null) throw new IllegalStateException("Failed to create zombie");
+        zombie.setPos(npc.getX() + 1, npc.getY(), npc.getZ() + 1);
+        level.addFreshEntity(zombie);
+
+        StrategicRetreatBehavior retreat = new StrategicRetreatBehavior();
+        boolean started = retreat.tryStart(level, npc, level.getGameTime());
+        helper.assertTrue(started, "StrategicRetreatBehavior should start when low health and hostiles are nearby");
+        helper.assertTrue(npc.isSprinting(), "NPC should sprint while retreating");
+        retreat.doStop(level, npc, level.getGameTime());
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 80)
+    public static void testStrategicRetreatBehaviorKeepsRunningUnderThreat(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        HumanoidNPC npc = spawnNpc(helper, 5, 1, 5);
+        npc.setHealth(6.0f);
+        npc.getBrain().setMemory(ModMemoryTypes.NEEDS_HEALING.get(), true);
+
+        Zombie zombie = EntityType.ZOMBIE.create(level);
+        if (zombie == null) throw new IllegalStateException("Failed to create zombie");
+        zombie.setPos(npc.getX() + 1, npc.getY(), npc.getZ() + 1);
+        level.addFreshEntity(zombie);
+
+        StrategicRetreatBehavior retreat = new StrategicRetreatBehavior();
+        helper.assertTrue(retreat.tryStart(level, npc, level.getGameTime()),
+                "Retreat behavior should start when threatened");
+        retreat.tickOrStop(level, npc, level.getGameTime() + 1);
+
+        helper.assertTrue(retreat.getStatus().equals(Behavior.Status.RUNNING),
+                "Retreat behavior should keep running while threat remains nearby");
+        helper.assertTrue(npc.isSprinting(),
+                "NPC should remain sprinting while retreat behavior is still running");
+        retreat.doStop(level, npc, level.getGameTime() + 2);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 80)
+    public static void testInventoryManagementBehaviorDropsLowValueItemsWhenOverCapacity(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        HumanoidNPC npc = spawnNpc(helper, 1, 1, 1);
+
+        for (int i = 0; i < 30; i++) {
+            npc.addToCarriedInventory(new ItemStack(Items.COBBLESTONE));
+        }
+        npc.addToCarriedInventory(new ItemStack(Items.DIAMOND));
+        npc.getBrain().setMemory(ModMemoryTypes.NEEDS_HEALING.get(), false);
+        npc.getBrain().eraseMemory(ModMemoryTypes.LAST_KNOWN_DANGER.get());
+
+        int beforeSize = npc.getCarriedInventory().size();
+        new InventoryManagementBehavior().tryStart(level, npc, level.getGameTime());
+        int afterSize = npc.getCarriedInventory().size();
+
+        helper.assertTrue(afterSize < beforeSize, "InventoryManagementBehavior should discard low-value items");
+        List<ItemEntity> dropped = level.getEntitiesOfClass(
+                ItemEntity.class,
+                npc.getBoundingBox().inflate(3.0D)
+        );
+        helper.assertFalse(dropped.isEmpty(), "Discarded low-value item should be spawned as ItemEntity");
+        boolean stillHasDiamond = npc.getCarriedInventory().stream().anyMatch(s -> s.is(Items.DIAMOND));
+        helper.assertTrue(stillHasDiamond, "High-value items should be retained after inventory cleanup");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 120)
+    public static void testSurvivalActivityOverridesWorkWhenInDanger(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        HumanoidNPC npc = spawnNpc(helper, 1, 1, 1);
+        npc.hurt(level.damageSources().generic(), 13.0f);
+
+        Zombie zombie = EntityType.ZOMBIE.create(level);
+        if (zombie == null) throw new IllegalStateException("Failed to create zombie");
+        zombie.setPos(npc.getX() + 2, npc.getY(), npc.getZ() + 1);
+        level.addFreshEntity(zombie);
+
+        helper.runAtTickTime(helper.getTick() + 30, () -> {
+            helper.assertTrue(
+                    npc.getBrain().isActive(HumanoidNPC.SURVIVAL_ACTIVITY),
+                    "SURVIVAL activity should override WORK when low health and threatened");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", timeoutTicks = 120)
+    public static void testLogisticsActivityDoesNotPreemptWorkWithoutLowValueItems(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        HumanoidNPC npc = spawnNpc(helper, 1, 1, 1);
+        npc.setNpcFoodLevel(20);
+        npc.getBrain().setMemory(ModMemoryTypes.NEEDS_HEALING.get(), false);
+        npc.getBrain().eraseMemory(ModMemoryTypes.LAST_KNOWN_DANGER.get());
+
+        for (int i = 0; i < 30; i++) {
+            npc.addToCarriedInventory(new ItemStack(Items.DIAMOND));
+        }
+
+        helper.runAtTickTime(helper.getTick() + 30, () -> {
+            helper.assertTrue(npc.getBrain().isActive(Activity.WORK),
+                    "WORK should remain active when no discardable logistics item exists");
+            helper.assertFalse(npc.getBrain().isActive(HumanoidNPC.LOGISTICS_ACTIVITY),
+                    "LOGISTICS should not activate without low-value discard candidates");
+            helper.succeed();
+        });
     }
 }
