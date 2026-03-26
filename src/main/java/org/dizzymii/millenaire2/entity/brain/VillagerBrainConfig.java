@@ -9,6 +9,9 @@ import org.dizzymii.millenaire2.entity.brain.behaviour.MillFightBehaviour;
 import org.dizzymii.millenaire2.entity.brain.behaviour.MillIdleBehaviour;
 import org.dizzymii.millenaire2.entity.brain.behaviour.MillRestBehaviour;
 import org.dizzymii.millenaire2.entity.brain.behaviour.MillWorkBehaviour;
+import net.minecraft.world.entity.ai.behavior.LookAtTargetSink;
+import net.minecraft.world.entity.ai.behavior.MoveToTargetSink;
+import net.minecraft.world.entity.ai.behavior.Swim;
 import org.dizzymii.millenaire2.entity.brain.smartbrain.BrainActivityGroup;
 
 import java.util.List;
@@ -79,11 +82,11 @@ public final class VillagerBrainConfig {
 
     private static List<BrainActivityGroup<MillVillager>> buildGroups() {
         return List.of(
-            // CORE is left empty intentionally — registerGroup() skips empty groups.
-            // Activities registered here (WORK/REST/IDLE/FIGHT) benefit from the
-            // Brain's priority-ordered tryStart loop.  Add LookAtTarget / Swim here
-            // when those vanilla behaviours are integrated.
-            BrainActivityGroup.coreTasks(/* placeholder — see above */),
+            BrainActivityGroup.coreTasks(
+                    new Swim(0.8F),
+                    new LookAtTargetSink(45, 90),
+                    new MoveToTargetSink()
+            ),
             BrainActivityGroup.workTasks(new MillWorkBehaviour()),
             BrainActivityGroup.restTasks(new MillRestBehaviour()),
             BrainActivityGroup.idleTasks(new MillIdleBehaviour()),
