@@ -11,10 +11,13 @@ import org.dizzymii.millenaire2.util.Point;
 import javax.annotation.Nullable;
 
 /**
- * Wither Skeleton variant summoned by villagers to attack a specific target.
+ * Wither Skeleton variant summoned by villagers to defend a specific village position.
+ * The village defense position is stored and persisted for future AI-based targeting.
  * Ported from org.millenaire.common.entity.EntityTargetedWitherSkeleton (Forge 1.12.2).
  */
 public class EntityTargetedWitherSkeleton extends WitherSkeleton {
+
+    private static final String NBT_VILLAGE_TARGET = "villageTarget";
 
     /** Village position this entity was summoned to defend — distinct from AI combat targeting. */
     @Nullable
@@ -40,13 +43,13 @@ public class EntityTargetedWitherSkeleton extends WitherSkeleton {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         if (target != null) {
-            target.writeToNBT(tag, "Target");
+            target.writeToNBT(tag, NBT_VILLAGE_TARGET);
         }
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        target = Point.readFromNBT(tag, "Target");
+        target = Point.readFromNBT(tag, NBT_VILLAGE_TARGET);
     }
 }
