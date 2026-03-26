@@ -2,6 +2,7 @@ package org.dizzymii.millenaire2.network;
 
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import org.dizzymii.millenaire2.client.network.ClientReceiver;
 import org.dizzymii.millenaire2.network.payloads.MillGenericC2SPayload;
 import org.dizzymii.millenaire2.network.payloads.MillGenericS2CPayload;
 import org.dizzymii.millenaire2.util.MillLog;
@@ -26,7 +27,7 @@ public final class MillNetworking {
                 MillGenericS2CPayload.TYPE,
                 MillGenericS2CPayload.STREAM_CODEC,
                 (payload, context) -> {
-                    context.enqueueWork(() -> ClientPacketHandler.handleGenericS2C(payload));
+                    context.enqueueWork(() -> ClientReceiver.onPacketReceived(payload));
                 }
         );
 

@@ -8,7 +8,7 @@ import org.dizzymii.millenaire2.client.book.TextBook;
 import org.dizzymii.millenaire2.client.book.TextPage;
 import org.dizzymii.millenaire2.client.book.TextLine;
 import org.dizzymii.millenaire2.client.book.TravelBookExporter;
-import org.dizzymii.millenaire2.network.ClientPacketHandler;
+import org.dizzymii.millenaire2.client.network.ClientNetworkCache;
 import org.dizzymii.millenaire2.network.ClientPacketSender;
 
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ import java.util.Map;
 
 /**
  * Travel book screen — paginated display of discovered villages and cultures.
- * Auto-populates from ClientPacketHandler.villageListCache.
+ * Auto-populates from ClientNetworkCache.villageListCache.
  */
 public class GuiTravelBook extends GuiText {
 
@@ -33,7 +33,7 @@ public class GuiTravelBook extends GuiText {
     private int currentPage = 0;
     private Mode mode = Mode.HOME;
     private String selectedCulture = "";
-    private ClientPacketHandler.VillageListClientEntry selectedEntry = null;
+    private ClientNetworkCache.VillageListClientEntry selectedEntry = null;
 
     public GuiTravelBook() {
         super(Component.literal("Travel Book"));
@@ -52,12 +52,12 @@ public class GuiTravelBook extends GuiText {
         pages.clear();
         TextBook book;
         if (mode == Mode.HOME) {
-            book = BookManagerTravelBook.generateHomeBook(ClientPacketHandler.villageListCache);
+            book = BookManagerTravelBook.generateHomeBook(ClientNetworkCache.villageListCache);
         } else if (mode == Mode.CULTURE_LIST) {
             TextBook listBook = new TextBook("travel_book_cultures", "Travel Book - Cultures");
             TextPage page = new TextPage("Cultures");
-            Map<String, List<ClientPacketHandler.VillageListClientEntry>> byCulture =
-                    BookManagerTravelBook.indexByCulture(ClientPacketHandler.villageListCache);
+            Map<String, List<ClientNetworkCache.VillageListClientEntry>> byCulture =
+                    BookManagerTravelBook.indexByCulture(ClientNetworkCache.villageListCache);
             List<String> cultures = new ArrayList<>(byCulture.keySet());
             Collections.sort(cultures);
             if (cultures.isEmpty()) {
@@ -73,12 +73,12 @@ public class GuiTravelBook extends GuiText {
             listBook.addPage(page);
             book = listBook;
         } else if (mode == Mode.CULTURE_DETAIL) {
-            book = BookManagerTravelBook.generateCultureBook(selectedCulture, ClientPacketHandler.villageListCache);
+            book = BookManagerTravelBook.generateCultureBook(selectedCulture, ClientNetworkCache.villageListCache);
         } else {
             if (selectedEntry != null) {
                 book = BookManagerTravelBook.generateVillageDetailBook(selectedEntry);
             } else {
-                book = BookManagerTravelBook.generateHomeBook(ClientPacketHandler.villageListCache);
+                book = BookManagerTravelBook.generateHomeBook(ClientNetworkCache.villageListCache);
                 mode = Mode.HOME;
             }
         }
@@ -185,8 +185,8 @@ public class GuiTravelBook extends GuiText {
     }
 
     private void openSelectedCulture() {
-        Map<String, List<ClientPacketHandler.VillageListClientEntry>> byCulture =
-                BookManagerTravelBook.indexByCulture(ClientPacketHandler.villageListCache);
+        Map<String, List<ClientNetworkCache.VillageListClientEntry>> byCulture =
+                BookManagerTravelBook.indexByCulture(ClientNetworkCache.villageListCache);
         List<String> cultures = new ArrayList<>(byCulture.keySet());
         Collections.sort(cultures);
         if (cultures.isEmpty()) return;
@@ -200,8 +200,8 @@ public class GuiTravelBook extends GuiText {
 
     private void openSelectedPlace() {
         if (selectedCulture == null || selectedCulture.isBlank()) return;
-        List<ClientPacketHandler.VillageListClientEntry> filtered = new ArrayList<>();
-        for (ClientPacketHandler.VillageListClientEntry e : ClientPacketHandler.villageListCache) {
+        List<ClientNetworkCache.VillageListClientEntry> filtered = new ArrayList<>();
+        for (ClientNetworkCache.VillageListClientEntry e : ClientNetworkCache.villageListCache) {
             String culture = e.cultureKey == null ? "unknown" : e.cultureKey;
             if (selectedCulture.equalsIgnoreCase(culture)) filtered.add(e);
         }

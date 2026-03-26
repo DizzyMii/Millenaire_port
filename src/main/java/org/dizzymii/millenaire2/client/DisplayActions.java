@@ -3,8 +3,8 @@ package org.dizzymii.millenaire2.client;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import org.dizzymii.millenaire2.network.ClientPacketHandler;
-import org.dizzymii.millenaire2.network.ClientPacketHandler.VillageListClientEntry;
+import org.dizzymii.millenaire2.client.network.ClientNetworkCache;
+import org.dizzymii.millenaire2.client.network.ClientNetworkCache.VillageListClientEntry;
 import org.dizzymii.millenaire2.util.Point;
 
 import javax.annotation.Nullable;
@@ -39,7 +39,7 @@ public class DisplayActions {
         int closestDist = Integer.MAX_VALUE;
         VillageListClientEntry closest = null;
 
-        for (VillageListClientEntry entry : ClientPacketHandler.villageListCache) {
+        for (VillageListClientEntry entry : ClientNetworkCache.villageListCache) {
             if (entry.pos != null) {
                 int dx = entry.pos.x - px;
                 int dz = entry.pos.z - pz;

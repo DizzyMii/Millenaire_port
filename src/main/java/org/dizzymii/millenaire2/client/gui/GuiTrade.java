@@ -4,7 +4,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import org.dizzymii.millenaire2.network.ClientPacketHandler;
+import org.dizzymii.millenaire2.client.network.ClientNetworkCache;
 import org.dizzymii.millenaire2.network.ClientPacketSender;
 import org.dizzymii.millenaire2.network.MillPacketIds;
 import org.dizzymii.millenaire2.network.PacketDataHelper;
@@ -53,9 +53,9 @@ public class GuiTrade extends Screen {
         graphics.fill(guiLeft, guiTop, guiLeft + BG_WIDTH, guiTop + BG_HEIGHT, 0xFFC6A96C);
         graphics.fill(guiLeft + 2, guiTop + 2, guiLeft + BG_WIDTH - 2, guiTop + BG_HEIGHT - 2, 0xFFF5E6C8);
 
-        String vName = ClientPacketHandler.cachedVillagerName;
-        int deniers = ClientPacketHandler.cachedDeniers;
-        int rep = ClientPacketHandler.cachedReputation;
+        String vName = ClientNetworkCache.cachedVillagerName;
+        int deniers = ClientNetworkCache.cachedDeniers;
+        int rep = ClientNetworkCache.cachedReputation;
 
         // Title
         graphics.drawString(font, "Trading with " + vName, guiLeft + 8, guiTop + 6, 0x3F2A14, false);
@@ -72,14 +72,14 @@ public class GuiTrade extends Screen {
         graphics.fill(guiLeft + 6, guiTop + 44, guiLeft + BG_WIDTH - 6, guiTop + 45, 0xFF3F2A14);
 
         // Trade goods list
-        List<ClientPacketHandler.TradeGoodClientEntry> goods = ClientPacketHandler.tradeGoodsCache;
+        List<ClientNetworkCache.TradeGoodClientEntry> goods = ClientNetworkCache.tradeGoodsCache;
         if (goods.isEmpty()) {
             graphics.drawString(font, "No goods available", guiLeft + 8, guiTop + 50, 0x666666, false);
         } else {
             int y = guiTop + 48;
             int end = Math.min(scrollOffset + MAX_VISIBLE, goods.size());
             for (int i = scrollOffset; i < end; i++) {
-                ClientPacketHandler.TradeGoodClientEntry g = goods.get(i);
+                ClientNetworkCache.TradeGoodClientEntry g = goods.get(i);
                 int rowColor = (i == selectedIndex) ? 0x40FFD700 : 0x00000000;
                 if (rowColor != 0) {
                     graphics.fill(guiLeft + 6, y, guiLeft + BG_WIDTH - 6, y + 14, rowColor);
@@ -106,7 +106,7 @@ public class GuiTrade extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // Check if click is in the trade goods list area
-        List<ClientPacketHandler.TradeGoodClientEntry> goods = ClientPacketHandler.tradeGoodsCache;
+        List<ClientNetworkCache.TradeGoodClientEntry> goods = ClientNetworkCache.tradeGoodsCache;
         int listTop = guiTop + 48;
         int listLeft = guiLeft + 6;
         int listRight = guiLeft + BG_WIDTH - 6;
@@ -122,23 +122,23 @@ public class GuiTrade extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        int maxScroll = Math.max(0, ClientPacketHandler.tradeGoodsCache.size() - MAX_VISIBLE);
+        int maxScroll = Math.max(0, ClientNetworkCache.tradeGoodsCache.size() - MAX_VISIBLE);
         scrollOffset = Math.max(0, Math.min(maxScroll, scrollOffset - (int) scrollY));
         return true;
     }
 
     private void executeBuy() {
-        if (selectedIndex < 0 || selectedIndex >= ClientPacketHandler.tradeGoodsCache.size()) return;
+        if (selectedIndex < 0 || selectedIndex >= ClientNetworkCache.tradeGoodsCache.size()) return;
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
-        w.writeInt(ClientPacketHandler.cachedVillagerEntityId);
+        w.writeInt(ClientNetworkCache.cachedVillagerEntityId);
         w.writeInt(selectedIndex);
         ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_TRADE_BUY, w);
     }
 
     private void executeSell() {
-        if (selectedIndex < 0 || selectedIndex >= ClientPacketHandler.tradeGoodsCache.size()) return;
+        if (selectedIndex < 0 || selectedIndex >= ClientNetworkCache.tradeGoodsCache.size()) return;
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
-        w.writeInt(ClientPacketHandler.cachedVillagerEntityId);
+        w.writeInt(ClientNetworkCache.cachedVillagerEntityId);
         w.writeInt(selectedIndex);
         ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_TRADE_SELL, w);
     }

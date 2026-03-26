@@ -2,14 +2,14 @@ package org.dizzymii.millenaire2.client.gui.text;
 
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
-import org.dizzymii.millenaire2.network.ClientPacketHandler;
+import org.dizzymii.millenaire2.client.network.ClientNetworkCache;
 import org.dizzymii.millenaire2.network.ClientPacketSender;
 import org.dizzymii.millenaire2.network.MillPacketIds;
 import org.dizzymii.millenaire2.network.PacketDataHelper;
 
 /**
  * Quest display screen — shows quest description, current step, and accept/decline buttons.
- * Reads from ClientPacketHandler.cachedQuest populated by PACKET_QUESTINSTANCE.
+ * Reads from ClientNetworkCache.cachedQuest populated by PACKET_QUESTINSTANCE.
  */
 public class GuiQuest extends GuiText {
 
@@ -22,7 +22,7 @@ public class GuiQuest extends GuiText {
         super.init();
         lines.clear();
 
-        ClientPacketHandler.QuestClientEntry q = ClientPacketHandler.cachedQuest;
+        ClientNetworkCache.QuestClientEntry q = ClientNetworkCache.cachedQuest;
 
         if (q != null) {
             addLine("Quest: " + q.questKey);
@@ -54,31 +54,31 @@ public class GuiQuest extends GuiText {
     }
 
     private void acceptQuest() {
-        ClientPacketHandler.QuestClientEntry q = ClientPacketHandler.cachedQuest;
+        ClientNetworkCache.QuestClientEntry q = ClientNetworkCache.cachedQuest;
         if (q == null) return;
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
         w.writeString(q.questKey);
-        w.writeInt(ClientPacketHandler.cachedQuestVillagerEntityId);
+        w.writeInt(ClientNetworkCache.cachedQuestVillagerEntityId);
         ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_QUEST_COMPLETESTEP, w);
         onClose();
     }
 
     private void completeStep() {
-        ClientPacketHandler.QuestClientEntry q = ClientPacketHandler.cachedQuest;
+        ClientNetworkCache.QuestClientEntry q = ClientNetworkCache.cachedQuest;
         if (q == null) return;
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
         w.writeString(q.questKey);
-        w.writeInt(ClientPacketHandler.cachedQuestVillagerEntityId);
+        w.writeInt(ClientNetworkCache.cachedQuestVillagerEntityId);
         ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_QUEST_COMPLETESTEP, w);
         onClose();
     }
 
     private void refuseQuest() {
-        ClientPacketHandler.QuestClientEntry q = ClientPacketHandler.cachedQuest;
+        ClientNetworkCache.QuestClientEntry q = ClientNetworkCache.cachedQuest;
         if (q == null) return;
         PacketDataHelper.Writer w = new PacketDataHelper.Writer();
         w.writeString(q.questKey);
-        w.writeInt(ClientPacketHandler.cachedQuestVillagerEntityId);
+        w.writeInt(ClientNetworkCache.cachedQuestVillagerEntityId);
         ClientPacketSender.sendGuiAction(MillPacketIds.GUIACTION_QUEST_REFUSE, w);
         onClose();
     }
