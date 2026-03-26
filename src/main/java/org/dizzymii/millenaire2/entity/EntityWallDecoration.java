@@ -5,9 +5,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import org.dizzymii.millenaire2.item.MillItems;
 
 /**
  * Wall decoration entity (tapestries, statues, icons, hide hangings).
@@ -62,12 +66,67 @@ public class EntityWallDecoration extends Entity {
         tag.putInt("facing", getFacingDirection().get2DDataValue());
     }
 
+    // ==================== Interaction ====================
+
+    @Override
+    public boolean isPickable() {
+        return true;
+    }
+
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        if (!this.level().isClientSide) {
+            dropItem();
+            this.discard();
+        }
+        return true;
+    }
+
+    @Override
+    public ItemStack getPickResult() {
+        ItemStack drop = getDropItem();
+        return drop.isEmpty() ? super.getPickResult() : drop;
+    }
+
+    // ==================== Drop Logic ====================
+
+    /**
+     * Maps the current decoration type constant to the corresponding
+     * {@link MillItems} entry so the correct item is dropped / picked.
+     */
+    private ItemStack getDropItem() {
+        return switch (getDecorationType()) {
+            case NORMAN_TAPESTRY        -> new ItemStack(MillItems.TAPESTRY.get());
+            case INDIAN_STATUE          -> new ItemStack(MillItems.INDIAN_STATUE.get());
+            case MAYAN_STATUE           -> new ItemStack(MillItems.MAYAN_STATUE.get());
+            case BYZANTINE_ICON_SMALL   -> new ItemStack(MillItems.BYZANTINE_ICON_SMALL.get());
+            case BYZANTINE_ICON_MEDIUM  -> new ItemStack(MillItems.BYZANTINE_ICON_MEDIUM.get());
+            case BYZANTINE_ICON_LARGE   -> new ItemStack(MillItems.BYZANTINE_ICON_LARGE.get());
+            case HIDE_HANGING           -> new ItemStack(MillItems.HIDE_HANGING.get());
+            case JAPANESE_PAINTING_SMALL  -> new ItemStack(MillItems.WALL_CARPET_SMALL.get());
+            case JAPANESE_PAINTING_MEDIUM -> new ItemStack(MillItems.WALL_CARPET_MEDIUM.get());
+            case JAPANESE_PAINTING_LARGE  -> new ItemStack(MillItems.WALL_CARPET_LARGE.get());
+            default -> ItemStack.EMPTY;
+        };
+    }
+
+    private void dropItem() {
+        ItemStack drop = getDropItem();
+        if (!drop.isEmpty()) {
+            Level lvl = this.level();
+            lvl.addFreshEntity(new ItemEntity(lvl, this.getX(), this.getY(), this.getZ(), drop));
+        }
+    }
+
+    // ==================== Tick / Survival ====================
+
     @Override
     public void tick() {
         // Survival check: discard if block behind is air (decoration fell off wall)
         if (!this.level().isClientSide && this.tickCount % 100 == 0) {
             net.minecraft.core.BlockPos behind = this.blockPosition().relative(getFacingDirection().getOpposite());
             if (this.level().getBlockState(behind).isAir()) {
+                dropItem();
                 this.discard();
             }
         }
