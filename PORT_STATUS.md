@@ -47,13 +47,13 @@ No legacy `RegistryEvent` subscribers exist anywhere in the codebase.
 | Items | `MillItems` | 100+ items (coins, crops, food, tools, weapons) |
 | Creative tab | `Millenaire2` | 1 tab with all mod items |
 | Entity types | `MillEntities` | 8 entity types |
-| Block entity types | `MillEntities` | 5 block entity types |
+| Block entity types | `MillEntities` | 4 block entity types (fire_pit, locked_chest, panel, import_table) |
 | Memory module types | `ModMemoryTypes` | 5 custom brain memory modules |
 | Menu types | `MillMenuTypes` | 1 menu (FirePit) |
 
 ### 1.3 Entity System
 
-All entities extend `PathfinderMob` (1.21.1 equivalent of 1.12.2 `EntityCreature`).
+Core villager and humanoid NPC entities extend `PathfinderMob` (1.21.1 equivalent of 1.12.2 `EntityCreature`), while targeted combat and decoration entities extend their appropriate vanilla bases (`Blaze`, `WitherSkeleton`, `Ghast`, `Entity`).
 No legacy `EntityCreature` or `EntityLivingBase` references remain.
 
 | Entity class | Base | Notes |
@@ -135,7 +135,7 @@ All block entities extend `BlockEntity` (not the removed 1.12.2 `TileEntity`).
 | `MillLockedChestBlockEntity` | `BaseContainerBlockEntity` | Access-controlled container |
 | `MillImportTableBlockEntity` | `BaseContainerBlockEntity` | Trading table |
 | `MillPanelBlockEntity` | `BlockEntity` | Display panel (no inventory) |
-| `MillMockBannerBlockEntity` | `BlockEntity` | Culture banner display |
+| `MillMockBannerBlockEntity` | `BlockEntity` | Culture banner display (planned; `BlockEntityType` not yet registered) |
 
 ### 1.7 GUI / Menu System
 
@@ -252,7 +252,7 @@ instead of their proper subclasses:
 **Nature:** Container classes extend `AbstractContainerMenu` correctly, and screen
 classes extend `Screen`, but none of these menus are registered in `MillMenuTypes`.
 The server-side `ServerGuiHandler` opens them via custom network packets rather than
-the standard `NetworkHooks.openScreen` / `IMenuFactory` path.
+the standard `NetworkHooks.openScreen` with a `MenuProvider` / `MenuType` path.
 
 **Impact:** These GUIs work in the current packet-driven approach, but the pattern
 is non-standard.  If a client disconnects while a GUI is open the menu type will be
