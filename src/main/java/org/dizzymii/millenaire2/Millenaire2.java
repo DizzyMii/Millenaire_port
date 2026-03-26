@@ -25,8 +25,10 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import org.dizzymii.millenaire2.block.MillBlocks;
 import org.dizzymii.millenaire2.client.screen.FirePitScreen;
 import org.dizzymii.millenaire2.data.ContentDeployer;
+import org.dizzymii.millenaire2.entity.HumanoidNPC;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
+import org.dizzymii.millenaire2.entity.brain.ModMemoryTypes;
 import org.dizzymii.millenaire2.item.MillItems;
 import org.dizzymii.millenaire2.menu.MillMenuTypes;
 import org.dizzymii.millenaire2.network.MillNetworking;
@@ -49,6 +51,8 @@ public class Millenaire2 {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(Registries.ENTITY_TYPE, MODID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
+    public static final DeferredRegister<net.minecraft.world.entity.ai.memory.MemoryModuleType<?>> MEMORY_MODULE_TYPES =
+            ModMemoryTypes.MEMORY_MODULE_TYPES;
 
     // --- Creative Tab ---
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MILL_TAB = CREATIVE_MODE_TABS.register("millenaire_tab",
@@ -72,6 +76,7 @@ public class Millenaire2 {
         CREATIVE_MODE_TABS.register(modEventBus);
         ENTITY_TYPES.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
+        MEMORY_MODULE_TYPES.register(modEventBus);
         MillMenuTypes.MENU_TYPES.register(modEventBus);
 
         // Force class loading of registration holders
@@ -79,6 +84,7 @@ public class Millenaire2 {
         MillItems.init();
         MillEntities.init();
         MillMenuTypes.init();
+        ModMemoryTypes.init();
 
         NeoForge.EVENT_BUS.register(this);
 
@@ -100,6 +106,7 @@ public class Millenaire2 {
         event.put(MillEntities.TARGETED_BLAZE.get(), net.minecraft.world.entity.monster.Blaze.createAttributes().build());
         event.put(MillEntities.TARGETED_WITHER_SKELETON.get(), net.minecraft.world.entity.monster.WitherSkeleton.createAttributes().build());
         event.put(MillEntities.TARGETED_GHAST.get(), net.minecraft.world.entity.monster.Ghast.createAttributes().build());
+        event.put(MillEntities.HUMANOID_NPC.get(), HumanoidNPC.createAttributes().build());
     }
 
     @SubscribeEvent
