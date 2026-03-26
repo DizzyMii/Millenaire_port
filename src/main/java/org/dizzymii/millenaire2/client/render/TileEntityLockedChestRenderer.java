@@ -14,6 +14,11 @@ import org.dizzymii.millenaire2.entity.blockentity.MillLockedChestBlockEntity;
  */
 public class TileEntityLockedChestRenderer implements BlockEntityRenderer<MillLockedChestBlockEntity> {
 
+    /** Minecraft's default font supports basic ASCII/Latin; use a bracket-based lock symbol. */
+    private static final String LOCK_LABEL = "[Locked]";
+    private static final int LOCK_TEXT_COLOR = 0xFF4444;
+    private static final int TEXT_BACKGROUND_COLOR = 0x40000000;
+
     private final Font font;
 
     public TileEntityLockedChestRenderer(BlockEntityRendererProvider.Context context) {
@@ -24,17 +29,16 @@ public class TileEntityLockedChestRenderer implements BlockEntityRenderer<MillLo
     public void render(MillLockedChestBlockEntity blockEntity, float partialTick,
                        PoseStack poseStack, MultiBufferSource buffer,
                        int packedLight, int packedOverlay) {
-        // Render a lock symbol floating above the chest
+        // Render a lock label floating above the chest
         poseStack.pushPose();
         poseStack.translate(0.5, 1.1, 0.5);
         poseStack.mulPose(Minecraft.getInstance().getEntityRenderDispatcher().cameraOrientation());
         poseStack.scale(-0.02F, -0.02F, 0.02F);
 
-        String lockIcon = "\uD83D\uDD12"; // Lock emoji
-        float offset = (float) (-font.width(lockIcon) / 2);
-        font.drawInBatch(lockIcon, offset, 0, 0xFF4444, false,
+        float offset = (float) (-font.width(LOCK_LABEL) / 2);
+        font.drawInBatch(LOCK_LABEL, offset, 0, LOCK_TEXT_COLOR, false,
                 poseStack.last().pose(), buffer, Font.DisplayMode.NORMAL,
-                0x40000000, packedLight);
+                TEXT_BACKGROUND_COLOR, packedLight);
 
         poseStack.popPose();
     }

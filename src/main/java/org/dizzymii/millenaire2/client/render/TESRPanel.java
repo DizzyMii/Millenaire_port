@@ -14,6 +14,11 @@ import org.dizzymii.millenaire2.entity.blockentity.MillPanelBlockEntity;
  */
 public class TESRPanel implements BlockEntityRenderer<MillPanelBlockEntity> {
 
+    private static final int VILLAGE_NAME_COLOR = 0xFFFFFF;
+    private static final int CULTURE_NAME_COLOR = 0xCCCCCC;
+    private static final int TEXT_BACKGROUND_COLOR = 0x40000000;
+    private static final float CULTURE_Y_OFFSET = 10F;
+
     private final Font font;
 
     public TESRPanel(BlockEntityRendererProvider.Context context) {
@@ -35,15 +40,15 @@ public class TESRPanel implements BlockEntityRenderer<MillPanelBlockEntity> {
 
         if (!villageName.isEmpty()) {
             float offset = (float) (-font.width(villageName) / 2);
-            font.drawInBatch(villageName, offset, 0, 0xFFFFFF, false,
+            font.drawInBatch(villageName, offset, 0, VILLAGE_NAME_COLOR, false,
                     poseStack.last().pose(), buffer, Font.DisplayMode.NORMAL,
-                    0x40000000, packedLight);
+                    TEXT_BACKGROUND_COLOR, packedLight);
         }
         if (!cultureName.isEmpty()) {
             float offset = (float) (-font.width(cultureName) / 2);
-            font.drawInBatch(cultureName, offset, 10, 0xCCCCCC, false,
+            font.drawInBatch(cultureName, offset, CULTURE_Y_OFFSET, CULTURE_NAME_COLOR, false,
                     poseStack.last().pose(), buffer, Font.DisplayMode.NORMAL,
-                    0x40000000, packedLight);
+                    TEXT_BACKGROUND_COLOR, packedLight);
         }
 
         poseStack.popPose();
