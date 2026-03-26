@@ -1,5 +1,6 @@
 package org.dizzymii.millenaire2.ui;
 
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -8,6 +9,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import org.dizzymii.millenaire2.menu.MillMenuTypes;
 
 public class ContainerLockedChest extends AbstractContainerMenu {
 
@@ -19,6 +21,11 @@ public class ContainerLockedChest extends AbstractContainerMenu {
 
     public ContainerLockedChest(MenuType<?> type, int containerId, Inventory playerInventory) {
         this(type, containerId, playerInventory, new SimpleContainer(CHEST_SIZE));
+    }
+
+    /** Client-side factory constructor used by {@link net.neoforged.neoforge.common.extensions.IMenuTypeExtension}. */
+    public ContainerLockedChest(int containerId, Inventory playerInventory, FriendlyByteBuf buf) {
+        this(MillMenuTypes.LOCKED_CHEST.get(), containerId, playerInventory);
     }
 
     public ContainerLockedChest(MenuType<?> type, int containerId, Inventory playerInventory, Container chestContainer) {
