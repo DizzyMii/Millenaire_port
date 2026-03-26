@@ -428,23 +428,12 @@ public class Building {
             if (controlledByName != null) tag.putString("controlledByName", controlledByName);
         }
 
-        // Save villager records
+        // Save villager records using the full VillagerRecord format so that all
+        // fields (rightHanded, questTags, inventory, family names, etc.) survive a
+        // save / load cycle.
         ListTag vrList = new ListTag();
         for (VillagerRecord vr : vrecords.values()) {
-            CompoundTag vrTag = new CompoundTag();
-            vrTag.putLong("id", vr.getVillagerId());
-            vrTag.putInt("gender", vr.gender);
-            if (vr.firstName != null) vrTag.putString("firstName", vr.firstName);
-            if (vr.familyName != null) vrTag.putString("familyName", vr.familyName);
-            if (vr.type != null) vrTag.putString("type", vr.type);
-            if (vr.getCultureKey() != null) vrTag.putString("culture", vr.getCultureKey());
-            vrTag.putBoolean("killed", vr.killed);
-            vrTag.putBoolean("awayraiding", vr.awayraiding);
-            vrTag.putBoolean("awayhired", vr.awayhired);
-            vrTag.putFloat("scale", vr.scale);
-            if (vr.getHousePos() != null) vr.getHousePos().writeToNBT(vrTag, "house");
-            if (vr.getTownHallPos() != null) vr.getTownHallPos().writeToNBT(vrTag, "th");
-            vrList.add(vrTag);
+            vrList.add(vr.save());
         }
         tag.put("villagers", vrList);
 
@@ -487,25 +476,11 @@ public class Building {
             if (tag.contains("controlledByName")) b.controlledByName = tag.getString("controlledByName");
         }
 
-        // Load villager records
+        // Load villager records using the full VillagerRecord format.
         if (tag.contains("villagers", Tag.TAG_LIST)) {
             ListTag vrList = tag.getList("villagers", Tag.TAG_COMPOUND);
             for (int i = 0; i < vrList.size(); i++) {
-                CompoundTag vrTag = vrList.getCompound(i);
-                VillagerRecord vr = new VillagerRecord();
-                vr.setVillagerId(vrTag.getLong("id"));
-                vr.gender = vrTag.getInt("gender");
-                if (vrTag.contains("firstName")) vr.firstName = vrTag.getString("firstName");
-                if (vrTag.contains("familyName")) vr.familyName = vrTag.getString("familyName");
-                if (vrTag.contains("type")) vr.type = vrTag.getString("type");
-                if (vrTag.contains("culture")) vr.setCultureKey(vrTag.getString("culture"));
-                vr.killed = vrTag.getBoolean("killed");
-                vr.awayraiding = vrTag.getBoolean("awayraiding");
-                vr.awayhired = vrTag.getBoolean("awayhired");
-                vr.scale = vrTag.getFloat("scale");
-                vr.setHousePos(Point.readFromNBT(vrTag, "house"));
-                vr.setTownHallPos(Point.readFromNBT(vrTag, "th"));
-                b.addVillagerRecord(vr);
+                b.addVillagerRecord(VillagerRecord.load(vrList.getCompound(i)));
             }
         }
 
