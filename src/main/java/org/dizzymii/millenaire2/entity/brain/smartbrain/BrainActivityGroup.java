@@ -58,6 +58,12 @@ public final class BrainActivityGroup<E extends LivingEntity> {
         return new BrainActivityGroup<E>(Activity.FIGHT, java.util.Arrays.asList(behaviours));
     }
 
+    @SafeVarargs
+    public static <E extends LivingEntity> BrainActivityGroup<E> customTasks(
+            Activity activity, BehaviorControl<? super E>... behaviours) {
+        return new BrainActivityGroup<E>(activity, java.util.Arrays.asList(behaviours));
+    }
+
     // ========== Accessors ==========
 
     public Activity activity() {

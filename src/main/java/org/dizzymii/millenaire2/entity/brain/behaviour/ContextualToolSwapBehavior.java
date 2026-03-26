@@ -82,6 +82,13 @@ public class ContextualToolSwapBehavior extends ExtendedBehaviour<HumanoidNPC> {
      */
     @Override
     protected boolean checkExtraStartConditions(ServerLevel level, HumanoidNPC entity) {
+        if (entity.getBrain().getMemory(ModMemoryTypes.NEEDS_HEALING.get()).orElse(false)) {
+            return false;
+        }
+        if (entity.getBrain().getMemory(ModMemoryTypes.LAST_KNOWN_DANGER.get()).isPresent()) {
+            return false;
+        }
+
         String objective = entity.getBrain()
                 .getMemory(ModMemoryTypes.MACRO_OBJECTIVE.get())
                 .orElse("");

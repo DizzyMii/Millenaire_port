@@ -16,8 +16,12 @@ import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.dizzymii.millenaire2.entity.brain.ModMemoryTypes;
+import org.dizzymii.millenaire2.entity.brain.behaviour.ConsumeFoodBehavior;
 import org.dizzymii.millenaire2.entity.brain.behaviour.ContextualToolSwapBehavior;
+import org.dizzymii.millenaire2.entity.brain.behaviour.InventoryManagementBehavior;
+import org.dizzymii.millenaire2.entity.brain.behaviour.StrategicRetreatBehavior;
 import org.dizzymii.millenaire2.entity.brain.sensor.InventoryStateSensor;
+import org.dizzymii.millenaire2.entity.brain.sensor.SelfPreservationSensor;
 import org.dizzymii.millenaire2.entity.brain.smartbrain.BrainActivityGroup;
 import org.dizzymii.millenaire2.entity.brain.smartbrain.ExtendedSensor;
 import org.dizzymii.millenaire2.entity.brain.smartbrain.SmartBrainOwner;
@@ -64,6 +68,21 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
     private static final double DEFAULT_MOVE_SPEED    = 0.5;
     private static final double DEFAULT_ATTACK_DAMAGE = 3.0;
     private static final double DEFAULT_FOLLOW_RANGE  = 32.0;
+    private static final int CARRIED_INVENTORY_CAPACITY = 36;
+    private static final int MAX_NPC_FOOD_LEVEL = 20;
+    /**
+     * NeoForge 1.21.1 activity compatibility:
+     * use built-in activities instead of runtime custom Activity registration.
+     *
+     * <p>Semantic aliasing:
+     * <ul>
+     *   <li>Survival (retreat/defensive behavior) maps to {@link Activity#FIGHT}.
+     *   <li>Logistics (inventory management / non-combat utility phase) maps to {@link Activity#REST}
+     *       as an alternate non-work state used by this entity.
+     * </ul>
+     */
+    public static final Activity SURVIVAL_ACTIVITY = Activity.FIGHT;
+    public static final Activity LOGISTICS_ACTIVITY = Activity.REST;
 
     // ========== Instance state ==========
 
@@ -72,6 +91,7 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
      * Tools are selected from this list by {@link ContextualToolSwapBehavior}.
      */
     private final List<ItemStack> carriedInventory = new ArrayList<>();
+    private int npcFoodLevel = MAX_NPC_FOOD_LEVEL;
 
     /**
      * Sensors that are polled each server tick to populate brain memories.
@@ -125,7 +145,7 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
      * {@link ExtendedSensor} API does not wrap vanilla {@code SensorType}; sensors
      * are instead polled manually in {@link #customServerAiStep}.
      *
-     * @return a Brain provider configured with all three custom memory types
+     * @return a Brain provider configured with all custom memory types
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -134,7 +154,9 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
                 List.of(
                         ModMemoryTypes.BASE_LOCATION.get(),
                         ModMemoryTypes.MACRO_OBJECTIVE.get(),
-                        ModMemoryTypes.NEEDED_MATERIALS.get()
+                        ModMemoryTypes.NEEDED_MATERIALS.get(),
+                        ModMemoryTypes.NEEDS_HEALING.get(),
+                        ModMemoryTypes.LAST_KNOWN_DANGER.get()
                 ),
                 List.of() // SensorTypes not used with the stub ExtendedSensor API
         );
@@ -179,7 +201,7 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
      */
     @Override
     public List<ExtendedSensor<? super HumanoidNPC>> getSensors() {
-        return List.of(new InventoryStateSensor());
+        return List.of(new InventoryStateSensor(), new SelfPreservationSensor());
     }
 
     /**
@@ -222,6 +244,37 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
         return BrainActivityGroup.workTasks(new ContextualToolSwapBehavior());
     }
 
+    public BrainActivityGroup<HumanoidNPC> getSurvivalTasks() {
+        return BrainActivityGroup.customTasks(
+                SURVIVAL_ACTIVITY,
+                new ConsumeFoodBehavior(),
+                new StrategicRetreatBehavior()
+        );
+    }
+
+    public BrainActivityGroup<HumanoidNPC> getLogisticsTasks() {
+        return BrainActivityGroup.customTasks(
+                LOGISTICS_ACTIVITY,
+                new InventoryManagementBehavior()
+        );
+    }
+
+    @Override
+    public List<BrainActivityGroup<HumanoidNPC>> getAllBrainActivities() {
+        List<BrainActivityGroup<HumanoidNPC>> list = new ArrayList<>();
+        BrainActivityGroup<HumanoidNPC> survival = getSurvivalTasks();
+        BrainActivityGroup<HumanoidNPC> core = getCoreTasks();
+        BrainActivityGroup<HumanoidNPC> work = getWorkTasks();
+        BrainActivityGroup<HumanoidNPC> logistics = getLogisticsTasks();
+        BrainActivityGroup<HumanoidNPC> idle = getIdleTasks();
+        if (!survival.isEmpty()) list.add(survival);
+        if (!core.isEmpty()) list.add(core);
+        if (!work.isEmpty()) list.add(work);
+        if (!logistics.isEmpty()) list.add(logistics);
+        if (!idle.isEmpty()) list.add(idle);
+        return list;
+    }
+
     // ========== Tick logic ==========
 
     /**
@@ -237,6 +290,7 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
             for (ExtendedSensor<? super HumanoidNPC> sensor : sensorCache) {
                 sensor.tick(sl, this);
             }
+            updateActivityState();
             level().getProfiler().push("humanoidNpcBrain");
             getBrain().tick(sl, this);
             level().getProfiler().pop();
@@ -257,6 +311,14 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
         return Collections.unmodifiableList(carriedInventory);
     }
 
+    public int getCarriedInventoryCapacity() {
+        return CARRIED_INVENTORY_CAPACITY;
+    }
+
+    public double getCarriedInventoryFillRatio() {
+        return (double) carriedInventory.size() / (double) CARRIED_INVENTORY_CAPACITY;
+    }
+
     /**
      * Adds an item to the NPC's carried inventory.
      *
@@ -265,9 +327,35 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
      * @param stack the item to add; must not be {@code null}
      */
     public void addToCarriedInventory(ItemStack stack) {
-        if (!stack.isEmpty()) {
+        if (!stack.isEmpty() && carriedInventory.size() < CARRIED_INVENTORY_CAPACITY) {
             carriedInventory.add(stack);
         }
+    }
+
+    public ItemStack getCarriedInventorySlot(int index) {
+        if (index < 0 || index >= carriedInventory.size()) {
+            return ItemStack.EMPTY;
+        }
+        return carriedInventory.get(index);
+    }
+
+    public ItemStack removeCarriedInventorySlot(int index) {
+        if (index < 0 || index >= carriedInventory.size()) {
+            return ItemStack.EMPTY;
+        }
+        return carriedInventory.remove(index);
+    }
+
+    public void pruneEmptyCarriedInventory() {
+        carriedInventory.removeIf(ItemStack::isEmpty);
+    }
+
+    public int getNpcFoodLevel() {
+        return npcFoodLevel;
+    }
+
+    public void setNpcFoodLevel(int foodLevel) {
+        this.npcFoodLevel = Math.max(0, Math.min(MAX_NPC_FOOD_LEVEL, foodLevel));
     }
 
     // ========== Home location ==========
@@ -327,5 +415,28 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
             builder.add(Pair.of(i, behaviours.get(i)));
         }
         brain.addActivityWithConditions(group.activity(), builder.build(), Set.of());
+    }
+
+    private void updateActivityState() {
+        if (shouldPrioritizeSurvival()) {
+            getBrain().setActiveActivityIfPossible(SURVIVAL_ACTIVITY);
+            return;
+        }
+        if (shouldRunLogistics()) {
+            getBrain().setActiveActivityIfPossible(LOGISTICS_ACTIVITY);
+            return;
+        }
+        getBrain().setActiveActivityIfPossible(Activity.WORK);
+    }
+
+    private boolean shouldPrioritizeSurvival() {
+        boolean needsHealing = getBrain().getMemory(ModMemoryTypes.NEEDS_HEALING.get()).orElse(false);
+        boolean hasDanger = getBrain().getMemory(ModMemoryTypes.LAST_KNOWN_DANGER.get()).isPresent();
+        boolean lowHunger = getNpcFoodLevel() <= 12;
+        return needsHealing || hasDanger || lowHunger;
+    }
+
+    private boolean shouldRunLogistics() {
+        return !shouldPrioritizeSurvival() && getCarriedInventoryFillRatio() > 0.80D;
     }
 }
