@@ -347,7 +347,7 @@ support.
 `HumanoidArmorLayer`-style rendering in `LayerVillagerClothes`; bind culture-
 specific textures.
 
-### 3.4 Custom A\* Pathfinding
+### 3.4 Custom A* Pathfinding
 
 **Package:** `pathing/`, `pathing/atomicstryker/`  
 **Key classes:** `PathNavigateSimple`, `AStarPathPlannerJPS`, `AStarWorker`,
