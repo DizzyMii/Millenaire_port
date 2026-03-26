@@ -31,15 +31,14 @@ public class SelfPreservationSensor extends ExtendedSensor<HumanoidNPC> {
 
     @Override
     protected void doTick(ServerLevel level, HumanoidNPC entity) {
-        float maxHealth = entity.getMaxHealth();
-        float healthPct = maxHealth > 0f ? (entity.getHealth() / maxHealth) : 1f;
+        float healthPct = entity.getHealth() / entity.getMaxHealth();
         boolean needsHealing = healthPct < LOW_HEALTH_THRESHOLD;
         entity.getBrain().setMemory(ModMemoryTypes.NEEDS_HEALING.get(), needsHealing);
 
         List<Monster> hostiles = level.getEntitiesOfClass(
                 Monster.class,
                 entity.getBoundingBox().inflate(HOSTILE_SCAN_RADIUS),
-                hostile -> hostile.isAlive() && hostile.distanceToSqr(entity) <= HOSTILE_SCAN_RADIUS * HOSTILE_SCAN_RADIUS
+                Monster::isAlive
         );
 
         if (hostiles.isEmpty()) {

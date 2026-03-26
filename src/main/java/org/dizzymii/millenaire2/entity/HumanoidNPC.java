@@ -70,6 +70,7 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
     private static final double DEFAULT_FOLLOW_RANGE  = 32.0;
     private static final int CARRIED_INVENTORY_CAPACITY = 36;
     private static final int MAX_NPC_FOOD_LEVEL = 20;
+    public static final int LOW_HUNGER_FOOD_LEVEL = 12;
     /**
      * NeoForge 1.21.1 activity compatibility:
      * use built-in activities instead of runtime custom Activity registration.
@@ -261,6 +262,8 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
 
     @Override
     public List<BrainActivityGroup<HumanoidNPC>> getAllBrainActivities() {
+        // Intentionally overrides SmartBrainOwner default ordering:
+        // survival is registered first so it preempts acquisition/work behaviours.
         List<BrainActivityGroup<HumanoidNPC>> list = new ArrayList<>();
         BrainActivityGroup<HumanoidNPC> survival = getSurvivalTasks();
         BrainActivityGroup<HumanoidNPC> core = getCoreTasks();
@@ -355,6 +358,7 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
     }
 
     public void setNpcFoodLevel(int foodLevel) {
+        // Clamp to vanilla-compatible range [0..20] for deterministic AI state.
         this.npcFoodLevel = Math.max(0, Math.min(MAX_NPC_FOOD_LEVEL, foodLevel));
     }
 
@@ -432,7 +436,7 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
     private boolean shouldPrioritizeSurvival() {
         boolean needsHealing = getBrain().getMemory(ModMemoryTypes.NEEDS_HEALING.get()).orElse(false);
         boolean hasDanger = getBrain().getMemory(ModMemoryTypes.LAST_KNOWN_DANGER.get()).isPresent();
-        boolean lowHunger = getNpcFoodLevel() <= 12;
+        boolean lowHunger = getNpcFoodLevel() <= LOW_HUNGER_FOOD_LEVEL;
         return needsHealing || hasDanger || lowHunger;
     }
 

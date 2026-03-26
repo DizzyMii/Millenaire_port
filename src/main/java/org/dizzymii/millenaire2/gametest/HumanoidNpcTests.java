@@ -456,7 +456,7 @@ public class HumanoidNpcTests {
                 ItemEntity.class,
                 npc.getBoundingBox().inflate(3.0D)
         );
-        helper.assertTrue(!dropped.isEmpty(), "Discarded low-value item should be spawned as ItemEntity");
+        helper.assertFalse(dropped.isEmpty(), "Discarded low-value item should be spawned as ItemEntity");
         boolean stillHasDiamond = npc.getCarriedInventory().stream().anyMatch(s -> s.is(Items.DIAMOND));
         helper.assertTrue(stillHasDiamond, "High-value items should be retained after inventory cleanup");
         helper.succeed();

@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import org.dizzymii.millenaire2.entity.HumanoidNPC;
 import org.dizzymii.millenaire2.entity.brain.ModMemoryTypes;
@@ -47,7 +48,7 @@ public class StrategicRetreatBehavior extends ExtendedBehaviour<HumanoidNPC> {
         return level.getEntitiesOfClass(
                 Monster.class,
                 entity.getBoundingBox().inflate(THREAT_RADIUS),
-                hostile -> hostile.isAlive() && hostile.distanceToSqr(entity) <= THREAT_RADIUS * THREAT_RADIUS
+                Monster::isAlive
         );
     }
 
@@ -76,7 +77,7 @@ public class StrategicRetreatBehavior extends ExtendedBehaviour<HumanoidNPC> {
 
         Vec3 direction = awayVector.normalize();
         Vec3 retreatPos = entityPos.add(direction.scale(RETREAT_DISTANCE));
-        double y = entity.level().getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+        double y = entity.level().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 BlockPos.containing(retreatPos.x, entityPos.y, retreatPos.z)).getY();
         return new Vec3(retreatPos.x, y, retreatPos.z);
     }

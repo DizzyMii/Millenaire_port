@@ -16,8 +16,8 @@ import java.util.List;
  * or hunger is low.
  */
 public class ConsumeFoodBehavior extends ExtendedBehaviour<HumanoidNPC> {
-
-    private static final int LOW_HUNGER_FOOD_LEVEL = 12;
+    private static final float MAX_HEAL_FROM_CONSUMPTION = 4.0f;
+    private static final float HEAL_PER_NUTRITION = 0.5f;
 
     @Override
     protected boolean checkExtraStartConditions(ServerLevel level, HumanoidNPC entity) {
@@ -32,29 +32,32 @@ public class ConsumeFoodBehavior extends ExtendedBehaviour<HumanoidNPC> {
         int bestIndex = findBestFoodIndex(inventory);
         if (bestIndex < 0) return;
 
-        ItemStack bestFood = entity.getCarriedInventorySlot(bestIndex);
-        if (bestFood.isEmpty()) return;
-        FoodProperties food = bestFood.get(DataComponents.FOOD);
-        if (food == null) return;
+        ItemStack consumed = entity.removeCarriedInventorySlot(bestIndex);
+        if (consumed.isEmpty()) return;
+        FoodProperties food = consumed.get(DataComponents.FOOD);
+        if (food == null) {
+            entity.addToCarriedInventory(consumed);
+            return;
+        }
 
-        entity.setItemInHand(InteractionHand.MAIN_HAND, bestFood.copyWithCount(1));
+        entity.setItemInHand(InteractionHand.MAIN_HAND, consumed.copyWithCount(1));
 
         int nutrition = food.nutrition();
         entity.setNpcFoodLevel(entity.getNpcFoodLevel() + nutrition);
         if (entity.getHealth() < entity.getMaxHealth()) {
-            entity.heal(Math.min(4.0f, nutrition * 0.5f));
+            entity.heal(Math.min(MAX_HEAL_FROM_CONSUMPTION, nutrition * HEAL_PER_NUTRITION));
         }
 
-        ItemStack consumed = entity.removeCarriedInventorySlot(bestIndex);
         consumed.shrink(1);
         if (!consumed.isEmpty()) {
             entity.addToCarriedInventory(consumed);
         }
+        entity.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
     }
 
     private boolean shouldEat(HumanoidNPC entity) {
         boolean needsHealing = entity.getBrain().getMemory(ModMemoryTypes.NEEDS_HEALING.get()).orElse(false);
-        return needsHealing || entity.getNpcFoodLevel() <= LOW_HUNGER_FOOD_LEVEL;
+        return needsHealing || entity.getNpcFoodLevel() <= HumanoidNPC.LOW_HUNGER_FOOD_LEVEL;
     }
 
     private int findBestFoodIndex(List<ItemStack> inventory) {
