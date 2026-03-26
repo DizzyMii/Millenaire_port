@@ -16,6 +16,7 @@ import javax.annotation.Nullable;
  */
 public class EntityTargetedBlaze extends Blaze {
 
+    /** Village position this entity was summoned to defend — distinct from AI combat targeting. */
     @Nullable
     private Point target = null;
 

@@ -16,6 +16,7 @@ import javax.annotation.Nullable;
  */
 public class EntityTargetedGhast extends Ghast {
 
+    /** Village position this entity was summoned to defend — distinct from AI combat targeting. */
     @Nullable
     private Point target = null;
 
