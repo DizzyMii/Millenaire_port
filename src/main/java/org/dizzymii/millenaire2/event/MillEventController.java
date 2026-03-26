@@ -98,22 +98,23 @@ public class MillEventController {
 
         long villagerId = villager.getVillagerId();
 
-        // Mark the VillagerRecord as killed
-        VillagerRecord vr = mw.getVillagerRecord(villagerId);
-        if (vr != null) {
-            vr.killed = true;
-        }
-
-        // Update the owning building
+        // Try the fast path first: look up the record via the townhall building.
+        // Fall back to a full building scan when townHallPoint is null or stale —
+        // the global MillWorldData.villagerRecords map is not populated at runtime,
+        // so per-building lookup is the only reliable source.
         Point thPoint = villager.townHallPoint;
+        VillagerRecord vr = null;
         if (thPoint != null) {
             Building b = mw.getBuilding(thPoint);
             if (b != null) {
-                VillagerRecord bvr = b.getVillagerRecord(villagerId);
-                if (bvr != null) {
-                    bvr.killed = true;
-                }
+                vr = b.getVillagerRecord(villagerId);
             }
+        }
+        if (vr == null) {
+            vr = mw.findVillagerRecordInAnyBuilding(villagerId);
+        }
+        if (vr != null) {
+            vr.killed = true;
         }
 
         // If a player killed the villager, apply reputation penalty

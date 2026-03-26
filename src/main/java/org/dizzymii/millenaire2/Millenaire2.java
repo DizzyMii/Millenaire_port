@@ -125,6 +125,10 @@ public class Millenaire2 {
         worldData = MillWorldData.get(overworld);
         LOGGER.info("{} world data loaded: {} buildings", MODNAME, worldData.allBuildings().size());
 
+        // Reset the attempted-chunk set so that chunks tried in a previous session are
+        // eligible for village generation again in the current one.
+        org.dizzymii.millenaire2.world.WorldGenVillage.resetTriedChunks();
+
         // Register empty GameTest templates
         org.dizzymii.millenaire2.gametest.GameTestSetup.ensureTemplates(overworld);
     }

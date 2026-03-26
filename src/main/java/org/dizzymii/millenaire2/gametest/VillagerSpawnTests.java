@@ -616,4 +616,112 @@ public class VillagerSpawnTests {
         }
         helper.succeed();
     }
+
+    // ==================== Building NBT round-trip (Bug 1 regression) ====================
+
+    /**
+     * VillagerRecord fields that were omitted from the inline Building save format —
+     * {@code rightHanded}, {@code questTags}, {@code inventory} and family-name strings —
+     * must survive a {@link Building#save()} / {@link Building#load(net.minecraft.nbt.CompoundTag)} cycle now
+     * that those methods delegate to {@link VillagerRecord#save()} / {@link VillagerRecord#load}.
+     */
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testBuildingNBTPreservesRightHandedAndQuestTags(GameTestHelper helper) {
+        Point pos = toPoint(helper, 1, 1, 1);
+        Building original = activeBuilding(pos);
+
+        VillagerRecord vr = VillagerRecord.create("norman", "farmer", "Isabelle", "Morin", MillVillager.FEMALE);
+        vr.rightHanded = false; // asymmetric variant — must survive round-trip
+        vr.addQuestTag("test_quest");
+        vr.inventory.put("denier", 5);
+        vr.fathersName = "Bertrand";
+        vr.setHousePos(pos);
+        original.addVillagerRecord(vr);
+
+        net.minecraft.nbt.CompoundTag tag = original.save();
+        Building loaded = Building.load(tag);
+
+        VillagerRecord loadedVr = loaded.getVillagerRecord(vr.getVillagerId());
+        helper.assertFalse(loadedVr == null, "VillagerRecord missing after Building NBT round-trip");
+        helper.assertFalse(loadedVr.rightHanded,
+                "rightHanded=false must be preserved through Building save/load");
+        helper.assertTrue(loadedVr.hasQuestTag("test_quest"),
+                "questTag must be preserved through Building save/load");
+        int actualQty = loadedVr.inventory.getOrDefault("denier", 0);
+        helper.assertTrue(actualQty == 5,
+                "inventory entry must be preserved through Building save/load; expected 5 denier, got " + actualQty);
+        helper.assertTrue("Bertrand".equals(loadedVr.fathersName),
+                "fathersName must be preserved through Building save/load; got " + loadedVr.fathersName);
+        helper.succeed();
+    }
+
+    /**
+     * After a Building NBT round-trip the entity type selected by {@link VillagerSpawner}
+     * must match the original {@code rightHanded} value — specifically a female record
+     * with {@code rightHanded=false} must produce a {@link MillVillager.GenericAsymmFemale}.
+     */
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testBuildingNBTPreservesEntityTypeSelection(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        Point pos = toPoint(helper, 1, 1, 1);
+        Building original = activeBuilding(pos);
+
+        VillagerRecord vr = VillagerRecord.create("norman", "farmer", "Elise", "Bernard", MillVillager.FEMALE);
+        vr.rightHanded = false; // must yield GenericAsymmFemale after round-trip
+        vr.setHousePos(pos);
+        original.addVillagerRecord(vr);
+
+        // Simulate a save/load cycle
+        Building loaded = Building.load(original.save());
+
+        VillagerSpawner.checkAndSpawnVillagers(loaded, level);
+
+        List<MillVillager> spawned = level.getEntitiesOfClass(MillVillager.class, nearbyBox(pos));
+        helper.assertTrue(!spawned.isEmpty(), "No villager spawned after Building round-trip");
+        helper.assertTrue(spawned.get(0) instanceof MillVillager.GenericAsymmFemale,
+                "rightHanded=false female must spawn GenericAsymmFemale after Building round-trip, got "
+                        + spawned.get(0).getClass().getSimpleName());
+        helper.succeed();
+    }
+
+    // ==================== Death handling (Bug 5 regression) ====================
+
+    /**
+     * When a villager's {@code townHallPoint} is {@code null} the death handler must
+     * still locate and mark the {@link VillagerRecord} as killed by falling back to a
+     * full building scan via {@link org.dizzymii.millenaire2.world.MillWorldData#findVillagerRecordInAnyBuilding}.
+     *
+     * <p>This test exercises the fixed path directly, without going through the event
+     * system, because GameTests cannot fire LivingDeathEvent reliably.</p>
+     */
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testFindVillagerRecordInAnyBuilding(GameTestHelper helper) {
+        Point pos = toPoint(helper, 1, 1, 1);
+        Building building = activeBuilding(pos);
+
+        VillagerRecord vr = VillagerRecord.create("norman", "farmer", "Gaston", "Leclerc", MillVillager.MALE);
+        vr.setHousePos(pos);
+        building.addVillagerRecord(vr);
+
+        // Simulate what MillWorldData looks like at runtime
+        org.dizzymii.millenaire2.world.MillWorldData mw = new org.dizzymii.millenaire2.world.MillWorldData();
+        mw.addBuilding(building, pos);
+
+        // Global villagerRecords map is intentionally NOT populated (mirrors runtime state)
+        helper.assertTrue(mw.getVillagerRecord(vr.getVillagerId()) == null,
+                "Global villagerRecords map should be empty (not populated at runtime)");
+
+        // findVillagerRecordInAnyBuilding must locate the record across buildings
+        VillagerRecord found = mw.findVillagerRecordInAnyBuilding(vr.getVillagerId());
+        helper.assertFalse(found == null,
+                "findVillagerRecordInAnyBuilding must find the record even when global map is empty");
+
+        // Marking it killed must be visible in the building's own records
+        found.killed = true;
+        VillagerRecord fromBuilding = building.getVillagerRecord(vr.getVillagerId());
+        helper.assertFalse(fromBuilding == null, "Record not found in building after update");
+        helper.assertTrue(fromBuilding.killed,
+                "killed flag must be set in the building record after death handling");
+        helper.succeed();
+    }
 }

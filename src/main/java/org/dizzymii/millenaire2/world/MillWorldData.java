@@ -115,6 +115,23 @@ public class MillWorldData extends SavedData {
         setDirty();
     }
 
+    /**
+     * Searches every building's per-building VillagerRecord map for the given ID.
+     * This is the authoritative lookup because the global {@code villagerRecords} map
+     * is not populated at runtime; all live records reside in their owning buildings.
+     *
+     * @param id the villager ID to search for
+     * @return the matching record, or {@code null} if none is found
+     */
+    @Nullable
+    public VillagerRecord findVillagerRecordInAnyBuilding(long id) {
+        for (Building b : buildings.values()) {
+            VillagerRecord vr = b.getVillagerRecord(id);
+            if (vr != null) return vr;
+        }
+        return null;
+    }
+
     // ========== Profile management ==========
 
     @Nullable
@@ -208,7 +225,7 @@ public class MillWorldData extends SavedData {
     public static MillWorldData load(CompoundTag root, HolderLookup.Provider registries) {
         MillWorldData data = new MillWorldData();
         data.millenaireEnabled = root.getBoolean("enabled");
-        data.generateVillages = root.getBoolean("generateVillages");
+        data.generateVillages = !root.contains("generateVillages") || root.getBoolean("generateVillages");
         data.lastWorldUpdate = root.getLong("lastUpdate");
 
         // Load buildings

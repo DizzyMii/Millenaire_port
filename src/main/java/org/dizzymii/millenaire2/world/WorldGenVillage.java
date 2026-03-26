@@ -136,6 +136,8 @@ public class WorldGenVillage {
         townhall.isTownhall = true;
         townhall.isActive = true;
         townhall.cultureKey = culture.key;
+        townhall.villageTypeKey = villageType.key;
+        townhall.planSetKey = planSet.key;
         townhall.setName(generateVillageName(culture, random));
         townhall.setPos(villagePos);
         townhall.setTownHallPos(villagePos);
