@@ -622,7 +622,7 @@ public class VillagerSpawnTests {
     /**
      * VillagerRecord fields that were omitted from the inline Building save format —
      * {@code rightHanded}, {@code questTags}, {@code inventory} and family-name strings —
-     * must survive a {@link Building#save()} / {@link Building#load(CompoundTag)} cycle now
+     * must survive a {@link Building#save()} / {@link Building#load(net.minecraft.nbt.CompoundTag)} cycle now
      * that those methods delegate to {@link VillagerRecord#save()} / {@link VillagerRecord#load}.
      */
     @GameTest(template = "empty", timeoutTicks = 40)
