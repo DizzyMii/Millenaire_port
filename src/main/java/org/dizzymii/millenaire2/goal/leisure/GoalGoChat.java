@@ -12,7 +12,7 @@ import java.util.List;
  * Villager finds a nearby villager and walks to them for a chat.
  */
 public class GoalGoChat extends Goal {
-    public GoalGoChat() { this.leasure = true; }
+    public GoalGoChat() { this.leisure = true; }
 
     @Override
     public GoalInformation getDestination(MillVillager v) {

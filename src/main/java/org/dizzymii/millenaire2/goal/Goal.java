@@ -15,6 +15,7 @@ import java.util.List;
  */
 public abstract class Goal {
 
+    /** Standard inter-goal cooldown, in milliseconds (2 s). Divide by 50 to convert to game ticks. */
     public static final int STANDARD_DELAY = 2000;
     public static HashMap<String, Goal> goals;
 
@@ -50,7 +51,8 @@ public abstract class Goal {
 
     // --- Instance fields ---
     public String key;
-    public boolean leasure = false;
+    /** Whether this is a leisure (non-productive) goal that the work-activity loop should skip. */
+    public boolean leisure = false;
     public boolean sprint = true;
     public List<String> tags = new ArrayList<>();
     public HashMap<InvItem, Integer> buildingLimit = new HashMap<>();

@@ -187,7 +187,7 @@ public class VillagerSpawnTests {
         helper.succeed();
     }
 
-    /** A female VillagerRecord must produce a {@link MillVillager.GenericSymmFemale} entity. */
+    /** A right-handed female VillagerRecord must produce a {@link MillVillager.GenericSymmFemale} entity. */
     @GameTest(template = "empty", timeoutTicks = 40)
     public static void testSpawnerFemaleEntityType(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
@@ -195,6 +195,7 @@ public class VillagerSpawnTests {
 
         Building building = activeBuilding(pos);
         VillagerRecord vr = VillagerRecord.create("norman", "farmer", "Marie", "Dupont", MillVillager.FEMALE);
+        vr.rightHanded = true; // deterministic: right-handed female → GenericSymmFemale
         vr.setHousePos(pos);
         building.addVillagerRecord(vr);
 
@@ -203,7 +204,29 @@ public class VillagerSpawnTests {
         List<MillVillager> spawned = level.getEntitiesOfClass(MillVillager.class, nearbyBox(pos));
         helper.assertTrue(!spawned.isEmpty(), "No villager was spawned");
         helper.assertTrue(spawned.get(0) instanceof MillVillager.GenericSymmFemale,
-                "Female record must produce GenericSymmFemale, got "
+                "Right-handed female record must produce GenericSymmFemale, got "
+                        + spawned.get(0).getClass().getSimpleName());
+        helper.succeed();
+    }
+
+    /** A left-handed female VillagerRecord must produce a {@link MillVillager.GenericAsymmFemale} entity. */
+    @GameTest(template = "empty", timeoutTicks = 40)
+    public static void testSpawnerLeftHandedFemaleEntityType(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        Point pos = toPoint(helper, 1, 1, 1);
+
+        Building building = activeBuilding(pos);
+        VillagerRecord vr = VillagerRecord.create("norman", "farmer", "Claire", "Dupont", MillVillager.FEMALE);
+        vr.rightHanded = false; // deterministic: left-handed female → GenericAsymmFemale
+        vr.setHousePos(pos);
+        building.addVillagerRecord(vr);
+
+        VillagerSpawner.checkAndSpawnVillagers(building, level);
+
+        List<MillVillager> spawned = level.getEntitiesOfClass(MillVillager.class, nearbyBox(pos));
+        helper.assertTrue(!spawned.isEmpty(), "No villager was spawned");
+        helper.assertTrue(spawned.get(0) instanceof MillVillager.GenericAsymmFemale,
+                "Left-handed female record must produce GenericAsymmFemale, got "
                         + spawned.get(0).getClass().getSimpleName());
         helper.succeed();
     }
@@ -336,6 +359,7 @@ public class VillagerSpawnTests {
         building.addVillagerRecord(male);
 
         VillagerRecord female = VillagerRecord.create("norman", "farmer", "Sophie", "Dubois", MillVillager.FEMALE);
+        female.rightHanded = true; // deterministic: right-handed female → GenericSymmFemale
         female.setHousePos(pos);
         building.addVillagerRecord(female);
 

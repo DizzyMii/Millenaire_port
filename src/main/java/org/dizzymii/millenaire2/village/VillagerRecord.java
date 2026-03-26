@@ -142,7 +142,7 @@ public class VillagerRecord implements Cloneable {
         vr.nb = tag.getInt("nb");
         vr.size = tag.getInt("size");
         vr.scale = tag.getFloat("scale");
-        vr.rightHanded = tag.getBoolean("rightHanded");
+        vr.rightHanded = tag.contains("rightHanded") ? tag.getBoolean("rightHanded") : true;
         vr.killed = tag.getBoolean("killed");
         vr.raidingVillage = tag.getBoolean("raidingVillage");
         vr.awayraiding = tag.getBoolean("awayraiding");
