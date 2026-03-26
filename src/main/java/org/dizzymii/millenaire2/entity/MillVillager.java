@@ -179,7 +179,7 @@ public abstract class MillVillager extends PathfinderMob {
     public org.dizzymii.millenaire2.culture.Culture getCulture() {
         String key = getCultureKey();
         if (key.isEmpty()) return null;
-        if (cachedCulture != null && cachedCulture.key.equals(key)) return cachedCulture;
+        if (cachedCulture != null && key.equals(cachedCulture.key)) return cachedCulture;
         cachedCulture = org.dizzymii.millenaire2.culture.Culture.getCultureByName(key);
         return cachedCulture;
     }
@@ -349,7 +349,9 @@ public abstract class MillVillager extends PathfinderMob {
                         this.getBrain().setActiveActivityIfPossible(
                                 net.minecraft.world.entity.schedule.Activity.FIGHT);
                     }
-                } catch (Exception ignored) {}
+                } catch (Exception e) {
+                    MillLog.error(this, "[hurt] Error setting up combat goal", e);
+                }
             }
         }
         return result;

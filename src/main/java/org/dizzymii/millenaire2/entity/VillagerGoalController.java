@@ -34,8 +34,13 @@ public final class VillagerGoalController {
      * loop continues to work during transition.  New code should go through
      * the Brain behaviour classes instead.
      *
-     * @deprecated Goal selection is handled by Brain behaviours; this method
-     *             is a no-op bridge kept only for backward compatibility.
+     * <p>This method still performs active goal maintenance: it resolves a
+     * deferred {@link org.dizzymii.millenaire2.culture.VillagerType} if needed
+     * and clears the current goal when {@link org.dizzymii.millenaire2.goal.Goal#isStillValid}
+     * returns {@code false}.  It is <em>not</em> a pure no-op.
+     *
+     * @deprecated Goal selection is handled by Brain behaviours; call sites
+     *             should migrate to those instead.
      */
     @Deprecated
     public void tickGoalSelection() {

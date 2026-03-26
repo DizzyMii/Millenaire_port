@@ -84,7 +84,7 @@ public class MillWorkBehaviour extends ExtendedBehaviour<MillVillager> {
 
         for (String gKey : villager.vtype.goals) {
             Goal g = Goal.goals.get(gKey);
-            if (g == null || g.leasure) continue;
+            if (g == null || g.leisure) continue;
             if (!g.canBeDoneInDayTime()) continue;
             if (!checkTimeWindow(g, level)) continue;
             if (isOnCooldown(g, villager, level)) continue;
@@ -114,6 +114,7 @@ public class MillWorkBehaviour extends ExtendedBehaviour<MillVillager> {
 
     private boolean isOnCooldown(Goal g, MillVillager villager, ServerLevel level) {
         Long last = villager.lastGoalTime.get(g);
+        // STANDARD_DELAY is in milliseconds; divide by 50 (ms per tick) to get the equivalent tick count
         return last != null && (level.getGameTime() - last) < Goal.STANDARD_DELAY / 50L;
     }
 }

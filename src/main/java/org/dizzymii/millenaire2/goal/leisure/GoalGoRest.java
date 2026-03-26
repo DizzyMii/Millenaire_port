@@ -9,7 +9,7 @@ import org.dizzymii.millenaire2.util.Point;
  * Villager goes home and rests, standing still for a period.
  */
 public class GoalGoRest extends Goal {
-    public GoalGoRest() { this.leasure = true; }
+    public GoalGoRest() { this.leisure = true; }
 
     @Override
     public GoalInformation getDestination(MillVillager v) {

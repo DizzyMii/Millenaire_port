@@ -70,13 +70,22 @@ public final class VillagerSpawner {
             vtype = culture.getVillagerType(vr.type);
         }
 
-        EntityType<? extends MillVillager> entityType =
-                vr.gender == MillVillager.FEMALE
-                        ? MillEntities.GENERIC_SYMM_FEMALE.get()
-                        : MillEntities.GENERIC_MALE.get();
+        // Female villagers are split between two body-model variants based on the
+        // rightHanded flag (set at 80 % chance in VillagerRecord.create).
+        EntityType<? extends MillVillager> entityType;
+        if (vr.gender == MillVillager.FEMALE) {
+            entityType = vr.rightHanded
+                    ? MillEntities.GENERIC_SYMM_FEMALE.get()
+                    : MillEntities.GENERIC_ASYMM_FEMALE.get();
+        } else {
+            entityType = MillEntities.GENERIC_MALE.get();
+        }
 
         MillVillager villager = entityType.create(level);
-        if (villager == null) return;
+        if (villager == null) {
+            MillLog.error("VillagerSpawner", "Failed to create entity for villager: " + vr.firstName + " " + vr.familyName);
+            return;
+        }
 
         Point spawnPos = vr.getHousePos() != null ? vr.getHousePos() : pos;
         villager.setPos(spawnPos.x + 0.5, spawnPos.y + 1.0, spawnPos.z + 0.5);

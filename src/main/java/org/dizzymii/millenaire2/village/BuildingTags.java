@@ -25,7 +25,8 @@ public final class BuildingTags {
     public static final String TAG_SILKWORM_FARM = "silkwormfarm";
     public static final String TAG_SNAILS_FARM = "snailsfarm";
     public static final String TAG_DESPAWN_ALL_MOBS = "despawnallmobs";
-    public static final String TAG_LEASURE = "leasure";
+    /** Building tag for leisure/recreation buildings. Value kept as {@code "leasure"} to match legacy data files. */
+    public static final String TAG_LEISURE = "leasure";
     public static final String TAG_NO_PATHS = "nopaths";
     public static final String TAG_PATH_NODE = "pathnode";
     public static final String TAG_MARVEL = "marvel";
