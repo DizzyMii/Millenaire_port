@@ -51,10 +51,12 @@ src/main/java/org/dizzymii/millenaire2/
 ├── Millenaire2.java        # Mod entry point
 ├── Config.java             # NeoForge config integration
 ├── MillConfig.java         # Millénaire-specific config
+├── client/                 # Client-only systems (GUI, rendering hooks, client networking)
 ├── block/                  # Block registrations
 ├── culture/                # Cultures, village types, villager types, building plans
 ├── data/                   # Config annotations, content deployment, parameters
 ├── item/                   # Item registrations
+├── network/                # Common/network protocol registration and payload contracts
 └── util/                   # Logging, legacy block mapping, language, geometry, I/O
 ```
 

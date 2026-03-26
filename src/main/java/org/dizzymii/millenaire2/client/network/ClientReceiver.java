@@ -1,4 +1,4 @@
-package org.dizzymii.millenaire2.network;
+package org.dizzymii.millenaire2.client.network;
 
 /**
  * Handles incoming network packets on the client side.

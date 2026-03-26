@@ -154,7 +154,7 @@ public final class VillagerDebugger {
                     ? villager.level().getGameTime() - state.goalStartTime : 0;
             out.add(Component.literal("§7Goal age: §f" + goalAge + " ticks"
                     + "  Stuck: §f" + state.stuckCount
-                    + "  Timeouts: §f" + state.timeoutCount));
+                    + "  Timeouts: " + state.timeoutCount));
             out.add(Component.literal("§7Goal history (most recent first):"));
             List<String> history = state.history();
             for (int i = history.size() - 1; i >= 0; i--) {
