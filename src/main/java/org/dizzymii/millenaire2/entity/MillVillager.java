@@ -130,10 +130,24 @@ public abstract class MillVillager extends PathfinderMob {
         return aggroTicks > 0;
     }
 
+    /**
+     * Creates a new {@link MillVillager} of the given entity type in the given level.
+     * Called by the entity factory during spawning.
+     *
+     * @param type  the entity type
+     * @param level the level to spawn into
+     */
     protected MillVillager(EntityType<? extends MillVillager> type, Level level) {
         super(type, level);
     }
 
+    /**
+     * Builds the default attribute set shared by all {@link MillVillager} subtypes.
+     * <p>Sets max health (20), movement speed ({@value #DEFAULT_MOVE_SPEED}),
+     * attack damage (2), and follow range (48 blocks).</p>
+     *
+     * @return a mutable builder pre-populated with villager attributes
+     */
     public static AttributeSupplier.Builder createAttributes() {
         return PathfinderMob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0)
@@ -142,6 +156,12 @@ public abstract class MillVillager extends PathfinderMob {
                 .add(Attributes.FOLLOW_RANGE, 48.0);
     }
 
+    /**
+     * Registers the synched entity data keys used to synchronise villager state
+     * (first name, family name, gender, culture key, and current goal key) to clients.
+     *
+     * @param builder the synched-entity-data builder supplied by NeoForge
+     */
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
@@ -153,19 +173,78 @@ public abstract class MillVillager extends PathfinderMob {
     }
 
     // --- Name accessors ---
+    /** Returns the villager's first (given) name, synced to all clients. */
     public String getFirstName() { return this.entityData.get(DATA_FIRST_NAME); }
-    public void setFirstName(String name) { this.entityData.set(DATA_FIRST_NAME, name); }
-    public String getFamilyName() { return this.entityData.get(DATA_FAMILY_NAME); }
-    public void setFamilyName(String name) { this.entityData.set(DATA_FAMILY_NAME, name); }
-    public int getGender() { return this.entityData.get(DATA_GENDER); }
-    public void setGender(int gender) { this.entityData.set(DATA_GENDER, gender); }
-    public String getCultureKey() { return this.entityData.get(DATA_CULTURE); }
-    public void setCultureKey(String key) { this.entityData.set(DATA_CULTURE, key); }
 
+    /**
+     * Sets the villager's first (given) name and syncs it to all clients.
+     *
+     * @param name the new first name; must not be {@code null}
+     */
+    public void setFirstName(String name) { this.entityData.set(DATA_FIRST_NAME, name); }
+
+    /** Returns the villager's family (surname) name, synced to all clients. */
+    public String getFamilyName() { return this.entityData.get(DATA_FAMILY_NAME); }
+
+    /**
+     * Sets the villager's family (surname) name and syncs it to all clients.
+     *
+     * @param name the new family name; must not be {@code null}
+     */
+    public void setFamilyName(String name) { this.entityData.set(DATA_FAMILY_NAME, name); }
+
+    /**
+     * Returns the villager's gender as an integer constant.
+     * Use {@link #isMale()} and {@link #isFemale()} for boolean tests.
+     *
+     * @return {@link #MALE} or {@link #FEMALE}
+     */
+    public int getGender() { return this.entityData.get(DATA_GENDER); }
+
+    /**
+     * Sets the villager's gender and syncs it to all clients.
+     *
+     * @param gender {@link #MALE} or {@link #FEMALE}
+     */
+    public void setGender(int gender) { this.entityData.set(DATA_GENDER, gender); }
+
+    /**
+     * Returns the culture identifier string for this villager (e.g. {@code "norman"}),
+     * synced to all clients. Returns an empty string if no culture is assigned.
+     */
+    public String getCultureKey() { return this.entityData.get(DATA_CULTURE); }
+
+    /**
+     * Sets the culture identifier for this villager and syncs it to all clients.
+     * Clears the cached {@link org.dizzymii.millenaire2.culture.Culture} reference so
+     * the next call to {@link #getCulture()} re-resolves from the new key.
+     *
+     * @param key the culture key (e.g. {@code "norman"})
+     */
+    public void setCultureKey(String key) {
+        this.entityData.set(DATA_CULTURE, key);
+        this.cachedCulture = null;
+    }
+
+    /**
+     * Returns the unique numeric identifier that links this entity to its
+     * persistent {@link org.dizzymii.millenaire2.village.VillagerRecord}.
+     * Returns {@code -1L} if the villager has not yet been assigned an ID.
+     */
     public long getVillagerId() { return villagerId; }
+
+    /**
+     * Sets the unique numeric identifier that links this entity to its
+     * persistent {@link org.dizzymii.millenaire2.village.VillagerRecord}.
+     *
+     * @param id the villager record ID
+     */
     public void setVillagerId(long id) { this.villagerId = id; }
 
+    /** Returns {@code true} if this villager's gender is {@link #MALE}. */
     public boolean isMale() { return getGender() == MALE; }
+
+    /** Returns {@code true} if this villager's gender is {@link #FEMALE}. */
     public boolean isFemale() { return getGender() == FEMALE; }
 
     // --- Culture/VillagerType resolution ---
@@ -205,14 +284,48 @@ public abstract class MillVillager extends PathfinderMob {
     }
 
     // --- Goal accessors ---
+    /**
+     * Returns additional goal information (e.g. target entity or coordinates) for
+     * the currently active goal, or {@code null} when no goal is running.
+     */
     @Nullable public GoalInformation getGoalInformation() { return goalInformation; }
+
+    /**
+     * Sets the goal information for the currently active goal.
+     * Called by {@link VillagerGoalController} when a new goal is started.
+     *
+     * @param info the new goal information, or {@code null} to clear
+     */
     public void setGoalInformation(@Nullable GoalInformation info) { this.goalInformation = info; }
+
+    /**
+     * Returns the currently active {@link Goal} object, or {@code null} when idle.
+     */
     @Nullable public Goal getCurrentGoal() { return currentGoal; }
+
+    /**
+     * Returns the navigation destination point used by the current pathing request,
+     * or {@code null} if the villager is not currently navigating.
+     */
     @Nullable public Point getPathDestPoint() { return pathDestPoint; }
+
+    /**
+     * Sets (or clears) the navigation destination point.
+     * Called by {@link VillagerGoalController} to track the active path target.
+     *
+     * @param p the destination, or {@code null} to clear
+     */
     public void setPathDestPoint(@Nullable Point p) { this.pathDestPoint = p; }
 
     // ========== Custom display name ==========
 
+    /**
+     * Returns the villager's full name as a chat {@link Component} in the form
+     * {@code "FirstName FamilyName"}.  Falls back to the entity type name when
+     * neither name field is populated.
+     *
+     * @return the display name component
+     */
     @Override
     public Component getDisplayName() {
         String first = getFirstName();
@@ -225,6 +338,10 @@ public abstract class MillVillager extends PathfinderMob {
         return super.getDisplayName();
     }
 
+    /**
+     * Returns {@code true} when the villager has a non-empty first name, suppressing
+     * the vanilla entity-type label from the name tag renderer.
+     */
     @Override
     public boolean hasCustomName() {
         return !getFirstName().isEmpty();
@@ -232,6 +349,16 @@ public abstract class MillVillager extends PathfinderMob {
 
     // ========== Brain setup ==========
 
+    /**
+     * Creates the {@link Brain.Provider} used to deserialise and reconstruct
+     * this villager's brain.  The default implementation uses no custom memory
+     * modules or sensors; behaviours read entity fields directly.
+     * <p>
+     * <b>Migration note:</b> When SmartBrainLib is integrated, replace with
+     * {@code SmartBrainProvider.of(this)}.
+     *
+     * @return the brain provider for this villager
+     */
     @SuppressWarnings("unchecked")
     @Override
     protected Brain.Provider<MillVillager> brainProvider() {
@@ -240,6 +367,14 @@ public abstract class MillVillager extends PathfinderMob {
         return Brain.provider(List.of(), List.of());
     }
 
+    /**
+     * Constructs the villager's {@link Brain} by applying
+     * {@link VillagerBrainConfig#configureBrain(Brain)} to the freshly created brain
+     * returned by the provider.
+     *
+     * @param dynamic the serialised NBT brain data, or an empty dynamic for new entities
+     * @return the fully configured brain
+     */
     @SuppressWarnings("unchecked")
     @Override
     protected Brain<?> makeBrain(Dynamic<?> dynamic) {
@@ -248,6 +383,13 @@ public abstract class MillVillager extends PathfinderMob {
         return brain;
     }
 
+    /**
+     * Returns this villager's brain, cast to {@code Brain<MillVillager>}.
+     * The cast is safe because {@link #makeBrain} always produces a
+     * {@code Brain<MillVillager>}.
+     *
+     * @return the villager brain
+     */
     @Override
     @SuppressWarnings("unchecked")
     public Brain<MillVillager> getBrain() {
@@ -256,6 +398,10 @@ public abstract class MillVillager extends PathfinderMob {
 
     // ========== Tick logic ==========
 
+    /**
+     * Main per-tick update: calls the vanilla tick pipeline and, on the logical
+     * server, invokes {@link #serverTick()} for goal/aggro decay logic.
+     */
     @Override
     public void tick() {
         super.tick();
@@ -264,6 +410,15 @@ public abstract class MillVillager extends PathfinderMob {
         }
     }
 
+    /**
+     * Server-side per-tick logic.
+     * <ul>
+     *   <li>Decrements the aggro counter until it reaches zero.</li>
+     *   <li>Periodically (every {@value #GOAL_TICK_INTERVAL} ticks) calls
+     *       {@link VillagerBrainConfig#updateActivity(MillVillager)} to switch
+     *       the active Brain activity based on time-of-day and combat state.</li>
+     * </ul>
+     */
     private void serverTick() {
         // Decay aggro counter
         if (aggroTicks > 0) {
@@ -278,6 +433,11 @@ public abstract class MillVillager extends PathfinderMob {
         }
     }
 
+    /**
+     * Called each tick on the server after the standard AI step.
+     * Ticks the villager's {@link Brain}, pushing it through the active-activity
+     * behaviour pipeline and advancing any running behaviours.
+     */
     @Override
     protected void customServerAiStep() {
         super.customServerAiStep();
@@ -303,6 +463,17 @@ public abstract class MillVillager extends PathfinderMob {
 
     // ========== Player interaction ==========
 
+    /**
+     * Handles right-click interaction from a player.
+     * <p>
+     * On the server side, sends a villager-info message to the player and requests
+     * the trade GUI to be opened.  Returns {@link InteractionResult#SUCCESS} on both
+     * sides so the animation plays correctly.
+     *
+     * @param player the interacting player
+     * @param hand   the hand used for the interaction
+     * @return {@link InteractionResult#SUCCESS} always
+     */
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (this.level().isClientSide) {
@@ -330,6 +501,20 @@ public abstract class MillVillager extends PathfinderMob {
 
     // ========== Combat ==========
 
+    /**
+     * Handles incoming damage.  In addition to vanilla processing:
+     * <ul>
+     *   <li>Records whether the attacker is a player.</li>
+     *   <li>Starts the aggro linger timer ({@value #AGGRO_LINGER_TICKS} ticks).</li>
+     *   <li>If the villager type has {@code helpInAttacks} set, immediately switches
+     *       to the {@code defendvillage} goal and the {@link net.minecraft.world.entity.schedule.Activity#FIGHT FIGHT}
+     *       Brain activity.</li>
+     * </ul>
+     *
+     * @param source the source of damage
+     * @param amount the amount of damage to apply
+     * @return {@code true} if the damage was actually applied
+     */
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (source.getEntity() instanceof Player) {
@@ -357,6 +542,16 @@ public abstract class MillVillager extends PathfinderMob {
         return result;
     }
 
+    /**
+     * Called when the villager dies.  Performs vanilla death handling then:
+     * <ul>
+     *   <li>Removes the debug tracker entry via {@link VillagerDebugger#remove(MillVillager)}.</li>
+     *   <li>Marks the corresponding {@link org.dizzymii.millenaire2.village.VillagerRecord}
+     *       as killed in {@link org.dizzymii.millenaire2.world.MillWorldData}.</li>
+     * </ul>
+     *
+     * @param source the cause of death
+     */
     @Override
     public void die(DamageSource source) {
         super.die(source);
@@ -377,6 +572,14 @@ public abstract class MillVillager extends PathfinderMob {
 
     // ========== NBT persistence ==========
 
+    /**
+     * Writes all Millénaire-specific fields to NBT so they survive a world save/load cycle.
+     * Fields written: names, gender, culture key, villager ID, raider/hired/aggressive flags,
+     * house/town-hall coordinates, goal key, hired-by info, villager type, and the
+     * in-memory item inventory.
+     *
+     * @param tag the compound tag to write into
+     */
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
@@ -416,6 +619,12 @@ public abstract class MillVillager extends PathfinderMob {
         tag.put("millInventory", invList);
     }
 
+    /**
+     * Reads all Millénaire-specific fields from NBT after a world save/load cycle,
+     * restoring all data written by {@link #addAdditionalSaveData(CompoundTag)}.
+     *
+     * @param tag the compound tag to read from
+     */
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
@@ -458,6 +667,15 @@ public abstract class MillVillager extends PathfinderMob {
     }
 
     // --- Building helpers ---
+
+    /**
+     * Looks up the {@link org.dizzymii.millenaire2.village.Building} that this villager's
+     * house point belongs to.
+     * <p>Always returns {@code null} on the client side or when
+     * {@link #housePoint} is not set.</p>
+     *
+     * @return the home building, or {@code null} if unavailable
+     */
     @Nullable
     public org.dizzymii.millenaire2.village.Building getHomeBuilding() {
         if (housePoint == null || this.level().isClientSide) return null;
@@ -466,6 +684,14 @@ public abstract class MillVillager extends PathfinderMob {
         return mw.getBuilding(housePoint);
     }
 
+    /**
+     * Looks up the {@link org.dizzymii.millenaire2.village.Building} that serves as
+     * this villager's town hall.
+     * <p>Always returns {@code null} on the client side or when
+     * {@link #townHallPoint} is not set.</p>
+     *
+     * @return the town-hall building, or {@code null} if unavailable
+     */
     @Nullable
     public org.dizzymii.millenaire2.village.Building getTownHallBuilding() {
         if (townHallPoint == null || this.level().isClientSide) return null;
@@ -475,10 +701,26 @@ public abstract class MillVillager extends PathfinderMob {
     }
 
     // --- Inventory helpers ---
+
+    /**
+     * Returns the count of the given {@link InvItem} currently held in the
+     * villager's logical inventory.  Returns {@code 0} if the item is absent.
+     *
+     * @param item the item to count
+     * @return the quantity held, or {@code 0}
+     */
     public int countInv(InvItem item) {
         return inventory.getOrDefault(item, 0);
     }
 
+    /**
+     * Adds (or subtracts) {@code count} of the given {@link InvItem} from the
+     * villager's logical inventory.  If the resulting quantity drops to zero or
+     * below, the entry is removed entirely.
+     *
+     * @param item  the item to adjust
+     * @param count the amount to add (use a negative value to subtract)
+     */
     public void addToInv(InvItem item, int count) {
         inventory.merge(item, count, Integer::sum);
         Integer current = inventory.get(item);
@@ -487,25 +729,62 @@ public abstract class MillVillager extends PathfinderMob {
         }
     }
 
+    /**
+     * Removes {@code count} of the given {@link InvItem} from the villager's
+     * logical inventory.  Equivalent to {@code addToInv(item, -count)}.
+     *
+     * @param item  the item to remove
+     * @param count the amount to remove (positive value)
+     */
     public void removeFromInv(InvItem item, int count) {
         addToInv(item, -count);
     }
 
     // ========== Concrete villager subclasses ==========
 
+    /**
+     * Generic male villager entity.
+     * Uses the {@link MillVillagerModel} and {@link MillVillagerRenderer}.
+     */
     public static class GenericMale extends MillVillager {
+        /**
+         * Creates a new {@code GenericMale} villager entity.
+         *
+         * @param type  the entity type
+         * @param level the level to spawn into
+         */
         public GenericMale(EntityType<? extends GenericMale> type, Level level) {
             super(type, level);
         }
     }
 
+    /**
+     * Generic female villager with a symmetrical body model (right-handed, 80% chance).
+     * Uses the female symmetrical renderer.
+     */
     public static class GenericSymmFemale extends MillVillager {
+        /**
+         * Creates a new {@code GenericSymmFemale} villager entity.
+         *
+         * @param type  the entity type
+         * @param level the level to spawn into
+         */
         public GenericSymmFemale(EntityType<? extends GenericSymmFemale> type, Level level) {
             super(type, level);
         }
     }
 
+    /**
+     * Generic female villager with an asymmetrical body model (left-handed, 20% chance).
+     * Uses the female asymmetrical renderer.
+     */
     public static class GenericAsymmFemale extends MillVillager {
+        /**
+         * Creates a new {@code GenericAsymmFemale} villager entity.
+         *
+         * @param type  the entity type
+         * @param level the level to spawn into
+         */
         public GenericAsymmFemale(EntityType<? extends GenericAsymmFemale> type, Level level) {
             super(type, level);
         }

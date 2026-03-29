@@ -23,6 +23,11 @@ public final class VillagerGoalController {
 
     private final MillVillager villager;
 
+    /**
+     * Creates a new goal controller bound to the given villager.
+     *
+     * @param villager the villager whose goal lifecycle this controller manages
+     */
     public VillagerGoalController(MillVillager villager) {
         this.villager = villager;
     }

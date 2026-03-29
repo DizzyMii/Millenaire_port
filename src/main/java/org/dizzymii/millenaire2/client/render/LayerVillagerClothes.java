@@ -22,10 +22,33 @@ import org.dizzymii.millenaire2.entity.MillVillager;
  */
 public class LayerVillagerClothes<T extends MillVillager, M extends HumanoidModel<T>> extends RenderLayer<T, M> {
 
+    /**
+     * Creates the clothing-overlay layer and attaches it to the given parent renderer.
+     *
+     * @param parent the parent renderer that owns this layer
+     */
     public LayerVillagerClothes(RenderLayerParent<T, M> parent) {
         super(parent);
     }
 
+    /**
+     * Renders the clothing-texture overlay on top of the villager's base skin.
+     * <p>
+     * Resolves the clothing texture from the villager's {@link VillagerType}; if none is
+     * configured the layer is a no-op.  The parent model is re-rendered with the clothing
+     * texture using a translucent render type so transparent parts show through correctly.
+     *
+     * @param poseStack       the current pose stack
+     * @param buffer          the multi-buffer source for render types
+     * @param packedLight     the packed sky/block light values
+     * @param entity          the villager being rendered
+     * @param limbSwing       the limb swing animation angle
+     * @param limbSwingAmount the amount of limb swing
+     * @param partialTick     the partial tick for interpolation
+     * @param ageInTicks      the entity's age in ticks
+     * @param netHeadYaw      the head yaw relative to the body
+     * @param headPitch       the head pitch
+     */
     @Override
     public void render(PoseStack poseStack, MultiBufferSource buffer,
                        int packedLight, T entity, float limbSwing, float limbSwingAmount,
@@ -46,6 +69,19 @@ public class LayerVillagerClothes<T extends MillVillager, M extends HumanoidMode
                 OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
     }
 
+    /**
+     * Converts a clothing texture path string from villager type data into a
+     * {@link ResourceLocation}.  Accepted formats:
+     * <ul>
+     *   <li>{@code "millenaire2:textures/entity/foo.png"} — explicit namespace, used as-is.</li>
+     *   <li>{@code "textures/entity/foo.png"} — no namespace, {@code millenaire2} is prepended.</li>
+     *   <li>{@code "foo"} or {@code "foo/bar"} — short form, expanded to
+     *       {@code millenaire2:textures/entity/foo.png}.</li>
+     * </ul>
+     *
+     * @param texPath the raw texture path from the culture data file
+     * @return the resolved {@code ResourceLocation}, or {@code null} if parsing fails
+     */
     private static ResourceLocation resolveClothingTexture(String texPath) {
         if (texPath.contains(":")) {
             return ResourceLocation.tryParse(texPath);

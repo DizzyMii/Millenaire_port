@@ -58,35 +58,111 @@ public class VillagerRecord implements Cloneable {
 
     // ========== Accessors ==========
 
+    /**
+     * Returns the unique numeric ID that links this record to a live
+     * {@link org.dizzymii.millenaire2.entity.MillVillager} entity.
+     *
+     * @return the villager ID
+     */
     public long getVillagerId() { return villagerId; }
+
+    /**
+     * Sets the unique numeric ID for this record.
+     *
+     * @param id the villager ID to assign
+     */
     public void setVillagerId(long id) { this.villagerId = id; }
 
+    /**
+     * Returns the culture identifier for this villager (e.g. {@code "norman"}),
+     * or {@code null} if no culture has been assigned.
+     */
     @Nullable public String getCultureKey() { return cultureKey; }
+
+    /**
+     * Sets the culture identifier for this villager.
+     *
+     * @param key the culture key, or {@code null} to clear
+     */
     public void setCultureKey(@Nullable String key) { this.cultureKey = key; }
 
+    /**
+     * Returns the position of the villager's assigned home, or {@code null} if
+     * no home has been assigned.
+     */
     @Nullable public Point getHousePos() { return housePos; }
+
+    /**
+     * Sets the position of the villager's assigned home.
+     *
+     * @param p the home position, or {@code null} to clear
+     */
     public void setHousePos(@Nullable Point p) { this.housePos = p; }
 
+    /**
+     * Returns the position of the town-hall building for this villager's village,
+     * or {@code null} if not set.
+     */
     @Nullable public Point getTownHallPos() { return townHallPos; }
+
+    /**
+     * Sets the position of the town-hall building for this villager.
+     *
+     * @param p the town-hall position, or {@code null} to clear
+     */
     public void setTownHallPos(@Nullable Point p) { this.townHallPos = p; }
 
+    /**
+     * Returns the original villager ID used before a clone/copy operation,
+     * or {@code -1L} if this record is not a clone.
+     */
     public long getOriginalId() { return originalId; }
+
+    /**
+     * Sets the original villager ID (used when cloning records).
+     *
+     * @param id the original ID
+     */
     public void setOriginalId(long id) { this.originalId = id; }
 
+    /**
+     * Returns {@code true} if this villager's quest tag list contains {@code tag}.
+     *
+     * @param tag the tag string to check
+     * @return {@code true} if present
+     */
     public boolean hasQuestTag(String tag) {
         return questTags.contains(tag);
     }
 
+    /**
+     * Adds {@code tag} to this villager's quest tag list if it is not already present.
+     *
+     * @param tag the tag string to add
+     */
     public void addQuestTag(String tag) {
         if (!questTags.contains(tag)) questTags.add(tag);
     }
 
+    /**
+     * Removes the first occurrence of {@code tag} from this villager's quest tag list.
+     * Does nothing if {@code tag} is not present.
+     *
+     * @param tag the tag string to remove
+     */
     public void removeQuestTag(String tag) {
         questTags.remove(tag);
     }
 
     // ========== NBT persistence ==========
 
+    /**
+     * Serialises this record to a {@link net.minecraft.nbt.CompoundTag} for
+     * persistent storage inside {@link org.dizzymii.millenaire2.world.MillWorldData}.
+     * All fields are written, including the inventory map and quest-tag list.
+     *
+     * @return the compound tag representing this record
+     */
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
         tag.putLong("id", villagerId);
@@ -135,6 +211,13 @@ public class VillagerRecord implements Cloneable {
         return tag;
     }
 
+    /**
+     * Deserialises a {@link VillagerRecord} from a {@link net.minecraft.nbt.CompoundTag}
+     * previously produced by {@link #save()}.
+     *
+     * @param tag the compound tag to read from
+     * @return the reconstructed {@code VillagerRecord}
+     */
     public static VillagerRecord load(CompoundTag tag) {
         VillagerRecord vr = new VillagerRecord();
         vr.villagerId = tag.getLong("id");
@@ -186,7 +269,16 @@ public class VillagerRecord implements Cloneable {
     }
 
     /**
-     * Create a new VillagerRecord with a random ID and given attributes.
+     * Creates a brand-new {@link VillagerRecord} with a randomly-generated ID and
+     * the given attributes.  The {@link #rightHanded} flag is set with an 80%
+     * probability of being {@code true} (affects female body-model variant selection).
+     *
+     * @param cultureKey  the culture identifier (e.g. {@code "norman"})
+     * @param type        the villager type key (e.g. {@code "farmer"})
+     * @param firstName   the villager's given name
+     * @param familyName  the villager's family name
+     * @param gender      {@link org.dizzymii.millenaire2.entity.MillVillager#MALE} or {@code FEMALE}
+     * @return the newly-created record
      */
     public static VillagerRecord create(String cultureKey, String type, String firstName, String familyName, int gender) {
         VillagerRecord vr = new VillagerRecord();
@@ -200,6 +292,13 @@ public class VillagerRecord implements Cloneable {
         return vr;
     }
 
+    /**
+     * Returns a shallow clone of this record with independent copies of the
+     * {@link #inventory} and {@link #questTags} collections.
+     *
+     * @return a copy of this record
+     * @throws AssertionError if cloning fails (should never occur for this class)
+     */
     @Override
     public VillagerRecord clone() {
         try {

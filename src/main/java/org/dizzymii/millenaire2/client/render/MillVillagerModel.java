@@ -19,10 +19,22 @@ public class MillVillagerModel extends HumanoidModel<MillVillager> {
     public static final ModelLayerLocation LAYER_LOCATION =
             new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(Millenaire2.MODID, "mill_villager"), "main");
 
+    /**
+     * Creates the villager model from the baked {@link ModelPart} tree.
+     *
+     * @param root the root model part produced by baking {@link #createBodyLayer()}
+     */
     public MillVillagerModel(ModelPart root) {
         super(root);
     }
 
+    /**
+     * Defines the geometry for the villager model layer.
+     * Uses the standard humanoid mesh ({@link HumanoidModel#createMesh}) with a
+     * 64×32 texture atlas and no cube deformation.
+     *
+     * @return the layer definition to register with the model-layer system
+     */
     public static LayerDefinition createBodyLayer() {
         MeshDefinition meshDef = HumanoidModel.createMesh(CubeDeformation.NONE, 0.0F);
         return LayerDefinition.create(meshDef, 64, 32);
