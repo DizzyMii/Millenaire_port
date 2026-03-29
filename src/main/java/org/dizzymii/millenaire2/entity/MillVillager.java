@@ -216,11 +216,15 @@ public abstract class MillVillager extends PathfinderMob {
 
     /**
      * Sets the culture identifier for this villager and syncs it to all clients.
-     * Invalidates the cached {@link org.dizzymii.millenaire2.culture.Culture} reference.
+     * Clears the cached {@link org.dizzymii.millenaire2.culture.Culture} reference so
+     * the next call to {@link #getCulture()} re-resolves from the new key.
      *
      * @param key the culture key (e.g. {@code "norman"})
      */
-    public void setCultureKey(String key) { this.entityData.set(DATA_CULTURE, key); }
+    public void setCultureKey(String key) {
+        this.entityData.set(DATA_CULTURE, key);
+        this.cachedCulture = null;
+    }
 
     /**
      * Returns the unique numeric identifier that links this entity to its
