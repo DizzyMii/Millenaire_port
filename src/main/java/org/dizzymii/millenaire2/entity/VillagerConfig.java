@@ -71,12 +71,22 @@ public class VillagerConfig {
 
     public Map<String, List<InvItem>> categories = new HashMap<>();
 
+    /**
+     * Creates a new {@link VillagerConfig} with the given key.
+     * Equipment and food maps are empty until populated by the config loader.
+     *
+     * @param key the unique identifier for this villager config (e.g. {@code "default"})
+     */
     public VillagerConfig(String key) {
         this.key = key;
     }
 
     /**
-     * Get a config by key, creating a copy of default if not found.
+     * Returns the config registered under {@code key}, creating and registering
+     * an empty one if none exists yet.
+     *
+     * @param key the config identifier
+     * @return the existing or newly-created config for {@code key}
      */
     public static VillagerConfig getOrCreate(String key) {
         if (villagerConfigs.containsKey(key)) {
@@ -88,7 +98,11 @@ public class VillagerConfig {
     }
 
     /**
-     * Sort all equipment/food lists by priority (descending).
+     * Sorts all equipment and food maps by their priority values (descending) and
+     * stores the results in the corresponding {@code *Sorted} list fields.
+     * Also populates the {@link #categories} lookup map so callers can access any
+     * sorted list by its category string constant.
+     * <p>Must be called after all items have been loaded from the config file.</p>
      */
     public void sortAll() {
         weaponsHandToHandSorted = sortByPriority(weaponsHandToHand);
@@ -119,6 +133,12 @@ public class VillagerConfig {
         categories.put(CATEGORY_TOOLSSHOVEL, toolsShovelSorted);
     }
 
+    /**
+     * Sorts the keys of {@code map} in descending order of their mapped priority values.
+     *
+     * @param map an item-to-priority mapping
+     * @return an unmodifiable list of items ordered from highest to lowest priority
+     */
     private static List<InvItem> sortByPriority(Map<InvItem, Integer> map) {
         List<InvItem> list = new ArrayList<>(map.keySet());
         list.sort((a, b) -> Integer.compare(map.getOrDefault(b, 0), map.getOrDefault(a, 0)));
@@ -126,7 +146,8 @@ public class VillagerConfig {
     }
 
     /**
-     * Initialise default config. Called during mod setup.
+     * Initialises the default config singleton and registers it under the key
+     * {@value #DEFAULT}.  Called during mod setup before any culture data is loaded.
      */
     public static void initDefaultConfig() {
         DEFAULT_CONFIG = new VillagerConfig(DEFAULT);

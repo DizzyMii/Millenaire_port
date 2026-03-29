@@ -170,10 +170,24 @@ public final class VillagerDebugger {
 
     // ========== Private helpers ==========
 
+    /**
+     * Returns the {@link DebugState} for {@code villager}, creating a fresh one if
+     * no state exists yet.
+     *
+     * @param villager the villager whose debug state is requested
+     * @return the (possibly newly-created) debug state
+     */
     private static DebugState getOrCreate(MillVillager villager) {
         return STATES.computeIfAbsent(villager.getUUID(), k -> new DebugState());
     }
 
+    /**
+     * Appends an entry to the circular history buffer of {@code state}.
+     * Evicts the oldest entry when the buffer is full ({@value #MAX_HISTORY} entries).
+     *
+     * @param state the debug state to update
+     * @param entry the formatted log string to append
+     */
     private static void pushHistory(DebugState state, String entry) {
         if (state.historyDeque.size() >= MAX_HISTORY) {
             state.historyDeque.pollFirst();
@@ -181,6 +195,14 @@ public final class VillagerDebugger {
         state.historyDeque.addLast(entry);
     }
 
+    /**
+     * Returns a human-readable string of the currently active Brain activities for
+     * {@code villager}, concatenated with {@code "+"} when multiple are active.
+     * Returns {@code "none"} if no activities are active, or {@code "?"} on error.
+     *
+     * @param villager the villager to query
+     * @return activity name string
+     */
     private static String getActivityName(MillVillager villager) {
         try {
             return villager.getBrain().getActiveActivities()
@@ -195,6 +217,7 @@ public final class VillagerDebugger {
 
     // ========== Inner state record ==========
 
+    /** Mutable debug state for a single villager, keyed by entity UUID. */
     private static final class DebugState {
         String lastGoalKey = "";
         long goalStartTime = 0;
@@ -204,6 +227,12 @@ public final class VillagerDebugger {
         @Nullable Point lastPos = null;
         final Deque<String> historyDeque = new ArrayDeque<>(MAX_HISTORY);
 
+        /**
+         * Returns a snapshot of the history deque as an ordered list,
+         * with the oldest entry first.
+         *
+         * @return a copy of the history entries in insertion order
+         */
         List<String> history() {
             return new ArrayList<>(historyDeque);
         }

@@ -161,11 +161,31 @@ public class VillagerType {
     public boolean isDefensive = false;
     public boolean noResurrect = false;
 
+    /**
+     * Creates a new {@code VillagerType} bound to the given culture.
+     * Fields are set to their default values and must be populated by
+     * {@link #loadFromFile(File, Culture)} before use.
+     *
+     * @param culture the owning culture object
+     * @param key     the villager type key (e.g. {@code "farmer"})
+     */
     public VillagerType(Culture culture, String key) {
         this.culture = culture;
         this.key = key;
     }
 
+    /**
+     * Loads and constructs a {@link VillagerType} from a culture data file
+     * (e.g. {@code cultures/norman/villagers/normalvillagers/farmer.txt}).
+     * <p>Derives the type key from the file name (lower-cased, {@code .txt} stripped)
+     * and parses all annotated fields via {@link ParametersManager}.
+     * After parsing, boolean convenience flags ({@link #isChild}, {@link #canSell}, etc.)
+     * are derived from the {@link #tags} list.</p>
+     *
+     * @param file    the data file to read
+     * @param culture the owning culture
+     * @return the loaded {@code VillagerType}, or {@code null} on error
+     */
     public static VillagerType loadFromFile(File file, Culture culture) {
         String key = file.getName().replace(".txt", "").toLowerCase();
         VillagerType vt = new VillagerType(culture, key);
@@ -201,14 +221,32 @@ public class VillagerType {
         }
     }
 
+    /**
+     * Returns {@code true} if the given {@code tag} string appears in this type's
+     * {@link #tags} list (case-insensitive comparison).
+     *
+     * @param tag the tag to search for
+     * @return {@code true} if the tag is present
+     */
     public boolean containsTag(String tag) {
         return tags.stream().anyMatch(t -> t.equalsIgnoreCase(tag));
     }
 
+    /**
+     * Returns {@code true} when this villager type can produce offspring, i.e.
+     * at least one of {@link #maleChild} or {@link #femaleChild} is set.
+     *
+     * @return {@code true} if the type has defined child types
+     */
     public boolean hasChildren() {
         return maleChild != null || femaleChild != null;
     }
 
+    /**
+     * Returns a debug string in the form {@code "VillagerType[<key>]"}.
+     *
+     * @return the debug string
+     */
     @Override
     public String toString() {
         return "VillagerType[" + key + "]";

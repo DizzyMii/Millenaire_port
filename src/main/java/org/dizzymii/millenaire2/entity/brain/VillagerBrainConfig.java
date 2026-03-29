@@ -77,6 +77,13 @@ public final class VillagerBrainConfig {
 
     // ========== Private helpers ==========
 
+    /**
+     * Constructs the ordered list of {@link BrainActivityGroup}s that describe
+     * all activities and their associated behaviour instances.
+     * Groups with no behaviours are silently skipped by {@link #registerGroup}.
+     *
+     * @return the list of activity groups to register
+     */
     private static List<BrainActivityGroup<MillVillager>> buildGroups() {
         return List.of(
             // CORE is left empty intentionally — registerGroup() skips empty groups.
@@ -91,6 +98,14 @@ public final class VillagerBrainConfig {
         );
     }
 
+    /**
+     * Registers all behaviours in {@code group} with the given {@code brain} under the
+     * group's activity, assigning sequential integer priorities starting at 0.
+     * Empty groups (no behaviours) are skipped.
+     *
+     * @param brain the brain to register the group with
+     * @param group the activity group whose behaviours should be added
+     */
     private static void registerGroup(Brain<MillVillager> brain,
                                        BrainActivityGroup<MillVillager> group) {
         if (group.isEmpty()) return;
