@@ -12,6 +12,10 @@ import net.minecraft.world.entity.ai.Brain;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.behavior.BehaviorControl;
+import net.minecraft.world.entity.ai.behavior.LookAtTargetSink;
+import net.minecraft.world.entity.ai.behavior.MoveToTargetSink;
+import net.minecraft.world.entity.ai.behavior.RandomStroll;
+import net.minecraft.world.entity.ai.behavior.Swim;
 import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -209,28 +213,33 @@ public class HumanoidNPC extends PathfinderMob implements SmartBrainOwner<Humano
     /**
      * CORE tasks run every tick regardless of which activity is currently active.
      *
-     * <p>Placeholder: vanilla {@code LookAtTargetSink} and {@code MoveToTargetSink}
-     * should be wired here once full SBL integration is complete.
+     * <p>Includes basic autonomous behaviours: swimming to stay afloat,
+     * looking at the current target, and walking toward the movement target.
      *
-     * @return an empty core group (placeholder)
+     * @return the core activity group with navigation primitives
      */
     @Override
     public BrainActivityGroup<HumanoidNPC> getCoreTasks() {
-        // Placeholder — vanilla look/walk behaviours are wired here in the full
-        // SBL integration pass.
-        return BrainActivityGroup.coreTasks();
+        return BrainActivityGroup.coreTasks(
+                new Swim(0.8F),
+                new LookAtTargetSink(45, 90),
+                new MoveToTargetSink()
+        );
     }
 
     /**
      * IDLE tasks execute when no higher-priority activity is currently active.
      *
-     * <p>Placeholder: socialise and wander behaviours are added in a future pass.
+     * <p>The NPC wanders randomly at a reduced speed so it looks natural
+     * while awaiting work or other high-priority goals.
      *
-     * @return an empty idle group (placeholder)
+     * @return the idle activity group with a random-stroll behaviour
      */
     @Override
     public BrainActivityGroup<HumanoidNPC> getIdleTasks() {
-        return BrainActivityGroup.idleTasks();
+        return BrainActivityGroup.idleTasks(
+                RandomStroll.stroll(0.6F)
+        );
     }
 
     /**

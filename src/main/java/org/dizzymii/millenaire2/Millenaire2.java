@@ -29,6 +29,7 @@ import org.dizzymii.millenaire2.entity.HumanoidNPC;
 import org.dizzymii.millenaire2.entity.MillEntities;
 import org.dizzymii.millenaire2.entity.MillVillager;
 import org.dizzymii.millenaire2.entity.brain.ModMemoryTypes;
+import org.dizzymii.millenaire2.item.MillArmorMaterials;
 import org.dizzymii.millenaire2.item.MillItems;
 import org.dizzymii.millenaire2.menu.MillMenuTypes;
 import org.dizzymii.millenaire2.network.MillNetworking;
@@ -78,10 +79,12 @@ public class Millenaire2 {
         BLOCK_ENTITY_TYPES.register(modEventBus);
         MEMORY_MODULE_TYPES.register(modEventBus);
         MillMenuTypes.MENU_TYPES.register(modEventBus);
+        MillArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
 
         // Force class loading of registration holders
         MillBlocks.init();
         MillItems.init();
+        MillArmorMaterials.init();
         MillEntities.init();
         MillMenuTypes.init();
         ModMemoryTypes.init();

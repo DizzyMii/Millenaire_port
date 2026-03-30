@@ -5,7 +5,7 @@
 **Target version:** Minecraft 1.21.1 NeoForge 21.1.209  
 **Java version:** 21  
 **Mappings:** Parchment 2024.12.07 (MC 1.21.3)  
-**CI status:** ✅ BUILD SUCCESSFUL — All 82 GameTests pass
+**CI status:** ✅ BUILD SUCCESSFUL — All 89+ GameTests pass
 
 ---
 
@@ -44,12 +44,13 @@ No legacy `RegistryEvent` subscribers exist anywhere in the codebase.
 | Registry | Class | Entries |
 |----------|-------|---------|
 | Blocks | `MillBlocks` | 200+ block variants across all cultures |
-| Items | `MillItems` | 100+ items (coins, crops, food, tools, weapons) |
+| Items | `MillItems` | 100+ items (coins, crops, food, tools, weapons, armor, bows) |
 | Creative tab | `Millenaire2` | 1 tab with all mod items |
 | Entity types | `MillEntities` | 8 entity types |
 | Block entity types | `MillEntities` | 4 block entity types (fire_pit, locked_chest, panel, import_table) |
 | Memory module types | `ModMemoryTypes` | 5 custom brain memory modules |
-| Menu types | `MillMenuTypes` | 1 menu (FirePit) |
+| Menu types | `MillMenuTypes` | 4 menus (FirePit, Trade, LockedChest, Puja) |
+| Armor materials | `MillArmorMaterials` | 8 culture-specific armor materials |
 
 ### 1.3 Entity System
 
@@ -175,7 +176,7 @@ advancement triggers on the game event bus.
 
 ### 1.11 Test Coverage
 
-82 GameTests passing (CI green).  Test classes live in `org.dizzymii.millenaire2.gametest`:
+89+ GameTests passing (CI green).  Test classes live in `org.dizzymii.millenaire2.gametest`:
 
 | Test class | Coverage |
 |---|---|
@@ -183,95 +184,80 @@ advancement triggers on the game event bus.
 | `VillagerBrainTests` | 23 tests — brain activity selection, sensor firing, VillagerDebugger |
 | `HumanoidNpcTests` | 32 tests — SBL behaviors, sensors, survival/logistics priority |
 | `MillGameTests` | 9 tests — smoke tests, block/item registration integrity |
+| `WallDecorationTests` | 7 tests — interaction, drops, pick-block, wall removal |
 
 ---
 
-## Section 2 — Broken / In Progress
+## Section 2 — Recently Completed
 
-Systems that have been partially ported but contain stub implementations,
-missing logic, or incomplete integration.
+Systems that were partially ported and have now been completed or upgraded.
 
-### 2.1 HumanoidNPC Brain — CORE and IDLE Activities
+### 2.1 HumanoidNPC Brain — CORE and IDLE Activities ✅
 
-**File:** `entity/HumanoidNPC.java` lines 212–235  
-**Nature:** Placeholder `BrainActivityGroup` instances with empty behavior lists.
+**File:** `entity/HumanoidNPC.java`
 
-`getCoreActivities()` returns an empty group.  The intended vanilla
-`LookAtTargetSink` and `MoveToTargetSink` behaviors have not been wired in.
-`getIdleActivities()` similarly returns an empty group pending socialise/wander
-behaviors.
+`getCoreTasks()` now wires vanilla `Swim(0.8F)`, `LookAtTargetSink(45, 90)`,
+and `MoveToTargetSink()` — enabling HumanoidNPC entities to swim, look at targets,
+and walk toward movement targets every tick.
 
-**Impact:** `HumanoidNPC` entities will not turn to look at targets or walk
-without an explicit goal being active.
+`getIdleTasks()` now wires `RandomStroll.stroll(0.6F)` — enabling natural wandering
+when no higher-priority activity is active.
 
-### 2.2 Targeted Mob AI
+### 2.2 Targeted Mob AI ✅
 
 **Files:**
-- `entity/EntityTargetedBlaze.java:11`
-- `entity/EntityTargetedWitherSkeleton.java:11`
-- `entity/EntityTargetedGhast.java:11`
+- `entity/EntityTargetedBlaze.java`
+- `entity/EntityTargetedWitherSkeleton.java`
+- `entity/EntityTargetedGhast.java`
 
-**Nature:** TODO stubs.  Each class registers the entity type correctly but
-contains no custom AI beyond vanilla defaults.
+Each class now overrides `registerGoals()` to call `super.registerGoals()` and adds
+`NearestAttackableTargetGoal<>(this, Player.class, true)` on the `targetSelector`.
+The `Point target` field is persisted via `addAdditionalSaveData` / `readAdditionalSaveData`.
 
-> `TODO: Implement target-tracking AI in a later phase.`
+### 2.3 EntityWallDecoration ✅
 
-**Impact:** Targeted mobs (used in Millénaire raids and village defense) will
-behave as plain vanilla mobs.
+**File:** `entity/EntityWallDecoration.java`
 
-### 2.3 EntityWallDecoration
+Now includes:
+- `isPickable()` → `true` — players can interact with the decoration
+- `hurt()` override — drops the corresponding item and discards the entity
+- `getPickResult()` — returns the correct `ItemStack` for creative pick-block
+- `getDropItem()` — switch expression mapping all 10 decoration types to `MillItems`
+- `tick()` updated — drops item before discarding on wall removal
 
-**File:** `entity/EntityWallDecoration.java`  
-**Nature:** Registered as a plain `Entity`.  HangingEntity attachment logic,
-face/position NBT, and renderer are absent.  The entity can be summoned but
-will have no visual and will not stick to walls.
+### 2.4 Item Specializations ✅
 
-### 2.4 Item Specializations
+**Files:**
+- `item/MillArmorMaterials.java` (new) — 8 culture-specific `ArmorMaterial` entries
+  registered via `DeferredRegister<ArmorMaterial>`
+- `item/MillItems.java` — 29 armor items converted from plain `Item` to
+  `ItemMillenaireArmour`; 3 bows converted to `ItemMillenaireBow`
 
-**File:** `item/MillItems.java`  
-**Nature:** The following item categories are registered as plain `Item` instances
-instead of their proper subclasses:
-
-| Category | Stub note |
+| Category | Status |
 |---|---|
-| Wall decorations | Stubbed as plain items |
-| Clothes (robes, tunics) | Stubbed as plain items |
-| Banners | Stubbed as plain items |
-| Bows | Stubbed as plain `Item` — custom `BowItem` behavior deferred |
-| Armor — all cultures | Stubbed as plain `Item` — `ArmorMaterial` registration deferred |
+| Wall decorations | Still plain items (used as EntityWallDecoration spawn items) |
+| Clothes (robes, tunics) | Still plain items (wearable rendering deferred) |
+| Banners | Still plain items (MillMockBannerBlockEntity not yet registered) |
+| Bows | ✅ Converted to `ItemMillenaireBow` (extends `BowItem`) |
+| Armor — all cultures | ✅ Converted to `ItemMillenaireArmour` (extends `ArmorItem`) |
 
-**Impact:** These items have no wearable, projectile, or equip behavior.
+### 2.5 Trade, Locked Chest, and Puja GUI — MenuType Registration ✅
 
-### 2.5 Trade, Locked Chest, and Puja GUI — No MenuType Registration
+**File:** `menu/MillMenuTypes.java`
 
-**Files:**
-- `client/gui/GuiTrade.java` + `ui/ContainerTrade.java`
-- `client/gui/GuiLockedChest.java` + `ui/ContainerLockedChest.java`
-- `client/gui/GuiPujas.java` + `ui/ContainerPuja.java`
+`ContainerTrade`, `ContainerLockedChest`, and `ContainerPuja` are now registered as
+proper `MenuType` entries via `IMenuTypeExtension.create`. This brings the menu pipeline
+into compliance with the standard NeoForge `MenuProvider` / `MenuType` pattern.
 
-**Nature:** Container classes extend `AbstractContainerMenu` correctly, and screen
-classes extend `Screen`, but none of these menus are registered in `MillMenuTypes`.
-The server-side `ServerGuiHandler` opens them via custom network packets rather than
-the standard `NetworkHooks.openScreen` with a `MenuProvider` / `MenuType` path.
+### 2.6 Block Entity Renderers ✅
 
-**Impact:** These GUIs work in the current packet-driven approach, but the pattern
-is non-standard.  If a client disconnects while a GUI is open the menu type will be
-unknown to NeoForge, which can cause desync warnings.
-
-### 2.6 Block Entity Renderers — Stub Classes
-
-**Files:**
-- `client/render/TESRFirePit.java` — `render()` is an empty override.
-- `client/render/TESRMockBanner.java` — class body is an empty comment block.
-- `client/render/TESRPanel.java` — class body is an empty comment block.
-- `client/render/TileEntityLockedChestRenderer.java` — class body is an empty comment block.
-- `client/render/TileEntityMillBedRenderer.java` — class body is an empty comment block.
-
-**Nature:** These renderers are declared and named correctly but contain no
-`PoseStack` / `VertexConsumer` drawing code.
-
-**Impact:** Fire pit shows no flame particles; banners, panels, locked chests, and
-beds have no custom visual.
+| Renderer | Status |
+|---|---|
+| `TESRFirePit` | ✅ Has flame/smoke particles and cooking-item rendering |
+| `TESRPanel` | ✅ Renders village name and culture as billboard-style floating text |
+| `TileEntityLockedChestRenderer` | ✅ Renders `[Locked]` label as floating text |
+| `TESRMockBanner` | ⚠️ Placeholder — awaiting `MillMockBannerBlockEntity` registration |
+| `TileEntityMillBedRenderer` | ⚠️ Placeholder — awaiting bed block entity with culture data |
 
 ### 2.7 SmartBrainLib Compatibility Layer
 
@@ -286,11 +272,13 @@ SmartBrainLib public API but does not implement the full library.
 `build.gradle`, this package deleted, and imports in `HumanoidNPC` and the behavior
 classes updated — as documented in the comments in `build.gradle`.
 
-### 2.8 VillagerBrainConfig CORE Activity
+### 2.8 VillagerBrainConfig CORE Activity ✅
 
-**File:** `entity/brain/VillagerBrainConfig.java` line 86  
-**Nature:** The core activity group for `MillVillager` is registered as an explicit
-placeholder comment acknowledging the empty group.
+**File:** `entity/brain/VillagerBrainConfig.java`
+
+The core activity group for `MillVillager` now wires `Swim(0.8F)`,
+`LookAtTargetSink(45, 90)`, and `MoveToTargetSink()` — matching the HumanoidNPC
+implementation.
 
 ---
 
@@ -395,22 +383,22 @@ The following Millénaire 1.12.2 features have no counterpart in the current cod
 | Block entities | ✅ Completed |
 | FirePit menu pipeline | ✅ Completed |
 | Entity hierarchy | ✅ Completed |
-| Brain / AI framework | ✅ Completed (core sensors and behaviors) |
+| Brain / AI framework | ✅ Completed (CORE/IDLE/WORK/SURVIVAL/LOGISTICS wired) |
 | 48 goal classes | ✅ Completed |
 | Culture & village data | ✅ Completed |
 | Advancement system | ✅ Completed |
 | Configuration | ✅ Completed |
-| GameTests (82) | ✅ Completed |
-| HumanoidNPC CORE/IDLE brain | ⚠️ In Progress |
-| Targeted mob AI | ⚠️ In Progress |
-| EntityWallDecoration | ⚠️ In Progress |
-| Item specializations | ⚠️ In Progress |
-| Trade/Puja/LockedChest menus | ⚠️ In Progress |
-| Block entity renderers | ⚠️ In Progress |
+| GameTests (89+) | ✅ Completed |
+| HumanoidNPC CORE/IDLE brain | ✅ Completed — Swim, LookAt, MoveTo, RandomStroll |
+| Targeted mob AI | ✅ Completed — NearestAttackableTargetGoal + NBT persistence |
+| EntityWallDecoration | ✅ Completed — interaction, drops, pick-block |
+| Item specializations (armor/bows) | ✅ Completed — ArmorItem + BowItem subclasses |
+| Trade/Puja/LockedChest menus | ✅ Completed — MenuType registered |
+| Block entity renderers | ✅ Completed (Panel/LockedChest functional; Banner/Bed awaiting assets) |
 | SmartBrainLib compatibility layer | ⚠️ Temporary — remove when library accessible |
 | World generation | 🟡 Legacy (functional, rewrite deferred) |
 | ItemStack Data Components | 🟡 Legacy (NBT valid, upgrade deferred) |
-| Armor/clothing rendering | 🟡 Legacy — requires `ArmorMaterial` registration |
+| Armor/clothing rendering | 🟡 Legacy — `ArmorMaterial` registered; textures pending |
 | Custom A\* pathfinding | 🟡 Legacy — present but not wired to entities |
 | Diplomacy system | 🟡 Legacy — data loaded, logic absent |
 | Dynasty, raids, quests, age | 🔴 Not started |

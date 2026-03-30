@@ -35,6 +35,9 @@ public class EntityTargetedWitherSkeleton extends WitherSkeleton {
     }
 
     @Nullable
+    public Point getTarget() { return target; }
+
+    public void setTarget(@Nullable Point target) { this.target = target; }
     public Point getVillageTarget() { return target; }
 
     public void setVillageTarget(@Nullable Point target) { this.target = target; }
@@ -43,6 +46,7 @@ public class EntityTargetedWitherSkeleton extends WitherSkeleton {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         if (target != null) {
+            target.writeToNBT(tag, "Target");
             target.writeToNBT(tag, NBT_VILLAGE_TARGET);
         }
     }
@@ -50,6 +54,7 @@ public class EntityTargetedWitherSkeleton extends WitherSkeleton {
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
+        target = Point.readFromNBT(tag, "Target");
         target = Point.readFromNBT(tag, NBT_VILLAGE_TARGET);
     }
 }

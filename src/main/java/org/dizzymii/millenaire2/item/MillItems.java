@@ -1,6 +1,7 @@
 package org.dizzymii.millenaire2.item;
 
 import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.Item;
@@ -21,7 +22,7 @@ import java.util.function.Supplier;
  * Items are registered via DeferredRegister in Millenaire2.ITEMS.
  *
  * Ported from org.millenaire.common.item.MillItems (Forge 1.12.2).
- * Armor items are stubbed as plain Items — full ArmorMaterial registration in a later phase.
+ * Armor items use culture-specific {@link MillArmorMaterials} via {@link ItemMillenaireArmour}.
  */
 public class MillItems {
 
@@ -238,56 +239,56 @@ public class MillItems {
     public static final DeferredItem<Item> INUIT_TRIDENT = registerItem("inuittrident",
             () -> new SwordItem(Tiers.IRON, props().attributes(SwordItem.createAttributes(Tiers.IRON, 3, -2.4f)).durability(20)));
 
-    // ========== Bows (stubbed as plain items — custom BowItem behavior later) ==========
-    public static final DeferredItem<Item> YUMI_BOW = registerItem("yumibow", () -> new Item(props1().durability(384)));
-    public static final DeferredItem<Item> INUIT_BOW = registerItem("inuitbow", () -> new Item(props1().durability(384)));
-    public static final DeferredItem<Item> SELJUK_BOW = registerItem("seljukbow", () -> new Item(props1().durability(384)));
+    // ========== Bows ==========
+    public static final DeferredItem<Item> YUMI_BOW = registerItem("yumibow", () -> new ItemMillenaireBow(props1().durability(384)));
+    public static final DeferredItem<Item> INUIT_BOW = registerItem("inuitbow", () -> new ItemMillenaireBow(props1().durability(384)));
+    public static final DeferredItem<Item> SELJUK_BOW = registerItem("seljukbow", () -> new ItemMillenaireBow(props1().durability(384)));
 
-    // ========== Armor — Norman (stubbed as plain items, proper ArmorItem later) ==========
-    public static final DeferredItem<Item> NORMAN_HELMET = registerItem("normanhelmet", () -> new Item(props1()));
-    public static final DeferredItem<Item> NORMAN_CHESTPLATE = registerItem("normanplate", () -> new Item(props1()));
-    public static final DeferredItem<Item> NORMAN_LEGGINGS = registerItem("normanlegs", () -> new Item(props1()));
-    public static final DeferredItem<Item> NORMAN_BOOTS = registerItem("normanboots", () -> new Item(props1()));
+    // ========== Armor — Norman ==========
+    public static final DeferredItem<Item> NORMAN_HELMET = registerItem("normanhelmet", () -> new ItemMillenaireArmour(MillArmorMaterials.NORMAN, ArmorItem.Type.HELMET, props1()));
+    public static final DeferredItem<Item> NORMAN_CHESTPLATE = registerItem("normanplate", () -> new ItemMillenaireArmour(MillArmorMaterials.NORMAN, ArmorItem.Type.CHESTPLATE, props1()));
+    public static final DeferredItem<Item> NORMAN_LEGGINGS = registerItem("normanlegs", () -> new ItemMillenaireArmour(MillArmorMaterials.NORMAN, ArmorItem.Type.LEGGINGS, props1()));
+    public static final DeferredItem<Item> NORMAN_BOOTS = registerItem("normanboots", () -> new ItemMillenaireArmour(MillArmorMaterials.NORMAN, ArmorItem.Type.BOOTS, props1()));
 
     // ========== Armor — Japanese Red ==========
-    public static final DeferredItem<Item> JAPANESE_RED_HELMET = registerItem("japaneseredhelmet", () -> new Item(props1()));
-    public static final DeferredItem<Item> JAPANESE_RED_CHESTPLATE = registerItem("japaneseredplate", () -> new Item(props1()));
-    public static final DeferredItem<Item> JAPANESE_RED_LEGGINGS = registerItem("japaneseredlegs", () -> new Item(props1()));
-    public static final DeferredItem<Item> JAPANESE_RED_BOOTS = registerItem("japaneseredboots", () -> new Item(props1()));
+    public static final DeferredItem<Item> JAPANESE_RED_HELMET = registerItem("japaneseredhelmet", () -> new ItemMillenaireArmour(MillArmorMaterials.JAPANESE_RED, ArmorItem.Type.HELMET, props1()));
+    public static final DeferredItem<Item> JAPANESE_RED_CHESTPLATE = registerItem("japaneseredplate", () -> new ItemMillenaireArmour(MillArmorMaterials.JAPANESE_RED, ArmorItem.Type.CHESTPLATE, props1()));
+    public static final DeferredItem<Item> JAPANESE_RED_LEGGINGS = registerItem("japaneseredlegs", () -> new ItemMillenaireArmour(MillArmorMaterials.JAPANESE_RED, ArmorItem.Type.LEGGINGS, props1()));
+    public static final DeferredItem<Item> JAPANESE_RED_BOOTS = registerItem("japaneseredboots", () -> new ItemMillenaireArmour(MillArmorMaterials.JAPANESE_RED, ArmorItem.Type.BOOTS, props1()));
 
     // ========== Armor — Japanese Blue ==========
-    public static final DeferredItem<Item> JAPANESE_BLUE_HELMET = registerItem("japanesebluehelmet", () -> new Item(props1()));
-    public static final DeferredItem<Item> JAPANESE_BLUE_CHESTPLATE = registerItem("japaneseblueplate", () -> new Item(props1()));
-    public static final DeferredItem<Item> JAPANESE_BLUE_LEGGINGS = registerItem("japanesebluelegs", () -> new Item(props1()));
-    public static final DeferredItem<Item> JAPANESE_BLUE_BOOTS = registerItem("japaneseblueboots", () -> new Item(props1()));
+    public static final DeferredItem<Item> JAPANESE_BLUE_HELMET = registerItem("japanesebluehelmet", () -> new ItemMillenaireArmour(MillArmorMaterials.JAPANESE_BLUE, ArmorItem.Type.HELMET, props1()));
+    public static final DeferredItem<Item> JAPANESE_BLUE_CHESTPLATE = registerItem("japaneseblueplate", () -> new ItemMillenaireArmour(MillArmorMaterials.JAPANESE_BLUE, ArmorItem.Type.CHESTPLATE, props1()));
+    public static final DeferredItem<Item> JAPANESE_BLUE_LEGGINGS = registerItem("japanesebluelegs", () -> new ItemMillenaireArmour(MillArmorMaterials.JAPANESE_BLUE, ArmorItem.Type.LEGGINGS, props1()));
+    public static final DeferredItem<Item> JAPANESE_BLUE_BOOTS = registerItem("japaneseblueboots", () -> new ItemMillenaireArmour(MillArmorMaterials.JAPANESE_BLUE, ArmorItem.Type.BOOTS, props1()));
 
     // ========== Armor — Japanese Guard ==========
-    public static final DeferredItem<Item> JAPANESE_GUARD_HELMET = registerItem("japaneseguardhelmet", () -> new Item(props1()));
-    public static final DeferredItem<Item> JAPANESE_GUARD_CHESTPLATE = registerItem("japaneseguardplate", () -> new Item(props1()));
-    public static final DeferredItem<Item> JAPANESE_GUARD_LEGGINGS = registerItem("japaneseguardlegs", () -> new Item(props1()));
-    public static final DeferredItem<Item> JAPANESE_GUARD_BOOTS = registerItem("japaneseguardboots", () -> new Item(props1()));
+    public static final DeferredItem<Item> JAPANESE_GUARD_HELMET = registerItem("japaneseguardhelmet", () -> new ItemMillenaireArmour(MillArmorMaterials.JAPANESE_GUARD, ArmorItem.Type.HELMET, props1()));
+    public static final DeferredItem<Item> JAPANESE_GUARD_CHESTPLATE = registerItem("japaneseguardplate", () -> new ItemMillenaireArmour(MillArmorMaterials.JAPANESE_GUARD, ArmorItem.Type.CHESTPLATE, props1()));
+    public static final DeferredItem<Item> JAPANESE_GUARD_LEGGINGS = registerItem("japaneseguardlegs", () -> new ItemMillenaireArmour(MillArmorMaterials.JAPANESE_GUARD, ArmorItem.Type.LEGGINGS, props1()));
+    public static final DeferredItem<Item> JAPANESE_GUARD_BOOTS = registerItem("japaneseguardboots", () -> new ItemMillenaireArmour(MillArmorMaterials.JAPANESE_GUARD, ArmorItem.Type.BOOTS, props1()));
 
     // ========== Armor — Byzantine ==========
-    public static final DeferredItem<Item> BYZANTINE_HELMET = registerItem("byzantinehelmet", () -> new Item(props1()));
-    public static final DeferredItem<Item> BYZANTINE_CHESTPLATE = registerItem("byzantineplate", () -> new Item(props1()));
-    public static final DeferredItem<Item> BYZANTINE_LEGGINGS = registerItem("byzantinelegs", () -> new Item(props1()));
-    public static final DeferredItem<Item> BYZANTINE_BOOTS = registerItem("byzantineboots", () -> new Item(props1()));
+    public static final DeferredItem<Item> BYZANTINE_HELMET = registerItem("byzantinehelmet", () -> new ItemMillenaireArmour(MillArmorMaterials.BYZANTINE, ArmorItem.Type.HELMET, props1()));
+    public static final DeferredItem<Item> BYZANTINE_CHESTPLATE = registerItem("byzantineplate", () -> new ItemMillenaireArmour(MillArmorMaterials.BYZANTINE, ArmorItem.Type.CHESTPLATE, props1()));
+    public static final DeferredItem<Item> BYZANTINE_LEGGINGS = registerItem("byzantinelegs", () -> new ItemMillenaireArmour(MillArmorMaterials.BYZANTINE, ArmorItem.Type.LEGGINGS, props1()));
+    public static final DeferredItem<Item> BYZANTINE_BOOTS = registerItem("byzantineboots", () -> new ItemMillenaireArmour(MillArmorMaterials.BYZANTINE, ArmorItem.Type.BOOTS, props1()));
 
     // ========== Armor — Fur (Inuit) ==========
-    public static final DeferredItem<Item> FUR_HELMET = registerItem("furhelmet", () -> new Item(props1()));
-    public static final DeferredItem<Item> FUR_CHESTPLATE = registerItem("furplate", () -> new Item(props1()));
-    public static final DeferredItem<Item> FUR_LEGGINGS = registerItem("furlegs", () -> new Item(props1()));
-    public static final DeferredItem<Item> FUR_BOOTS = registerItem("furboots", () -> new Item(props1()));
+    public static final DeferredItem<Item> FUR_HELMET = registerItem("furhelmet", () -> new ItemMillenaireArmour(MillArmorMaterials.FUR, ArmorItem.Type.HELMET, props1()));
+    public static final DeferredItem<Item> FUR_CHESTPLATE = registerItem("furplate", () -> new ItemMillenaireArmour(MillArmorMaterials.FUR, ArmorItem.Type.CHESTPLATE, props1()));
+    public static final DeferredItem<Item> FUR_LEGGINGS = registerItem("furlegs", () -> new ItemMillenaireArmour(MillArmorMaterials.FUR, ArmorItem.Type.LEGGINGS, props1()));
+    public static final DeferredItem<Item> FUR_BOOTS = registerItem("furboots", () -> new ItemMillenaireArmour(MillArmorMaterials.FUR, ArmorItem.Type.BOOTS, props1()));
 
     // ========== Armor — Seljuk ==========
-    public static final DeferredItem<Item> SELJUK_TURBAN = registerItem("seljukturban", () -> new Item(props1()));
-    public static final DeferredItem<Item> SELJUK_HELMET = registerItem("seljukhelmet", () -> new Item(props1()));
-    public static final DeferredItem<Item> SELJUK_CHESTPLATE = registerItem("seljukplate", () -> new Item(props1()));
-    public static final DeferredItem<Item> SELJUK_LEGGINGS = registerItem("seljuklegs", () -> new Item(props1()));
-    public static final DeferredItem<Item> SELJUK_BOOTS = registerItem("seljukboots", () -> new Item(props1()));
+    public static final DeferredItem<Item> SELJUK_TURBAN = registerItem("seljukturban", () -> new ItemMillenaireArmour(MillArmorMaterials.SELJUK, ArmorItem.Type.HELMET, props1()));
+    public static final DeferredItem<Item> SELJUK_HELMET = registerItem("seljukhelmet", () -> new ItemMillenaireArmour(MillArmorMaterials.SELJUK, ArmorItem.Type.HELMET, props1()));
+    public static final DeferredItem<Item> SELJUK_CHESTPLATE = registerItem("seljukplate", () -> new ItemMillenaireArmour(MillArmorMaterials.SELJUK, ArmorItem.Type.CHESTPLATE, props1()));
+    public static final DeferredItem<Item> SELJUK_LEGGINGS = registerItem("seljuklegs", () -> new ItemMillenaireArmour(MillArmorMaterials.SELJUK, ArmorItem.Type.LEGGINGS, props1()));
+    public static final DeferredItem<Item> SELJUK_BOOTS = registerItem("seljukboots", () -> new ItemMillenaireArmour(MillArmorMaterials.SELJUK, ArmorItem.Type.BOOTS, props1()));
 
     // ========== Armor — Mayan Crown ==========
-    public static final DeferredItem<Item> MAYAN_QUEST_CROWN = registerItem("mayanquestcrown", () -> new Item(props1()));
+    public static final DeferredItem<Item> MAYAN_QUEST_CROWN = registerItem("mayanquestcrown", () -> new ItemMillenaireArmour(MillArmorMaterials.MAYAN, ArmorItem.Type.HELMET, props1()));
 
     // ========== Parchments ==========
     public static final DeferredItem<Item> PARCHMENT_NORMAN_VILLAGERS = registerItem("parchment_normanvillagers", () -> new Item(props1()));
