@@ -17,6 +17,38 @@ Prechecked
 If you want to support me and keep this preservation rolling, consider supporting me on Ko-Fi!
 https://ko-fi.com/dizzymii
 
+## Remaining Port Features
+
+> Full details for each item are in [PORT_STATUS.md](PORT_STATUS.md).
+
+**In Progress / Broken**
+- HumanoidNPC CORE and IDLE brain activities (LookAtTargetSink / MoveToTargetSink / wander not wired)
+- Targeted mob AI — EntityTargetedBlaze, EntityTargetedWitherSkeleton, EntityTargetedGhast (vanilla behavior only)
+- EntityWallDecoration — wall-attachment logic, face/position NBT, and renderer absent
+- Item specializations — wall decorations, clothes, bows, and armor registered as plain Items instead of proper subclasses
+- Trade, LockedChest, and Puja menus not registered in MillMenuTypes (non-standard packet-driven path)
+- Block entity renderers — FirePit, MockBanner, Panel, LockedChest, and MillBed renderers are empty stubs
+- SmartBrainLib compatibility layer — temporary shim; replace with real library when maven.tslat.net is reachable
+- VillagerBrainConfig CORE activity group is an acknowledged empty placeholder
+
+**Legacy / Deferred**
+- World generation — village placement and tree gen not ported to ConfiguredFeature / PlacedFeature / Jigsaw
+- ItemStack data storage — raw NBT still used; should migrate to DataComponentType / DataComponentMap for custom per-stack data
+- Armor and clothing rendering — ArmorMaterial entries not registered; LayerVillagerClothes contains no render calls
+- Custom A* pathfinding — PathNavigateSimple present but not wired into any entity navigator
+- Diplomacy system — culture affinity data loaded but alliance/rivalry/hostility logic absent
+
+**Not Started**
+- Dynasty / family tree system
+- Prayer, religion, and puja scheduling execution
+- Village raids and warfare AI
+- Travel Book in-game rendering
+- Quest delivery and completion flow
+- Villager age-progression life-cycle timer
+- Import table economic loop
+
+---
+
 ## Current Plan
 
 PT.1: Bring the mod up to modern versions, maintaining as much of the original functionality and charm as possible.
